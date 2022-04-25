@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package tstr.admin.v1;
+
+import "api/common/v1/common.proto";
+
+option go_package =  "github.com/nanzhong/tstr/api/admin/v1;admin";
+
+service AdminService {
+  rpc IssueAccessToken(IssueAccessTokenRequest) returns (IssueAccessTokenResponse);
+  rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse);
+  rpc ListAccessTokens(ListAccessTokensRequest) returns (ListAccessTokensResponse);
+  rpc RevokeAccessToken(RevokeAccessTokenRequest) returns (RevokeAccessTokenResponse);
+
+  rpc ApproveRunner(ApproveRunnerRequest) returns (ApproveRunnerResponse);
+  rpc DenyRunner(DenyRunnerRequest) returns (DenyRunnerResponse);
+}
+
+message IssueAccessTokenRequest {
+  string name = 1; // required
+  repeated tstr.common.v1.AccessToken.Scope scopes = 2; // required
+}
+
+message IssueAccessTokenResponse {
+  tstr.common.v1.AccessToken access_token = 1; // required
+}
+
+message GetAccessTokenRequest {
+  string id = 1; // required
+}
+
+message GetAccessTokenResponse {
+  tstr.common.v1.AccessToken access_token = 1; // required
+}
+
+message ListAccessTokensRequest {
+  bool include_expired = 1;
+  bool include_revoked = 2;
+}
+
+message ListAccessTokensResponse {
+  repeated tstr.common.v1.AccessToken access_tokens = 1; // required
+}
+
+message RevokeAccessTokenRequest {
+  string id = 1; // required
+}
+
+message RevokeAccessTokenResponse {}
+
+message ApproveRunnerRequest {
+  string id = 1; // required
+}
+
+message ApproveRunnerResponse {}
+
+message DenyRunnerRequest {
+  string id = 1; // required
+}
+
+message DenyRunnerResponse {}

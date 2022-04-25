@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package tstr.control.v1;
+
+import "api/common/v1/common.proto";
+
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package =  "github.com/nanzhong/tstr/api/control/v1;control";
+
+service TestService {
+  rpc RegisterTest(RegisterTestRequest) returns (RegisterTestResponse);
+  rpc UpdateTest(UpdateTestRequest) returns (UpdateTestResponse);
+  rpc GetTest(GetTestRequest) returns (GetTestResponse);
+  rpc ListTests(ListTestsRequest) returns (ListTestsResponse);
+  rpc ArchiveTest(ArchiveTestRequest) returns (ArchiveTestResponse);
+
+  rpc DefineTestSuite(DefineTestSuiteRequest) returns (DefineTestSuiteResponse);
+  rpc UpdateTestSuite(UpdateTestSuiteRequest) returns (UpdateTestSuiteResponse);
+  rpc GetTestSuite(GetTestSuiteRequest) returns (GetTestSuiteResponse);
+  rpc ListTestSuites(ListTestSuitesRequest) returns (ListTestSuitesResponse);
+  rpc ArchiveTestSuite(ArchiveTestSuiteRequest) returns (ArchiveTestSuiteResponse);
+
+  rpc GetRun(GetRunRequest) returns (GetRunResponse);
+  rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
+
+  rpc GetRunner(GetRunnerRequest) returns (GetRunnerResponse);
+  rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
+}
+
+message RegisterTestRequest {
+  string name = 1; // required
+  map<string, string> labels = 2;
+  string cron_schedule = 3;
+  tstr.common.v1.Test.RunConfig run_config = 4; // required
+}
+
+message RegisterTestResponse {
+  tstr.common.v1.Test test = 1; // required
+}
+
+message UpdateTestRequest {
+  google.protobuf.FieldMask field_mask = 1;
+
+  string id = 2; // required
+  string name = 3;
+  map<string, string> labels = 4;
+  string cron_schedule = 5;
+  tstr.common.v1.Test.RunConfig run_config = 6;
+}
+
+message GetTestRequest {
+  string id = 1; // required
+}
+
+message GetTestResponse {
+  tstr.common.v1.Test test = 1; // required
+}
+
+message ListTestsRequest {
+  repeated tstr.common.v1.Label labels = 1;
+}
+
+message ListTestsResponse {
+  repeated tstr.common.v1.Test tests = 1; // required
+}
+
+message UpdateTestResponse {}
+
+message ArchiveTestRequest {
+  string id = 1; // required
+}
+
+message ArchiveTestResponse {}
+
+message DefineTestSuiteRequest {
+  string name = 1; // required
+  tstr.common.v1.Label labels = 2; // required
+}
+
+message DefineTestSuiteResponse {
+  tstr.common.v1.TestSuite test_suite = 1; // required
+}
+
+message UpdateTestSuiteRequest {
+  google.protobuf.FieldMask field_mask = 1;
+
+  string id = 2; // required
+  string name = 3;
+  repeated tstr.common.v1.Label labels = 4;
+}
+
+message UpdateTestSuiteResponse {}
+
+message GetTestSuiteRequest {
+  string id = 1; // required
+}
+
+message GetTestSuiteResponse {
+  tstr.common.v1.TestSuite test_suite = 1; // required
+}
+
+message ListTestSuitesRequest {}
+
+message ListTestSuitesResponse {
+  repeated tstr.common.v1.TestSuite test_suites = 1; // required
+}
+
+message ArchiveTestSuiteRequest {
+  string id = 1; // required
+}
+
+message ArchiveTestSuiteResponse {}
+
+message GetRunRequest {
+  string id = 1; // required
+}
+
+message GetRunResponse {
+  tstr.common.v1.Run run = 1; // required
+}
+
+message ListRunsRequest {
+  repeated string test_ids = 1;
+  repeated string test_suite_ids = 2;
+  repeated string runner_ids = 3;
+  repeated tstr.common.v1.Run.Result results = 4;
+  google.protobuf.Timestamp scheduled_before = 5;
+  google.protobuf.Timestamp scheduled_after = 6;
+  google.protobuf.Timestamp started_before = 7;
+  google.protobuf.Timestamp started_after = 8;
+  google.protobuf.Timestamp finished_before = 9;
+  google.protobuf.Timestamp finished_after = 10;
+}
+
+message ListRunsResponse {
+  repeated tstr.common.v1.Run runs = 1; // required
+}
+
+message GetRunnerRequest {
+  string id = 1; // required
+}
+
+message GetRunnerResponse {
+  tstr.common.v1.Runner runner = 1; // required
+}
+
+message ListRunnersRequest {}
+
+message ListRunnersResponse {
+  repeated tstr.common.v1.Runner runners = 1; // required
+}

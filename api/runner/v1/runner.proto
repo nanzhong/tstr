@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package tstr.runner.v1;
+
+import "api/common/v1/common.proto";
+
+import "google/protobuf/timestamp.proto";
+
+option go_package =  "github.com/nanzhong/tstr/api/runner/v1;runner";
+
+service RunnerService {
+  rpc RegisterRunner(RegisterRunnerRequest) returns (RegisterRunnerResponse);
+  rpc NextRun(NextRunRequest) returns (NextRunResponse);
+  rpc SubmitRun(stream SubmitRunRequest) returns (SubmitRunResponse);
+}
+
+message RegisterRunnerRequest {
+  string name = 1; // required
+  repeated tstr.common.v1.Label accept_test_labels = 2;
+  repeated tstr.common.v1.Label reqect_test_labels = 3;
+}
+
+message RegisterRunnerResponse {
+  repeated tstr.common.v1.Runner runner = 1; // required
+}
+
+message NextRunRequest {
+  repeated tstr.common.v1.Label accept_test_labels = 1;
+  repeated tstr.common.v1.Label reqect_test_labels = 2;
+}
+
+message NextRunResponse {
+  tstr.common.v1.Run run = 1; // required
+}
+
+message SubmitRunRequest {
+  tstr.common.v1.Run.Result result = 1;
+  repeated tstr.common.v1.Run.Log logs = 2;
+
+  google.protobuf.Timestamp started_at = 10;
+  google.protobuf.Timestamp finished_at = 11;
+}
+
+message SubmitRunResponse {}

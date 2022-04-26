@@ -1,0 +1,1 @@
+db: ./scripts/start_db.sh

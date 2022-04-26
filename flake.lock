@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "dbmate": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1649656063,
+        "narHash": "sha256-DEQ/nPDoug4LBFFsG5BxS6uDPf3XCy9pG+VSXJYQIaU=",
+        "owner": "amacneil",
+        "repo": "dbmate",
+        "rev": "1613f72c4f9456ebe1b72eb1fa8a55c648a7587a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "amacneil",
+        "repo": "dbmate",
+        "type": "github"
+      }
+    },
     "flake-utils": {
       "locked": {
         "lastModified": 1649676176,
@@ -17,11 +33,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1650555608,
-        "narHash": "sha256-e34oMPWPwRWhF1K6NZnF0mNle7qDADJzjWujp8UupGo=",
+        "lastModified": 1650911318,
+        "narHash": "sha256-UvCP5fvt6nsf26Fqr3PSpbpvyC9D1a376BFTg/Z4YH0=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "c11ee1c598b15a24d18f142f85ee3d438afc39e6",
+        "rev": "1d395b2c9a82a8bca6f7f67640641c73e833f3d4",
         "type": "github"
       },
       "original": {
@@ -31,10 +47,45 @@
         "type": "github"
       }
     },
+    "overmind": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1627037632,
+        "narHash": "sha256-coQRuRXIQV/X3+ruthAZarp+cXNpkPGyIK2HPbGJahU=",
+        "owner": "DarthSim",
+        "repo": "overmind",
+        "rev": "e654d50f630d7b44192f3bb22ef0d5889854d110",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DarthSim",
+        "repo": "overmind",
+        "type": "github"
+      }
+    },
+    "pggen": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1644101690,
+        "narHash": "sha256-EnFWnrCWdfJcplHo5jxf9o/v/4qKYxNIbxnrNSesYHw=",
+        "owner": "jschaf",
+        "repo": "pggen",
+        "rev": "1266d15e85c54237d9b58b1a701acd5274bc2c45",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jschaf",
+        "repo": "pggen",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
+        "dbmate": "dbmate",
         "flake-utils": "flake-utils",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs",
+        "overmind": "overmind",
+        "pggen": "pggen"
       }
     }
   },

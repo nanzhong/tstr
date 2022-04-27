@@ -24,6 +24,7 @@ service TestService {
 
   rpc GetRun(GetRunRequest) returns (GetRunResponse);
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
+  rpc ScheduleRun(ScheduleRunRequest) returns (ScheduleRunResponse);
 
   rpc GetRunner(GetRunnerRequest) returns (GetRunnerResponse);
   rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
@@ -136,6 +137,14 @@ message ListRunsRequest {
 
 message ListRunsResponse {
   repeated tstr.common.v1.Run runs = 1; // required
+}
+
+message ScheduleRunRequest {
+  string test_id = 1; // required
+}
+
+message ScheduleRunResponse {
+  tstr.common.v1.Run run = 1; // required
 }
 
 message GetRunnerRequest {

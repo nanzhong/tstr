@@ -34,6 +34,7 @@ type TestServiceClient interface {
 	ArchiveTestSuite(ctx context.Context, in *ArchiveTestSuiteRequest, opts ...grpc.CallOption) (*ArchiveTestSuiteResponse, error)
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
 	ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error)
+	ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error)
 	GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error)
 	ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error)
 }
@@ -154,6 +155,15 @@ func (c *testServiceClient) ListRuns(ctx context.Context, in *ListRunsRequest, o
 	return out, nil
 }
 
+func (c *testServiceClient) ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error) {
+	out := new(ScheduleRunResponse)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ScheduleRun", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *testServiceClient) GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error) {
 	out := new(GetRunnerResponse)
 	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/GetRunner", in, out, opts...)
@@ -188,6 +198,7 @@ type TestServiceServer interface {
 	ArchiveTestSuite(context.Context, *ArchiveTestSuiteRequest) (*ArchiveTestSuiteResponse, error)
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
 	ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error)
+	ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error)
 	GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error)
 	ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
 	mustEmbedUnimplementedTestServiceServer()
@@ -232,6 +243,9 @@ func (UnimplementedTestServiceServer) GetRun(context.Context, *GetRunRequest) (*
 }
 func (UnimplementedTestServiceServer) ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRuns not implemented")
+}
+func (UnimplementedTestServiceServer) ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ScheduleRun not implemented")
 }
 func (UnimplementedTestServiceServer) GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRunner not implemented")
@@ -468,6 +482,24 @@ func _TestService_ListRuns_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TestService_ScheduleRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScheduleRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TestServiceServer).ScheduleRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tstr.control.v1.TestService/ScheduleRun",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TestServiceServer).ScheduleRun(ctx, req.(*ScheduleRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _TestService_GetRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRunnerRequest)
 	if err := dec(in); err != nil {
@@ -558,6 +590,10 @@ var TestService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListRuns",
 			Handler:    _TestService_ListRuns_Handler,
+		},
+		{
+			MethodName: "ScheduleRun",
+			Handler:    _TestService_ScheduleRun_Handler,
 		},
 		{
 			MethodName: "GetRunner",

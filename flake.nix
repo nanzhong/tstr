@@ -21,9 +21,10 @@
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
-
+        version = "0.0.1";
         tstr = pkgs.buildGoModule {
-          name = "tstr";
+          pname = "tstr";
+          inherit version;
           src = ./.;
           subPackages = [
             "cmd/tstr"
@@ -34,21 +35,21 @@
 
         devTools = {
           pggen = pkgs.buildGoModule {
-            pname = "pggen";
+            name = "pggen";
             src = pggen;
             subPackages = [ "cmd/pggen" ];
             doCheck = false;
             vendorSha256 = "sha256-WLoFpwOP97160WfmfbCUUlhqGC0qiEPWDg0qL/DrzIA=";
           };
           dbmate = pkgs.buildGoModule {
-            pname = "dbmate";
+            name = "dbmate";
             src = dbmate;
             subPackages = [ "." ];
             doCheck = false;
             vendorSha256 = "sha256-U9VTS0rmLHxweFiIcFyoybHMBihy5ezloDC2iLc4IMc=";
           };
           overmind = pkgs.buildGoModule {
-            pname = "overmind";
+            name = "overmind";
             src = overmind;
             subPackages = [ "." ];
             dbCheck = false;

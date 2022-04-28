@@ -10,6 +10,20 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
+-- Name: uuid-ossp; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
+
+
+--
 -- Name: access_token_scope; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -40,11 +54,11 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.access_tokens (
-    id uuid NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     token_hash character varying NOT NULL,
     scopes public.access_token_scope[],
-    issued_at timestamp with time zone NOT NULL,
+    issued_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     expires_at timestamp with time zone NOT NULL,
     revoked_at timestamp with time zone
 );
@@ -55,13 +69,13 @@ CREATE TABLE public.access_tokens (
 --
 
 CREATE TABLE public.runners (
-    id uuid NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     accept_test_labels jsonb,
     reject_test_labels jsonb,
-    registered_at timestamp with time zone NOT NULL,
-    approved_at timestamp with time zone NOT NULL,
-    last_heartbeat_at timestamp with time zone NOT NULL
+    registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    approved_at timestamp with time zone,
+    last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -70,13 +84,13 @@ CREATE TABLE public.runners (
 --
 
 CREATE TABLE public.runs (
-    id uuid NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     test_id uuid,
     test_run_config_id integer,
     runner_id uuid,
     result public.run_result,
     logs jsonb,
-    scheduled_at timestamp with time zone NOT NULL,
+    scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,
     finished_at timestamp with time zone
 );
@@ -100,8 +114,9 @@ CREATE TABLE public.test_run_configs (
     test_id uuid,
     container_image character varying NOT NULL,
     command character varying,
+    args character varying[],
     env jsonb,
-    created_at timestamp with time zone NOT NULL
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -130,11 +145,11 @@ ALTER SEQUENCE public.test_run_configs_id_seq OWNED BY public.test_run_configs.i
 --
 
 CREATE TABLE public.test_suites (
-    id uuid NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     labels jsonb,
-    created_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     archived_at timestamp with time zone
 );
 
@@ -144,12 +159,12 @@ CREATE TABLE public.test_suites (
 --
 
 CREATE TABLE public.tests (
-    id uuid NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
     labels jsonb,
     cron_schedule character varying,
-    registered_at timestamp with time zone NOT NULL,
-    updated_at timestamp with time zone NOT NULL,
+    registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     archived_at timestamp with time zone
 );
 
@@ -202,11 +217,27 @@ ALTER TABLE ONLY public.test_run_configs
 
 
 --
+-- Name: test_suites test_suites_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_suites
+    ADD CONSTRAINT test_suites_name_key UNIQUE (name);
+
+
+--
 -- Name: test_suites test_suites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.test_suites
     ADD CONSTRAINT test_suites_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tests tests_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tests
+    ADD CONSTRAINT tests_name_key UNIQUE (name);
 
 
 --
@@ -267,10 +298,24 @@ CREATE INDEX test_suites_archived_at_idx ON public.test_suites USING btree (arch
 
 
 --
+-- Name: test_suites_unique_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX test_suites_unique_name ON public.test_suites USING btree (name) WHERE (archived_at IS NULL);
+
+
+--
 -- Name: tests_labels_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX tests_labels_idx ON public.tests USING gin (labels);
+
+
+--
+-- Name: tests_unique_name; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX tests_unique_name ON public.tests USING btree (name) WHERE (archived_at IS NULL);
 
 
 --

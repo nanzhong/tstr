@@ -7,4 +7,6 @@ pggen gen go \
       --query-glob db/queries.sql \
       --go-type 'varchar=string' \
       --go-type '_varchar=[]string' \
-      --go-type 'timestamptz=time.Time'
+      --go-type 'int4=int' \
+      --go-type 'timestamptz=time.Time' \
+      --go-type 'uuid=string' \

@@ -9,7 +9,7 @@ import "google/protobuf/timestamp.proto";
 
 option go_package =  "github.com/nanzhong/tstr/api/control/v1;control";
 
-service TestService {
+service ControlService {
   rpc RegisterTest(RegisterTestRequest) returns (RegisterTestResponse);
   rpc UpdateTest(UpdateTestRequest) returns (UpdateTestResponse);
   rpc GetTest(GetTestRequest) returns (GetTestResponse);

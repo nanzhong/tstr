@@ -10,16 +10,21 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/nanzhong/tstr/api/admin/v1"
+	"github.com/nanzhong/tstr/api/control/v1"
+	"github.com/nanzhong/tstr/api/runner/v1"
+	"github.com/nanzhong/tstr/server"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
+	"google.golang.org/grpc"
 )
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "sere the web UI",
+	Short: "serve the gRPC API and web UI.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		// TODO Use console writer for now for easy development/debugging, perhaps remove and rely on humanlog in the future.
@@ -29,9 +34,19 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			log.Fatal().
 				Err(err).
-				Str("api-addre", viper.GetString("serve-api-addr")).
+				Str("api-addr", viper.GetString("serve-api-addr")).
 				Msg("failed to listen on api addr")
 		}
+
+		grpcServer := grpc.NewServer()
+		controlServer := server.NewControlServer()
+		control.RegisterControlServiceServer(grpcServer, controlServer)
+
+		adminServer := server.NewAdminServer()
+		admin.RegisterAdminServiceServer(grpcServer, adminServer)
+
+		runnerServer := server.NewRunnerServer()
+		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 		pool, err := pgxpool.Connect(context.Background(), viper.GetString("serve-pg-dsn"))
 		if err != nil {
@@ -40,7 +55,7 @@ var serveCmd = &cobra.Command{
 		defer pool.Close()
 
 		// TODO setup db.
-		// TODO setup grpc server.
+
 		// TODO setup http handler for web ui.
 		mux := http.NewServeMux()
 		httpServer := http.Server{
@@ -68,6 +83,11 @@ var serveCmd = &cobra.Command{
 
 				var eg errgroup.Group
 				eg.Go(func() error {
+					log.Info().Msg("attempting to shutdown grpc server")
+					grpcServer.GracefulStop()
+					return nil
+				})
+				eg.Go(func() error {
 					log.Info().Msg("attempting to shutdown http server")
 					return httpServer.Shutdown(shutdownCtx)
 				})
@@ -79,6 +99,12 @@ var serveCmd = &cobra.Command{
 		}()
 
 		var eg errgroup.Group
+		eg.Go(func() error {
+			log.Info().
+				Str("api-addr", viper.GetString("serve-api-addr")).
+				Msg("starting grpc server")
+			return grpcServer.Serve(l)
+		})
 		eg.Go(func() error {
 			log.Info().
 				Str("web-addr", viper.GetString("serve-web-addr")).

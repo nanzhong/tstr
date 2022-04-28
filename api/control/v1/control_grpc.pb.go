@@ -18,10 +18,10 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// TestServiceClient is the client API for TestService service.
+// ControlServiceClient is the client API for ControlService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TestServiceClient interface {
+type ControlServiceClient interface {
 	RegisterTest(ctx context.Context, in *RegisterTestRequest, opts ...grpc.CallOption) (*RegisterTestResponse, error)
 	UpdateTest(ctx context.Context, in *UpdateTestRequest, opts ...grpc.CallOption) (*UpdateTestResponse, error)
 	GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*GetTestResponse, error)
@@ -39,153 +39,153 @@ type TestServiceClient interface {
 	ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error)
 }
 
-type testServiceClient struct {
+type controlServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTestServiceClient(cc grpc.ClientConnInterface) TestServiceClient {
-	return &testServiceClient{cc}
+func NewControlServiceClient(cc grpc.ClientConnInterface) ControlServiceClient {
+	return &controlServiceClient{cc}
 }
 
-func (c *testServiceClient) RegisterTest(ctx context.Context, in *RegisterTestRequest, opts ...grpc.CallOption) (*RegisterTestResponse, error) {
+func (c *controlServiceClient) RegisterTest(ctx context.Context, in *RegisterTestRequest, opts ...grpc.CallOption) (*RegisterTestResponse, error) {
 	out := new(RegisterTestResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/RegisterTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/RegisterTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) UpdateTest(ctx context.Context, in *UpdateTestRequest, opts ...grpc.CallOption) (*UpdateTestResponse, error) {
+func (c *controlServiceClient) UpdateTest(ctx context.Context, in *UpdateTestRequest, opts ...grpc.CallOption) (*UpdateTestResponse, error) {
 	out := new(UpdateTestResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/UpdateTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/UpdateTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*GetTestResponse, error) {
+func (c *controlServiceClient) GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*GetTestResponse, error) {
 	out := new(GetTestResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/GetTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ListTests(ctx context.Context, in *ListTestsRequest, opts ...grpc.CallOption) (*ListTestsResponse, error) {
+func (c *controlServiceClient) ListTests(ctx context.Context, in *ListTestsRequest, opts ...grpc.CallOption) (*ListTestsResponse, error) {
 	out := new(ListTestsResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ListTests", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListTests", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ArchiveTest(ctx context.Context, in *ArchiveTestRequest, opts ...grpc.CallOption) (*ArchiveTestResponse, error) {
+func (c *controlServiceClient) ArchiveTest(ctx context.Context, in *ArchiveTestRequest, opts ...grpc.CallOption) (*ArchiveTestResponse, error) {
 	out := new(ArchiveTestResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ArchiveTest", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ArchiveTest", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) DefineTestSuite(ctx context.Context, in *DefineTestSuiteRequest, opts ...grpc.CallOption) (*DefineTestSuiteResponse, error) {
+func (c *controlServiceClient) DefineTestSuite(ctx context.Context, in *DefineTestSuiteRequest, opts ...grpc.CallOption) (*DefineTestSuiteResponse, error) {
 	out := new(DefineTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/DefineTestSuite", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/DefineTestSuite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) UpdateTestSuite(ctx context.Context, in *UpdateTestSuiteRequest, opts ...grpc.CallOption) (*UpdateTestSuiteResponse, error) {
+func (c *controlServiceClient) UpdateTestSuite(ctx context.Context, in *UpdateTestSuiteRequest, opts ...grpc.CallOption) (*UpdateTestSuiteResponse, error) {
 	out := new(UpdateTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/UpdateTestSuite", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/UpdateTestSuite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error) {
+func (c *controlServiceClient) GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error) {
 	out := new(GetTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/GetTestSuite", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetTestSuite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ListTestSuites(ctx context.Context, in *ListTestSuitesRequest, opts ...grpc.CallOption) (*ListTestSuitesResponse, error) {
+func (c *controlServiceClient) ListTestSuites(ctx context.Context, in *ListTestSuitesRequest, opts ...grpc.CallOption) (*ListTestSuitesResponse, error) {
 	out := new(ListTestSuitesResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ListTestSuites", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListTestSuites", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ArchiveTestSuite(ctx context.Context, in *ArchiveTestSuiteRequest, opts ...grpc.CallOption) (*ArchiveTestSuiteResponse, error) {
+func (c *controlServiceClient) ArchiveTestSuite(ctx context.Context, in *ArchiveTestSuiteRequest, opts ...grpc.CallOption) (*ArchiveTestSuiteResponse, error) {
 	out := new(ArchiveTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ArchiveTestSuite", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ArchiveTestSuite", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error) {
+func (c *controlServiceClient) GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error) {
 	out := new(GetRunResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/GetRun", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetRun", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error) {
+func (c *controlServiceClient) ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error) {
 	out := new(ListRunsResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ListRuns", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListRuns", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error) {
+func (c *controlServiceClient) ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error) {
 	out := new(ScheduleRunResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ScheduleRun", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ScheduleRun", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error) {
+func (c *controlServiceClient) GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error) {
 	out := new(GetRunnerResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/GetRunner", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetRunner", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *testServiceClient) ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error) {
+func (c *controlServiceClient) ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error) {
 	out := new(ListRunnersResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.TestService/ListRunners", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListRunners", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// TestServiceServer is the server API for TestService service.
-// All implementations must embed UnimplementedTestServiceServer
+// ControlServiceServer is the server API for ControlService service.
+// All implementations must embed UnimplementedControlServiceServer
 // for forward compatibility
-type TestServiceServer interface {
+type ControlServiceServer interface {
 	RegisterTest(context.Context, *RegisterTestRequest) (*RegisterTestResponse, error)
 	UpdateTest(context.Context, *UpdateTestRequest) (*UpdateTestResponse, error)
 	GetTest(context.Context, *GetTestRequest) (*GetTestResponse, error)
@@ -201,407 +201,407 @@ type TestServiceServer interface {
 	ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error)
 	GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error)
 	ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
-	mustEmbedUnimplementedTestServiceServer()
+	mustEmbedUnimplementedControlServiceServer()
 }
 
-// UnimplementedTestServiceServer must be embedded to have forward compatible implementations.
-type UnimplementedTestServiceServer struct {
+// UnimplementedControlServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedControlServiceServer struct {
 }
 
-func (UnimplementedTestServiceServer) RegisterTest(context.Context, *RegisterTestRequest) (*RegisterTestResponse, error) {
+func (UnimplementedControlServiceServer) RegisterTest(context.Context, *RegisterTestRequest) (*RegisterTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RegisterTest not implemented")
 }
-func (UnimplementedTestServiceServer) UpdateTest(context.Context, *UpdateTestRequest) (*UpdateTestResponse, error) {
+func (UnimplementedControlServiceServer) UpdateTest(context.Context, *UpdateTestRequest) (*UpdateTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTest not implemented")
 }
-func (UnimplementedTestServiceServer) GetTest(context.Context, *GetTestRequest) (*GetTestResponse, error) {
+func (UnimplementedControlServiceServer) GetTest(context.Context, *GetTestRequest) (*GetTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTest not implemented")
 }
-func (UnimplementedTestServiceServer) ListTests(context.Context, *ListTestsRequest) (*ListTestsResponse, error) {
+func (UnimplementedControlServiceServer) ListTests(context.Context, *ListTestsRequest) (*ListTestsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTests not implemented")
 }
-func (UnimplementedTestServiceServer) ArchiveTest(context.Context, *ArchiveTestRequest) (*ArchiveTestResponse, error) {
+func (UnimplementedControlServiceServer) ArchiveTest(context.Context, *ArchiveTestRequest) (*ArchiveTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ArchiveTest not implemented")
 }
-func (UnimplementedTestServiceServer) DefineTestSuite(context.Context, *DefineTestSuiteRequest) (*DefineTestSuiteResponse, error) {
+func (UnimplementedControlServiceServer) DefineTestSuite(context.Context, *DefineTestSuiteRequest) (*DefineTestSuiteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DefineTestSuite not implemented")
 }
-func (UnimplementedTestServiceServer) UpdateTestSuite(context.Context, *UpdateTestSuiteRequest) (*UpdateTestSuiteResponse, error) {
+func (UnimplementedControlServiceServer) UpdateTestSuite(context.Context, *UpdateTestSuiteRequest) (*UpdateTestSuiteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTestSuite not implemented")
 }
-func (UnimplementedTestServiceServer) GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error) {
+func (UnimplementedControlServiceServer) GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTestSuite not implemented")
 }
-func (UnimplementedTestServiceServer) ListTestSuites(context.Context, *ListTestSuitesRequest) (*ListTestSuitesResponse, error) {
+func (UnimplementedControlServiceServer) ListTestSuites(context.Context, *ListTestSuitesRequest) (*ListTestSuitesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListTestSuites not implemented")
 }
-func (UnimplementedTestServiceServer) ArchiveTestSuite(context.Context, *ArchiveTestSuiteRequest) (*ArchiveTestSuiteResponse, error) {
+func (UnimplementedControlServiceServer) ArchiveTestSuite(context.Context, *ArchiveTestSuiteRequest) (*ArchiveTestSuiteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ArchiveTestSuite not implemented")
 }
-func (UnimplementedTestServiceServer) GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error) {
+func (UnimplementedControlServiceServer) GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRun not implemented")
 }
-func (UnimplementedTestServiceServer) ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error) {
+func (UnimplementedControlServiceServer) ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRuns not implemented")
 }
-func (UnimplementedTestServiceServer) ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error) {
+func (UnimplementedControlServiceServer) ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ScheduleRun not implemented")
 }
-func (UnimplementedTestServiceServer) GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error) {
+func (UnimplementedControlServiceServer) GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRunner not implemented")
 }
-func (UnimplementedTestServiceServer) ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error) {
+func (UnimplementedControlServiceServer) ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRunners not implemented")
 }
-func (UnimplementedTestServiceServer) mustEmbedUnimplementedTestServiceServer() {}
+func (UnimplementedControlServiceServer) mustEmbedUnimplementedControlServiceServer() {}
 
-// UnsafeTestServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TestServiceServer will
+// UnsafeControlServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to ControlServiceServer will
 // result in compilation errors.
-type UnsafeTestServiceServer interface {
-	mustEmbedUnimplementedTestServiceServer()
+type UnsafeControlServiceServer interface {
+	mustEmbedUnimplementedControlServiceServer()
 }
 
-func RegisterTestServiceServer(s grpc.ServiceRegistrar, srv TestServiceServer) {
-	s.RegisterService(&TestService_ServiceDesc, srv)
+func RegisterControlServiceServer(s grpc.ServiceRegistrar, srv ControlServiceServer) {
+	s.RegisterService(&ControlService_ServiceDesc, srv)
 }
 
-func _TestService_RegisterTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_RegisterTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RegisterTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).RegisterTest(ctx, in)
+		return srv.(ControlServiceServer).RegisterTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/RegisterTest",
+		FullMethod: "/tstr.control.v1.ControlService/RegisterTest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).RegisterTest(ctx, req.(*RegisterTestRequest))
+		return srv.(ControlServiceServer).RegisterTest(ctx, req.(*RegisterTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_UpdateTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_UpdateTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).UpdateTest(ctx, in)
+		return srv.(ControlServiceServer).UpdateTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/UpdateTest",
+		FullMethod: "/tstr.control.v1.ControlService/UpdateTest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).UpdateTest(ctx, req.(*UpdateTestRequest))
+		return srv.(ControlServiceServer).UpdateTest(ctx, req.(*UpdateTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_GetTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_GetTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).GetTest(ctx, in)
+		return srv.(ControlServiceServer).GetTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/GetTest",
+		FullMethod: "/tstr.control.v1.ControlService/GetTest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).GetTest(ctx, req.(*GetTestRequest))
+		return srv.(ControlServiceServer).GetTest(ctx, req.(*GetTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ListTests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ListTests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTestsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ListTests(ctx, in)
+		return srv.(ControlServiceServer).ListTests(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ListTests",
+		FullMethod: "/tstr.control.v1.ControlService/ListTests",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ListTests(ctx, req.(*ListTestsRequest))
+		return srv.(ControlServiceServer).ListTests(ctx, req.(*ListTestsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ArchiveTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ArchiveTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ArchiveTestRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ArchiveTest(ctx, in)
+		return srv.(ControlServiceServer).ArchiveTest(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ArchiveTest",
+		FullMethod: "/tstr.control.v1.ControlService/ArchiveTest",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ArchiveTest(ctx, req.(*ArchiveTestRequest))
+		return srv.(ControlServiceServer).ArchiveTest(ctx, req.(*ArchiveTestRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_DefineTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_DefineTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DefineTestSuiteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).DefineTestSuite(ctx, in)
+		return srv.(ControlServiceServer).DefineTestSuite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/DefineTestSuite",
+		FullMethod: "/tstr.control.v1.ControlService/DefineTestSuite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).DefineTestSuite(ctx, req.(*DefineTestSuiteRequest))
+		return srv.(ControlServiceServer).DefineTestSuite(ctx, req.(*DefineTestSuiteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_UpdateTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_UpdateTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateTestSuiteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).UpdateTestSuite(ctx, in)
+		return srv.(ControlServiceServer).UpdateTestSuite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/UpdateTestSuite",
+		FullMethod: "/tstr.control.v1.ControlService/UpdateTestSuite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).UpdateTestSuite(ctx, req.(*UpdateTestSuiteRequest))
+		return srv.(ControlServiceServer).UpdateTestSuite(ctx, req.(*UpdateTestSuiteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_GetTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_GetTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetTestSuiteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).GetTestSuite(ctx, in)
+		return srv.(ControlServiceServer).GetTestSuite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/GetTestSuite",
+		FullMethod: "/tstr.control.v1.ControlService/GetTestSuite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).GetTestSuite(ctx, req.(*GetTestSuiteRequest))
+		return srv.(ControlServiceServer).GetTestSuite(ctx, req.(*GetTestSuiteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ListTestSuites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ListTestSuites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListTestSuitesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ListTestSuites(ctx, in)
+		return srv.(ControlServiceServer).ListTestSuites(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ListTestSuites",
+		FullMethod: "/tstr.control.v1.ControlService/ListTestSuites",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ListTestSuites(ctx, req.(*ListTestSuitesRequest))
+		return srv.(ControlServiceServer).ListTestSuites(ctx, req.(*ListTestSuitesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ArchiveTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ArchiveTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ArchiveTestSuiteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ArchiveTestSuite(ctx, in)
+		return srv.(ControlServiceServer).ArchiveTestSuite(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ArchiveTestSuite",
+		FullMethod: "/tstr.control.v1.ControlService/ArchiveTestSuite",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ArchiveTestSuite(ctx, req.(*ArchiveTestSuiteRequest))
+		return srv.(ControlServiceServer).ArchiveTestSuite(ctx, req.(*ArchiveTestSuiteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_GetRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_GetRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRunRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).GetRun(ctx, in)
+		return srv.(ControlServiceServer).GetRun(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/GetRun",
+		FullMethod: "/tstr.control.v1.ControlService/GetRun",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).GetRun(ctx, req.(*GetRunRequest))
+		return srv.(ControlServiceServer).GetRun(ctx, req.(*GetRunRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ListRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ListRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRunsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ListRuns(ctx, in)
+		return srv.(ControlServiceServer).ListRuns(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ListRuns",
+		FullMethod: "/tstr.control.v1.ControlService/ListRuns",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ListRuns(ctx, req.(*ListRunsRequest))
+		return srv.(ControlServiceServer).ListRuns(ctx, req.(*ListRunsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ScheduleRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ScheduleRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ScheduleRunRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ScheduleRun(ctx, in)
+		return srv.(ControlServiceServer).ScheduleRun(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ScheduleRun",
+		FullMethod: "/tstr.control.v1.ControlService/ScheduleRun",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ScheduleRun(ctx, req.(*ScheduleRunRequest))
+		return srv.(ControlServiceServer).ScheduleRun(ctx, req.(*ScheduleRunRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_GetRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_GetRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRunnerRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).GetRunner(ctx, in)
+		return srv.(ControlServiceServer).GetRunner(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/GetRunner",
+		FullMethod: "/tstr.control.v1.ControlService/GetRunner",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).GetRunner(ctx, req.(*GetRunnerRequest))
+		return srv.(ControlServiceServer).GetRunner(ctx, req.(*GetRunnerRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TestService_ListRunners_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _ControlService_ListRunners_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRunnersRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TestServiceServer).ListRunners(ctx, in)
+		return srv.(ControlServiceServer).ListRunners(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tstr.control.v1.TestService/ListRunners",
+		FullMethod: "/tstr.control.v1.ControlService/ListRunners",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TestServiceServer).ListRunners(ctx, req.(*ListRunnersRequest))
+		return srv.(ControlServiceServer).ListRunners(ctx, req.(*ListRunnersRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// TestService_ServiceDesc is the grpc.ServiceDesc for TestService service.
+// ControlService_ServiceDesc is the grpc.ServiceDesc for ControlService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var TestService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "tstr.control.v1.TestService",
-	HandlerType: (*TestServiceServer)(nil),
+var ControlService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "tstr.control.v1.ControlService",
+	HandlerType: (*ControlServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "RegisterTest",
-			Handler:    _TestService_RegisterTest_Handler,
+			Handler:    _ControlService_RegisterTest_Handler,
 		},
 		{
 			MethodName: "UpdateTest",
-			Handler:    _TestService_UpdateTest_Handler,
+			Handler:    _ControlService_UpdateTest_Handler,
 		},
 		{
 			MethodName: "GetTest",
-			Handler:    _TestService_GetTest_Handler,
+			Handler:    _ControlService_GetTest_Handler,
 		},
 		{
 			MethodName: "ListTests",
-			Handler:    _TestService_ListTests_Handler,
+			Handler:    _ControlService_ListTests_Handler,
 		},
 		{
 			MethodName: "ArchiveTest",
-			Handler:    _TestService_ArchiveTest_Handler,
+			Handler:    _ControlService_ArchiveTest_Handler,
 		},
 		{
 			MethodName: "DefineTestSuite",
-			Handler:    _TestService_DefineTestSuite_Handler,
+			Handler:    _ControlService_DefineTestSuite_Handler,
 		},
 		{
 			MethodName: "UpdateTestSuite",
-			Handler:    _TestService_UpdateTestSuite_Handler,
+			Handler:    _ControlService_UpdateTestSuite_Handler,
 		},
 		{
 			MethodName: "GetTestSuite",
-			Handler:    _TestService_GetTestSuite_Handler,
+			Handler:    _ControlService_GetTestSuite_Handler,
 		},
 		{
 			MethodName: "ListTestSuites",
-			Handler:    _TestService_ListTestSuites_Handler,
+			Handler:    _ControlService_ListTestSuites_Handler,
 		},
 		{
 			MethodName: "ArchiveTestSuite",
-			Handler:    _TestService_ArchiveTestSuite_Handler,
+			Handler:    _ControlService_ArchiveTestSuite_Handler,
 		},
 		{
 			MethodName: "GetRun",
-			Handler:    _TestService_GetRun_Handler,
+			Handler:    _ControlService_GetRun_Handler,
 		},
 		{
 			MethodName: "ListRuns",
-			Handler:    _TestService_ListRuns_Handler,
+			Handler:    _ControlService_ListRuns_Handler,
 		},
 		{
 			MethodName: "ScheduleRun",
-			Handler:    _TestService_ScheduleRun_Handler,
+			Handler:    _ControlService_ScheduleRun_Handler,
 		},
 		{
 			MethodName: "GetRunner",
-			Handler:    _TestService_GetRunner_Handler,
+			Handler:    _ControlService_GetRunner_Handler,
 		},
 		{
 			MethodName: "ListRunners",
-			Handler:    _TestService_ListRunners_Handler,
+			Handler:    _ControlService_ListRunners_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

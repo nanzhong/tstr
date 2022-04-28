@@ -21,23 +21,34 @@
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
+
+        tstr = pkgs.buildGoModule {
+          name = "tstr";
+          src = ./.;
+          subPackages = [
+            "cmd/tstr"
+            "cmd/tstrctl"
+          ];
+          vendorSha256 = "sha256-9q36pPzsY3eXSkCq7lY2jB/VQU7lfrxbcHIrj+X/lns=";
+        };
+
         devTools = {
           pggen = pkgs.buildGoModule {
-            name = "pggen";
+            pname = "pggen";
             src = pggen;
             subPackages = [ "cmd/pggen" ];
             doCheck = false;
             vendorSha256 = "sha256-WLoFpwOP97160WfmfbCUUlhqGC0qiEPWDg0qL/DrzIA=";
           };
           dbmate = pkgs.buildGoModule {
-            name = "dbmate";
+            pname = "dbmate";
             src = dbmate;
             subPackages = [ "." ];
             doCheck = false;
             vendorSha256 = "sha256-U9VTS0rmLHxweFiIcFyoybHMBihy5ezloDC2iLc4IMc=";
           };
           overmind = pkgs.buildGoModule {
-            name = "overmind";
+            pname = "overmind";
             src = overmind;
             subPackages = [ "." ];
             dbCheck = false;
@@ -45,7 +56,24 @@
           };
         };
       in
-        {
+        rec {
+          packages = flake-utils.lib.flattenTree {
+            tstr = tstr;
+          };
+          defaultPackage = packages.tstr;
+
+          apps = {
+            tstr = flake-utils.lib.mkApp {
+              drv = packages.tstr;
+              exePath = "/bin/tstr";
+            };
+            tstrctl = flake-utils.lib.mkApp {
+              drv = packages.tstr;
+              exePath = "/bin/tstrctl";
+            };
+          };
+          defaultApp = apps.tstr;
+
           devShell = with pkgs;
             mkShell {
               buildInputs = [

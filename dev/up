@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+overmind s -r serve,db

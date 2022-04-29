@@ -37,6 +37,34 @@ type Querier interface {
 	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
 	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
 
+	GetRunner(ctx context.Context, id string) (GetRunnerRow, error)
+	// GetRunnerBatch enqueues a GetRunner query into batch to be executed
+	// later by the batch.
+	GetRunnerBatch(batch genericBatch, id string)
+	// GetRunnerScan scans the result of an executed GetRunnerBatch query.
+	GetRunnerScan(results pgx.BatchResults) (GetRunnerRow, error)
+
+	ListRunners(ctx context.Context, filterRevoked bool) ([]ListRunnersRow, error)
+	// ListRunnersBatch enqueues a ListRunners query into batch to be executed
+	// later by the batch.
+	ListRunnersBatch(batch genericBatch, filterRevoked bool)
+	// ListRunnersScan scans the result of an executed ListRunnersBatch query.
+	ListRunnersScan(results pgx.BatchResults) ([]ListRunnersRow, error)
+
+	ApproveRunner(ctx context.Context, id string) (pgconn.CommandTag, error)
+	// ApproveRunnerBatch enqueues a ApproveRunner query into batch to be executed
+	// later by the batch.
+	ApproveRunnerBatch(batch genericBatch, id string)
+	// ApproveRunnerScan scans the result of an executed ApproveRunnerBatch query.
+	ApproveRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
+	RevokeRunner(ctx context.Context, id string) (pgconn.CommandTag, error)
+	// RevokeRunnerBatch enqueues a RevokeRunner query into batch to be executed
+	// later by the batch.
+	RevokeRunnerBatch(batch genericBatch, id string)
+	// RevokeRunnerScan scans the result of an executed RevokeRunnerBatch query.
+	RevokeRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
 	RegisterTest(ctx context.Context, params RegisterTestParams) (RegisterTestRow, error)
 	// RegisterTestBatch enqueues a RegisterTest query into batch to be executed
 	// later by the batch.
@@ -198,6 +226,18 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, scheduleRunSQL, scheduleRunSQL); err != nil {
 		return fmt.Errorf("prepare query 'ScheduleRun': %w", err)
+	}
+	if _, err := p.Prepare(ctx, getRunnerSQL, getRunnerSQL); err != nil {
+		return fmt.Errorf("prepare query 'GetRunner': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listRunnersSQL, listRunnersSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListRunners': %w", err)
+	}
+	if _, err := p.Prepare(ctx, approveRunnerSQL, approveRunnerSQL); err != nil {
+		return fmt.Errorf("prepare query 'ApproveRunner': %w", err)
+	}
+	if _, err := p.Prepare(ctx, revokeRunnerSQL, revokeRunnerSQL); err != nil {
+		return fmt.Errorf("prepare query 'RevokeRunner': %w", err)
 	}
 	if _, err := p.Prepare(ctx, registerTestSQL, registerTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'RegisterTest': %w", err)

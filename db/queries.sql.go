@@ -16,27 +16,6 @@ import (
 // calling SendBatch on pgx.Conn, pgxpool.Pool, or pgx.Tx, use the Scan methods
 // to parse the results.
 type Querier interface {
-	GetRun(ctx context.Context, id string) (GetRunRow, error)
-	// GetRunBatch enqueues a GetRun query into batch to be executed
-	// later by the batch.
-	GetRunBatch(batch genericBatch, id string)
-	// GetRunScan scans the result of an executed GetRunBatch query.
-	GetRunScan(results pgx.BatchResults) (GetRunRow, error)
-
-	ListRuns(ctx context.Context, params ListRunsParams) ([]ListRunsRow, error)
-	// ListRunsBatch enqueues a ListRuns query into batch to be executed
-	// later by the batch.
-	ListRunsBatch(batch genericBatch, params ListRunsParams)
-	// ListRunsScan scans the result of an executed ListRunsBatch query.
-	ListRunsScan(results pgx.BatchResults) ([]ListRunsRow, error)
-
-	ScheduleRun(ctx context.Context, testID string, testRunConfigID int) (ScheduleRunRow, error)
-	// ScheduleRunBatch enqueues a ScheduleRun query into batch to be executed
-	// later by the batch.
-	ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID int)
-	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
-	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
-
 	GetRunner(ctx context.Context, id string) (GetRunnerRow, error)
 	// GetRunnerBatch enqueues a GetRunner query into batch to be executed
 	// later by the batch.
@@ -64,6 +43,62 @@ type Querier interface {
 	RevokeRunnerBatch(batch genericBatch, id string)
 	// RevokeRunnerScan scans the result of an executed RevokeRunnerBatch query.
 	RevokeRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
+	GetRun(ctx context.Context, id string) (GetRunRow, error)
+	// GetRunBatch enqueues a GetRun query into batch to be executed
+	// later by the batch.
+	GetRunBatch(batch genericBatch, id string)
+	// GetRunScan scans the result of an executed GetRunBatch query.
+	GetRunScan(results pgx.BatchResults) (GetRunRow, error)
+
+	ListRuns(ctx context.Context, params ListRunsParams) ([]ListRunsRow, error)
+	// ListRunsBatch enqueues a ListRuns query into batch to be executed
+	// later by the batch.
+	ListRunsBatch(batch genericBatch, params ListRunsParams)
+	// ListRunsScan scans the result of an executed ListRunsBatch query.
+	ListRunsScan(results pgx.BatchResults) ([]ListRunsRow, error)
+
+	ScheduleRun(ctx context.Context, testID string, testRunConfigID int) (ScheduleRunRow, error)
+	// ScheduleRunBatch enqueues a ScheduleRun query into batch to be executed
+	// later by the batch.
+	ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID int)
+	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
+	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
+
+	DefineTestSuite(ctx context.Context, name string, labels pgtype.JSONB) (DefineTestSuiteRow, error)
+	// DefineTestSuiteBatch enqueues a DefineTestSuite query into batch to be executed
+	// later by the batch.
+	DefineTestSuiteBatch(batch genericBatch, name string, labels pgtype.JSONB)
+	// DefineTestSuiteScan scans the result of an executed DefineTestSuiteBatch query.
+	DefineTestSuiteScan(results pgx.BatchResults) (DefineTestSuiteRow, error)
+
+	UpdateTestSuite(ctx context.Context, params UpdateTestSuiteParams) (pgconn.CommandTag, error)
+	// UpdateTestSuiteBatch enqueues a UpdateTestSuite query into batch to be executed
+	// later by the batch.
+	UpdateTestSuiteBatch(batch genericBatch, params UpdateTestSuiteParams)
+	// UpdateTestSuiteScan scans the result of an executed UpdateTestSuiteBatch query.
+	UpdateTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
+	GetTestSuite(ctx context.Context, id string) (GetTestSuiteRow, error)
+	// GetTestSuiteBatch enqueues a GetTestSuite query into batch to be executed
+	// later by the batch.
+	GetTestSuiteBatch(batch genericBatch, id string)
+	// GetTestSuiteScan scans the result of an executed GetTestSuiteBatch query.
+	GetTestSuiteScan(results pgx.BatchResults) (GetTestSuiteRow, error)
+
+	ListTestSuites(ctx context.Context, labels pgtype.JSONB) ([]ListTestSuitesRow, error)
+	// ListTestSuitesBatch enqueues a ListTestSuites query into batch to be executed
+	// later by the batch.
+	ListTestSuitesBatch(batch genericBatch, labels pgtype.JSONB)
+	// ListTestSuitesScan scans the result of an executed ListTestSuitesBatch query.
+	ListTestSuitesScan(results pgx.BatchResults) ([]ListTestSuitesRow, error)
+
+	ArchiveTestSuite(ctx context.Context, id string) (pgconn.CommandTag, error)
+	// ArchiveTestSuiteBatch enqueues a ArchiveTestSuite query into batch to be executed
+	// later by the batch.
+	ArchiveTestSuiteBatch(batch genericBatch, id string)
+	// ArchiveTestSuiteScan scans the result of an executed ArchiveTestSuiteBatch query.
+	ArchiveTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
 
 	RegisterTest(ctx context.Context, params RegisterTestParams) (RegisterTestRow, error)
 	// RegisterTestBatch enqueues a RegisterTest query into batch to be executed
@@ -106,41 +141,6 @@ type Querier interface {
 	ArchiveTestBatch(batch genericBatch, id string)
 	// ArchiveTestScan scans the result of an executed ArchiveTestBatch query.
 	ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	DefineTestSuite(ctx context.Context, name string, labels pgtype.JSONB) (DefineTestSuiteRow, error)
-	// DefineTestSuiteBatch enqueues a DefineTestSuite query into batch to be executed
-	// later by the batch.
-	DefineTestSuiteBatch(batch genericBatch, name string, labels pgtype.JSONB)
-	// DefineTestSuiteScan scans the result of an executed DefineTestSuiteBatch query.
-	DefineTestSuiteScan(results pgx.BatchResults) (DefineTestSuiteRow, error)
-
-	UpdateTestSuite(ctx context.Context, params UpdateTestSuiteParams) (pgconn.CommandTag, error)
-	// UpdateTestSuiteBatch enqueues a UpdateTestSuite query into batch to be executed
-	// later by the batch.
-	UpdateTestSuiteBatch(batch genericBatch, params UpdateTestSuiteParams)
-	// UpdateTestSuiteScan scans the result of an executed UpdateTestSuiteBatch query.
-	UpdateTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	GetTestSuite(ctx context.Context, id string) (GetTestSuiteRow, error)
-	// GetTestSuiteBatch enqueues a GetTestSuite query into batch to be executed
-	// later by the batch.
-	GetTestSuiteBatch(batch genericBatch, id string)
-	// GetTestSuiteScan scans the result of an executed GetTestSuiteBatch query.
-	GetTestSuiteScan(results pgx.BatchResults) (GetTestSuiteRow, error)
-
-	ListTestSuites(ctx context.Context, labels pgtype.JSONB) ([]ListTestSuitesRow, error)
-	// ListTestSuitesBatch enqueues a ListTestSuites query into batch to be executed
-	// later by the batch.
-	ListTestSuitesBatch(batch genericBatch, labels pgtype.JSONB)
-	// ListTestSuitesScan scans the result of an executed ListTestSuitesBatch query.
-	ListTestSuitesScan(results pgx.BatchResults) ([]ListTestSuitesRow, error)
-
-	ArchiveTestSuite(ctx context.Context, id string) (pgconn.CommandTag, error)
-	// ArchiveTestSuiteBatch enqueues a ArchiveTestSuite query into batch to be executed
-	// later by the batch.
-	ArchiveTestSuiteBatch(batch genericBatch, id string)
-	// ArchiveTestSuiteScan scans the result of an executed ArchiveTestSuiteBatch query.
-	ArchiveTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
 }
 
 type DBQuerier struct {
@@ -218,15 +218,6 @@ type preparer interface {
 // is an optional optimization to avoid a network round-trip the first time pgx
 // runs a query if pgx statement caching is enabled.
 func PrepareAllQueries(ctx context.Context, p preparer) error {
-	if _, err := p.Prepare(ctx, getRunSQL, getRunSQL); err != nil {
-		return fmt.Errorf("prepare query 'GetRun': %w", err)
-	}
-	if _, err := p.Prepare(ctx, listRunsSQL, listRunsSQL); err != nil {
-		return fmt.Errorf("prepare query 'ListRuns': %w", err)
-	}
-	if _, err := p.Prepare(ctx, scheduleRunSQL, scheduleRunSQL); err != nil {
-		return fmt.Errorf("prepare query 'ScheduleRun': %w", err)
-	}
 	if _, err := p.Prepare(ctx, getRunnerSQL, getRunnerSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetRunner': %w", err)
 	}
@@ -238,6 +229,30 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, revokeRunnerSQL, revokeRunnerSQL); err != nil {
 		return fmt.Errorf("prepare query 'RevokeRunner': %w", err)
+	}
+	if _, err := p.Prepare(ctx, getRunSQL, getRunSQL); err != nil {
+		return fmt.Errorf("prepare query 'GetRun': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listRunsSQL, listRunsSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListRuns': %w", err)
+	}
+	if _, err := p.Prepare(ctx, scheduleRunSQL, scheduleRunSQL); err != nil {
+		return fmt.Errorf("prepare query 'ScheduleRun': %w", err)
+	}
+	if _, err := p.Prepare(ctx, defineTestSuiteSQL, defineTestSuiteSQL); err != nil {
+		return fmt.Errorf("prepare query 'DefineTestSuite': %w", err)
+	}
+	if _, err := p.Prepare(ctx, updateTestSuiteSQL, updateTestSuiteSQL); err != nil {
+		return fmt.Errorf("prepare query 'UpdateTestSuite': %w", err)
+	}
+	if _, err := p.Prepare(ctx, getTestSuiteSQL, getTestSuiteSQL); err != nil {
+		return fmt.Errorf("prepare query 'GetTestSuite': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listTestSuitesSQL, listTestSuitesSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListTestSuites': %w", err)
+	}
+	if _, err := p.Prepare(ctx, archiveTestSuiteSQL, archiveTestSuiteSQL); err != nil {
+		return fmt.Errorf("prepare query 'ArchiveTestSuite': %w", err)
 	}
 	if _, err := p.Prepare(ctx, registerTestSQL, registerTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'RegisterTest': %w", err)
@@ -256,21 +271,6 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, archiveTestSQL, archiveTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'ArchiveTest': %w", err)
-	}
-	if _, err := p.Prepare(ctx, defineTestSuiteSQL, defineTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'DefineTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, updateTestSuiteSQL, updateTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'UpdateTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, getTestSuiteSQL, getTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'GetTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, listTestSuitesSQL, listTestSuitesSQL); err != nil {
-		return fmt.Errorf("prepare query 'ListTestSuites': %w", err)
-	}
-	if _, err := p.Prepare(ctx, archiveTestSuiteSQL, archiveTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'ArchiveTestSuite': %w", err)
 	}
 	return nil
 }

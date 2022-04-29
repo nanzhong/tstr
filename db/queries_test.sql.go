@@ -30,6 +30,34 @@ type Querier interface {
 	GetTestBatch(batch genericBatch, id string)
 	// GetTestScan scans the result of an executed GetTestBatch query.
 	GetTestScan(results pgx.BatchResults) (GetTestRow, error)
+
+	ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListTestsRow, error)
+	// ListTestsBatch enqueues a ListTests query into batch to be executed
+	// later by the batch.
+	ListTestsBatch(batch genericBatch, labels pgtype.JSONB)
+	// ListTestsScan scans the result of an executed ListTestsBatch query.
+	ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, error)
+
+	UpdateTest(ctx context.Context, params UpdateTestParams) (pgconn.CommandTag, error)
+	// UpdateTestBatch enqueues a UpdateTest query into batch to be executed
+	// later by the batch.
+	UpdateTestBatch(batch genericBatch, params UpdateTestParams)
+	// UpdateTestScan scans the result of an executed UpdateTestBatch query.
+	UpdateTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
+	CreateTestRunConfig(ctx context.Context, params CreateTestRunConfigParams) (CreateTestRunConfigRow, error)
+	// CreateTestRunConfigBatch enqueues a CreateTestRunConfig query into batch to be executed
+	// later by the batch.
+	CreateTestRunConfigBatch(batch genericBatch, params CreateTestRunConfigParams)
+	// CreateTestRunConfigScan scans the result of an executed CreateTestRunConfigBatch query.
+	CreateTestRunConfigScan(results pgx.BatchResults) (CreateTestRunConfigRow, error)
+
+	ArchiveTest(ctx context.Context, id string) (pgconn.CommandTag, error)
+	// ArchiveTestBatch enqueues a ArchiveTest query into batch to be executed
+	// later by the batch.
+	ArchiveTestBatch(batch genericBatch, id string)
+	// ArchiveTestScan scans the result of an executed ArchiveTestBatch query.
+	ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
 }
 
 type DBQuerier struct {
@@ -112,6 +140,18 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, getTestSQL, getTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetTest': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listTestsSQL, listTestsSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListTests': %w", err)
+	}
+	if _, err := p.Prepare(ctx, updateTestSQL, updateTestSQL); err != nil {
+		return fmt.Errorf("prepare query 'UpdateTest': %w", err)
+	}
+	if _, err := p.Prepare(ctx, createTestRunConfigSQL, createTestRunConfigSQL); err != nil {
+		return fmt.Errorf("prepare query 'CreateTestRunConfig': %w", err)
+	}
+	if _, err := p.Prepare(ctx, archiveTestSQL, archiveTestSQL); err != nil {
+		return fmt.Errorf("prepare query 'ArchiveTest': %w", err)
 	}
 	return nil
 }
@@ -227,16 +267,27 @@ func (q *DBQuerier) RegisterTestScan(results pgx.BatchResults) (RegisterTestRow,
 
 const getTestSQL = `SELECT *
 FROM tests
-WHERE id = $1::uuid;`
+JOIN test_run_configs
+ON tests.id = test_run_configs.test_id
+WHERE tests.id = $1::uuid
+ORDER BY test_run_configs.id DESC
+LIMIT 1;`
 
 type GetTestRow struct {
-	ID           string       `json:"id"`
-	Name         string       `json:"name"`
-	Labels       pgtype.JSONB `json:"labels"`
-	CronSchedule string       `json:"cron_schedule"`
-	RegisteredAt time.Time    `json:"registered_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
-	ArchivedAt   time.Time    `json:"archived_at"`
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	Labels         pgtype.JSONB `json:"labels"`
+	CronSchedule   string       `json:"cron_schedule"`
+	RegisteredAt   time.Time    `json:"registered_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	ArchivedAt     time.Time    `json:"archived_at"`
+	ID             int          `json:"id"`
+	TestID         string       `json:"test_id"`
+	ContainerImage string       `json:"container_image"`
+	Command        string       `json:"command"`
+	Args           []string     `json:"args"`
+	Env            pgtype.JSONB `json:"env"`
+	CreatedAt      time.Time    `json:"created_at"`
 }
 
 // GetTest implements Querier.GetTest.
@@ -244,7 +295,7 @@ func (q *DBQuerier) GetTest(ctx context.Context, id string) (GetTestRow, error) 
 	ctx = context.WithValue(ctx, "pggen_query_name", "GetTest")
 	row := q.conn.QueryRow(ctx, getTestSQL, id)
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("query GetTest: %w", err)
 	}
 	return item, nil
@@ -259,10 +310,204 @@ func (q *DBQuerier) GetTestBatch(batch genericBatch, id string) {
 func (q *DBQuerier) GetTestScan(results pgx.BatchResults) (GetTestRow, error) {
 	row := results.QueryRow()
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("scan GetTestBatch row: %w", err)
 	}
 	return item, nil
+}
+
+const listTestsSQL = `SELECT *
+FROM tests
+JOIN (
+  SELECT *
+  FROM test_run_configs
+  WHERE id IN (SELECT MAX(id) from test_run_configs GROUP BY test_id)
+) AS latest_configs
+ON tests.id = latest_configs.test_id
+WHERE tests.labels @> $1::jsonb
+ORDER BY tests.name ASC;`
+
+type ListTestsRow struct {
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	Labels         pgtype.JSONB `json:"labels"`
+	CronSchedule   string       `json:"cron_schedule"`
+	RegisteredAt   time.Time    `json:"registered_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	ArchivedAt     time.Time    `json:"archived_at"`
+	ID             int          `json:"id"`
+	TestID         string       `json:"test_id"`
+	ContainerImage string       `json:"container_image"`
+	Command        string       `json:"command"`
+	Args           []string     `json:"args"`
+	Env            pgtype.JSONB `json:"env"`
+	CreatedAt      time.Time    `json:"created_at"`
+}
+
+// ListTests implements Querier.ListTests.
+func (q *DBQuerier) ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListTestsRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "ListTests")
+	rows, err := q.conn.Query(ctx, listTestsSQL, labels)
+	if err != nil {
+		return nil, fmt.Errorf("query ListTests: %w", err)
+	}
+	defer rows.Close()
+	items := []ListTestsRow{}
+	for rows.Next() {
+		var item ListTestsRow
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan ListTests row: %w", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("close ListTests rows: %w", err)
+	}
+	return items, err
+}
+
+// ListTestsBatch implements Querier.ListTestsBatch.
+func (q *DBQuerier) ListTestsBatch(batch genericBatch, labels pgtype.JSONB) {
+	batch.Queue(listTestsSQL, labels)
+}
+
+// ListTestsScan implements Querier.ListTestsScan.
+func (q *DBQuerier) ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, error) {
+	rows, err := results.Query()
+	if err != nil {
+		return nil, fmt.Errorf("query ListTestsBatch: %w", err)
+	}
+	defer rows.Close()
+	items := []ListTestsRow{}
+	for rows.Next() {
+		var item ListTestsRow
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+			return nil, fmt.Errorf("scan ListTestsBatch row: %w", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("close ListTestsBatch rows: %w", err)
+	}
+	return items, err
+}
+
+const updateTestSQL = `UPDATE tests
+SET name = $1::varchar,
+  labels = $2::jsonb,
+  cron_schedule = $3::varchar,
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = $4::uuid;`
+
+type UpdateTestParams struct {
+	Name         string
+	Labels       pgtype.JSONB
+	CronSchedule string
+	ID           string
+}
+
+// UpdateTest implements Querier.UpdateTest.
+func (q *DBQuerier) UpdateTest(ctx context.Context, params UpdateTestParams) (pgconn.CommandTag, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "UpdateTest")
+	cmdTag, err := q.conn.Exec(ctx, updateTestSQL, params.Name, params.Labels, params.CronSchedule, params.ID)
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec query UpdateTest: %w", err)
+	}
+	return cmdTag, err
+}
+
+// UpdateTestBatch implements Querier.UpdateTestBatch.
+func (q *DBQuerier) UpdateTestBatch(batch genericBatch, params UpdateTestParams) {
+	batch.Queue(updateTestSQL, params.Name, params.Labels, params.CronSchedule, params.ID)
+}
+
+// UpdateTestScan implements Querier.UpdateTestScan.
+func (q *DBQuerier) UpdateTestScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
+	cmdTag, err := results.Exec()
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec UpdateTestBatch: %w", err)
+	}
+	return cmdTag, err
+}
+
+const createTestRunConfigSQL = `INSERT INTO test_run_configs (container_image, command, args, env)
+VALUES (
+  $1::varchar,
+  $2::varchar,
+  $3::varchar[],
+  $4::jsonb
+)
+RETURNING *;`
+
+type CreateTestRunConfigParams struct {
+	ContainerImage string
+	Command        string
+	Args           []string
+	Env            pgtype.JSONB
+}
+
+type CreateTestRunConfigRow struct {
+	ID             int          `json:"id"`
+	TestID         string       `json:"test_id"`
+	ContainerImage string       `json:"container_image"`
+	Command        string       `json:"command"`
+	Args           []string     `json:"args"`
+	Env            pgtype.JSONB `json:"env"`
+	CreatedAt      time.Time    `json:"created_at"`
+}
+
+// CreateTestRunConfig implements Querier.CreateTestRunConfig.
+func (q *DBQuerier) CreateTestRunConfig(ctx context.Context, params CreateTestRunConfigParams) (CreateTestRunConfigRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "CreateTestRunConfig")
+	row := q.conn.QueryRow(ctx, createTestRunConfigSQL, params.ContainerImage, params.Command, params.Args, params.Env)
+	var item CreateTestRunConfigRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		return item, fmt.Errorf("query CreateTestRunConfig: %w", err)
+	}
+	return item, nil
+}
+
+// CreateTestRunConfigBatch implements Querier.CreateTestRunConfigBatch.
+func (q *DBQuerier) CreateTestRunConfigBatch(batch genericBatch, params CreateTestRunConfigParams) {
+	batch.Queue(createTestRunConfigSQL, params.ContainerImage, params.Command, params.Args, params.Env)
+}
+
+// CreateTestRunConfigScan implements Querier.CreateTestRunConfigScan.
+func (q *DBQuerier) CreateTestRunConfigScan(results pgx.BatchResults) (CreateTestRunConfigRow, error) {
+	row := results.QueryRow()
+	var item CreateTestRunConfigRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		return item, fmt.Errorf("scan CreateTestRunConfigBatch row: %w", err)
+	}
+	return item, nil
+}
+
+const archiveTestSQL = `UPDATE tests
+SET archived_at = CURRENT_TIMESTAMP
+WHERE id = $1::uuid;`
+
+// ArchiveTest implements Querier.ArchiveTest.
+func (q *DBQuerier) ArchiveTest(ctx context.Context, id string) (pgconn.CommandTag, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "ArchiveTest")
+	cmdTag, err := q.conn.Exec(ctx, archiveTestSQL, id)
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec query ArchiveTest: %w", err)
+	}
+	return cmdTag, err
+}
+
+// ArchiveTestBatch implements Querier.ArchiveTestBatch.
+func (q *DBQuerier) ArchiveTestBatch(batch genericBatch, id string) {
+	batch.Queue(archiveTestSQL, id)
+}
+
+// ArchiveTestScan implements Querier.ArchiveTestScan.
+func (q *DBQuerier) ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
+	cmdTag, err := results.Exec()
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec ArchiveTestBatch: %w", err)
+	}
+	return cmdTag, err
 }
 
 // textPreferrer wraps a pgtype.ValueTranscoder and sets the preferred encoding

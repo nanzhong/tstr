@@ -16,6 +16,27 @@ import (
 // calling SendBatch on pgx.Conn, pgxpool.Pool, or pgx.Tx, use the Scan methods
 // to parse the results.
 type Querier interface {
+	IssueAccessToken(ctx context.Context, params IssueAccessTokenParams) (IssueAccessTokenRow, error)
+	// IssueAccessTokenBatch enqueues a IssueAccessToken query into batch to be executed
+	// later by the batch.
+	IssueAccessTokenBatch(batch genericBatch, params IssueAccessTokenParams)
+	// IssueAccessTokenScan scans the result of an executed IssueAccessTokenBatch query.
+	IssueAccessTokenScan(results pgx.BatchResults) (IssueAccessTokenRow, error)
+
+	GetAccessToken(ctx context.Context, id string) (GetAccessTokenRow, error)
+	// GetAccessTokenBatch enqueues a GetAccessToken query into batch to be executed
+	// later by the batch.
+	GetAccessTokenBatch(batch genericBatch, id string)
+	// GetAccessTokenScan scans the result of an executed GetAccessTokenBatch query.
+	GetAccessTokenScan(results pgx.BatchResults) (GetAccessTokenRow, error)
+
+	ListAccessTokens(ctx context.Context, filterExpired bool, filterRevoked bool) ([]ListAccessTokensRow, error)
+	// ListAccessTokensBatch enqueues a ListAccessTokens query into batch to be executed
+	// later by the batch.
+	ListAccessTokensBatch(batch genericBatch, filterExpired bool, filterRevoked bool)
+	// ListAccessTokensScan scans the result of an executed ListAccessTokensBatch query.
+	ListAccessTokensScan(results pgx.BatchResults) ([]ListAccessTokensRow, error)
+
 	GetRunner(ctx context.Context, id string) (GetRunnerRow, error)
 	// GetRunnerBatch enqueues a GetRunner query into batch to be executed
 	// later by the batch.
@@ -218,6 +239,15 @@ type preparer interface {
 // is an optional optimization to avoid a network round-trip the first time pgx
 // runs a query if pgx statement caching is enabled.
 func PrepareAllQueries(ctx context.Context, p preparer) error {
+	if _, err := p.Prepare(ctx, issueAccessTokenSQL, issueAccessTokenSQL); err != nil {
+		return fmt.Errorf("prepare query 'IssueAccessToken': %w", err)
+	}
+	if _, err := p.Prepare(ctx, getAccessTokenSQL, getAccessTokenSQL); err != nil {
+		return fmt.Errorf("prepare query 'GetAccessToken': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listAccessTokensSQL, listAccessTokensSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListAccessTokens': %w", err)
+	}
 	if _, err := p.Prepare(ctx, getRunnerSQL, getRunnerSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetRunner': %w", err)
 	}
@@ -274,6 +304,17 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	return nil
 }
+
+// AccessTokenScope represents the Postgres enum "access_token_scope".
+type AccessTokenScope string
+
+const (
+	AccessTokenScopeAdmin     AccessTokenScope = "admin"
+	AccessTokenScopeControlR  AccessTokenScope = "control_r"
+	AccessTokenScopeControlRW AccessTokenScope = "control_rw"
+)
+
+func (a AccessTokenScope) String() string { return string(a) }
 
 // RunResult represents the Postgres enum "run_result".
 type RunResult string
@@ -371,6 +412,32 @@ func (tr *typeResolver) newArrayValue(name, elemName string, defaultVal func() p
 		return textPreferrer{typ, name}
 	}
 	return typ
+}
+
+// newAccessTokenScopeArray creates a new pgtype.ValueTranscoder for the Postgres
+// '_access_token_scope' array type.
+func (tr *typeResolver) newAccessTokenScopeArray() pgtype.ValueTranscoder {
+	return tr.newArrayValue("_access_token_scope", "access_token_scope", newAccessTokenScopeEnum)
+}
+
+// newAccessTokenScopeArrayInit creates an initialized pgtype.ValueTranscoder for the
+// Postgres array type '_access_token_scope' to encode query parameters.
+func (tr *typeResolver) newAccessTokenScopeArrayInit(ps []AccessTokenScope) pgtype.ValueTranscoder {
+	dec := tr.newAccessTokenScopeArray()
+	if err := dec.Set(tr.newAccessTokenScopeArrayRaw(ps)); err != nil {
+		panic("encode []AccessTokenScope: " + err.Error()) // should always succeed
+	}
+	return textPreferrer{ValueTranscoder: dec, typeName: "_access_token_scope"}
+}
+
+// newAccessTokenScopeArrayRaw returns all elements for the Postgres array type '_access_token_scope'
+// as a slice of interface{} for use with the pgtype.Value Set method.
+func (tr *typeResolver) newAccessTokenScopeArrayRaw(vs []AccessTokenScope) []interface{} {
+	elems := make([]interface{}, len(vs))
+	for i, v := range vs {
+		elems[i] = v
+	}
+	return elems
 }
 
 // newRunResultArray creates a new pgtype.ValueTranscoder for the Postgres

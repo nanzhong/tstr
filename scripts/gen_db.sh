@@ -10,3 +10,4 @@ pggen gen go \
       --go-type 'int4=int' \
       --go-type 'timestamptz=time.Time' \
       --go-type 'uuid=string' \
+      --acronym rw

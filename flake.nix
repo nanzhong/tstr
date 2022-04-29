@@ -30,8 +30,7 @@
             "cmd/tstr"
             "cmd/tstrctl"
           ];
-          # vendorSha256 = pkgs.lib.fakeSha256;
-          vendorSha256 = "sha256-59ekBhdJZ39aWySexzUbBlo1MHRJM27dqgtR7KX3WTE=";
+          vendorSha256 = null;
         };
 
         devTools = {
@@ -45,14 +44,12 @@
           dbmate = pkgs.buildGoModule {
             name = "dbmate";
             src = dbmate;
-            subPackages = [ "." ];
             doCheck = false;
             vendorSha256 = "sha256-U9VTS0rmLHxweFiIcFyoybHMBihy5ezloDC2iLc4IMc=";
           };
           overmind = pkgs.buildGoModule {
             name = "overmind";
             src = overmind;
-            subPackages = [ "." ];
             dbCheck = false;
             vendorSha256 = "sha256-KDMzR6qAruscgS6/bHTN6RnHOlLKCm9lxkr9k3oLY+Y=";
           };
@@ -85,6 +82,7 @@
                 protobuf
                 protoc-gen-go
                 protoc-gen-go-grpc
+                protoc-gen-validate
 
                 postgresql_14
 

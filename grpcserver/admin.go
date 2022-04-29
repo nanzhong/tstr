@@ -1,4 +1,4 @@
-package server
+package grpcserver
 
 import "github.com/nanzhong/tstr/api/admin/v1"
 

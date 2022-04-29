@@ -15,7 +15,7 @@ import (
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
-	"github.com/nanzhong/tstr/server"
+	"github.com/nanzhong/tstr/grpcserver"
 	"github.com/nanzhong/tstr/webui"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
@@ -70,13 +70,13 @@ var serveCmd = &cobra.Command{
 			),
 		)
 
-		controlServer := server.NewControlServer(dbQuerier)
+		controlServer := grpcserver.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
-		adminServer := server.NewAdminServer()
+		adminServer := grpcserver.NewAdminServer()
 		admin.RegisterAdminServiceServer(grpcServer, adminServer)
 
-		runnerServer := server.NewRunnerServer()
+		runnerServer := grpcserver.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 		webui := webui.NewWebUI()

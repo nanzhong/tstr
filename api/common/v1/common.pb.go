@@ -179,15 +179,14 @@ type Test struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`     // required (generated)
-	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // required
-	Labels           map[string]string      `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	CronSchedule     string                 `protobuf:"bytes,4,opt,name=cron_schedule,proto3" json:"cron_schedule,omitempty"`
-	RunConfig        *Test_RunConfig        `protobuf:"bytes,5,opt,name=run_config,proto3" json:"run_config,omitempty"` // required
-	FormerRunConfigs []*Test_RunConfig      `protobuf:"bytes,6,rep,name=former_run_configs,proto3" json:"former_run_configs,omitempty"`
-	RegisteredAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=registered_at,proto3" json:"registered_at,omitempty"` // required
-	UpdatedAt        *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,proto3" json:"updated_at,omitempty"`       // required
-	ArchivedAt       *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=archived_at,proto3" json:"archived_at,omitempty"`
+	Id           string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`     // required (generated)
+	Name         string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // required
+	Labels       map[string]string      `protobuf:"bytes,3,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	CronSchedule string                 `protobuf:"bytes,4,opt,name=cron_schedule,proto3" json:"cron_schedule,omitempty"`
+	RunConfig    *Test_RunConfig        `protobuf:"bytes,5,opt,name=run_config,proto3" json:"run_config,omitempty"`        // required
+	RegisteredAt *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=registered_at,proto3" json:"registered_at,omitempty"` // required
+	UpdatedAt    *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=updated_at,proto3" json:"updated_at,omitempty"`       // required
+	ArchivedAt   *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=archived_at,proto3" json:"archived_at,omitempty"`
 }
 
 func (x *Test) Reset() {
@@ -253,13 +252,6 @@ func (x *Test) GetCronSchedule() string {
 func (x *Test) GetRunConfig() *Test_RunConfig {
 	if x != nil {
 		return x.RunConfig
-	}
-	return nil
-}
-
-func (x *Test) GetFormerRunConfigs() []*Test_RunConfig {
-	if x != nil {
-		return x.FormerRunConfigs
 	}
 	return nil
 }
@@ -830,7 +822,7 @@ var file_api_common_v1_common_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0e, 0x74, 0x73,
 	0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x1a, 0x1f, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc0, 0x06,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xf0, 0x05,
 	0x0a, 0x04, 0x54, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x38, 0x0a, 0x06, 0x6c, 0x61,
@@ -843,12 +835,7 @@ var file_api_common_v1_common_proto_rawDesc = []byte{
 	0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e,
 	0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e,
 	0x54, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x75, 0x6e, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x0a,
-	0x72, 0x75, 0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x4e, 0x0a, 0x12, 0x66, 0x6f,
-	0x72, 0x6d, 0x65, 0x72, 0x5f, 0x72, 0x75, 0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73,
-	0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x63, 0x6f,
-	0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x65, 0x73, 0x74, 0x2e, 0x52, 0x75, 0x6e,
-	0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x12, 0x66, 0x6f, 0x72, 0x6d, 0x65, 0x72, 0x5f, 0x72,
-	0x75, 0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x73, 0x12, 0x40, 0x0a, 0x0d, 0x72, 0x65,
+	0x72, 0x75, 0x6e, 0x5f, 0x63, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x12, 0x40, 0x0a, 0x0d, 0x72, 0x65,
 	0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x5f, 0x61, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28,
 	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x52, 0x0d, 0x72,
@@ -1046,37 +1033,36 @@ var file_api_common_v1_common_proto_goTypes = []interface{}{
 var file_api_common_v1_common_proto_depIdxs = []int32{
 	9,  // 0: tstr.common.v1.Test.labels:type_name -> tstr.common.v1.Test.LabelsEntry
 	8,  // 1: tstr.common.v1.Test.run_config:type_name -> tstr.common.v1.Test.RunConfig
-	8,  // 2: tstr.common.v1.Test.former_run_configs:type_name -> tstr.common.v1.Test.RunConfig
-	15, // 3: tstr.common.v1.Test.registered_at:type_name -> google.protobuf.Timestamp
-	15, // 4: tstr.common.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
-	15, // 5: tstr.common.v1.Test.archived_at:type_name -> google.protobuf.Timestamp
-	11, // 6: tstr.common.v1.TestSuite.labels:type_name -> tstr.common.v1.TestSuite.LabelsEntry
-	15, // 7: tstr.common.v1.TestSuite.created_at:type_name -> google.protobuf.Timestamp
-	15, // 8: tstr.common.v1.TestSuite.updated_at:type_name -> google.protobuf.Timestamp
-	15, // 9: tstr.common.v1.TestSuite.archived_at:type_name -> google.protobuf.Timestamp
-	8,  // 10: tstr.common.v1.Run.test_run_config:type_name -> tstr.common.v1.Test.RunConfig
-	0,  // 11: tstr.common.v1.Run.result:type_name -> tstr.common.v1.Run.Result
-	12, // 12: tstr.common.v1.Run.logs:type_name -> tstr.common.v1.Run.Log
-	15, // 13: tstr.common.v1.Run.scheduled_at:type_name -> google.protobuf.Timestamp
-	15, // 14: tstr.common.v1.Run.started_at:type_name -> google.protobuf.Timestamp
-	15, // 15: tstr.common.v1.Run.finished_at:type_name -> google.protobuf.Timestamp
-	13, // 16: tstr.common.v1.Runner.accept_test_labels:type_name -> tstr.common.v1.Runner.AcceptTestLabelsEntry
-	14, // 17: tstr.common.v1.Runner.reject_test_labels:type_name -> tstr.common.v1.Runner.RejectTestLabelsEntry
-	15, // 18: tstr.common.v1.Runner.registered_at:type_name -> google.protobuf.Timestamp
-	15, // 19: tstr.common.v1.Runner.approved_at:type_name -> google.protobuf.Timestamp
-	15, // 20: tstr.common.v1.Runner.last_heartbeat_at:type_name -> google.protobuf.Timestamp
-	2,  // 21: tstr.common.v1.AccessToken.scopes:type_name -> tstr.common.v1.AccessToken.Scope
-	15, // 22: tstr.common.v1.AccessToken.issued_at:type_name -> google.protobuf.Timestamp
-	15, // 23: tstr.common.v1.AccessToken.expires_at:type_name -> google.protobuf.Timestamp
-	15, // 24: tstr.common.v1.AccessToken.revoked_at:type_name -> google.protobuf.Timestamp
-	10, // 25: tstr.common.v1.Test.RunConfig.env:type_name -> tstr.common.v1.Test.RunConfig.EnvEntry
-	15, // 26: tstr.common.v1.Test.RunConfig.created_at:type_name -> google.protobuf.Timestamp
-	1,  // 27: tstr.common.v1.Run.Log.output_type:type_name -> tstr.common.v1.Run.Log.Output
-	28, // [28:28] is the sub-list for method output_type
-	28, // [28:28] is the sub-list for method input_type
-	28, // [28:28] is the sub-list for extension type_name
-	28, // [28:28] is the sub-list for extension extendee
-	0,  // [0:28] is the sub-list for field type_name
+	15, // 2: tstr.common.v1.Test.registered_at:type_name -> google.protobuf.Timestamp
+	15, // 3: tstr.common.v1.Test.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 4: tstr.common.v1.Test.archived_at:type_name -> google.protobuf.Timestamp
+	11, // 5: tstr.common.v1.TestSuite.labels:type_name -> tstr.common.v1.TestSuite.LabelsEntry
+	15, // 6: tstr.common.v1.TestSuite.created_at:type_name -> google.protobuf.Timestamp
+	15, // 7: tstr.common.v1.TestSuite.updated_at:type_name -> google.protobuf.Timestamp
+	15, // 8: tstr.common.v1.TestSuite.archived_at:type_name -> google.protobuf.Timestamp
+	8,  // 9: tstr.common.v1.Run.test_run_config:type_name -> tstr.common.v1.Test.RunConfig
+	0,  // 10: tstr.common.v1.Run.result:type_name -> tstr.common.v1.Run.Result
+	12, // 11: tstr.common.v1.Run.logs:type_name -> tstr.common.v1.Run.Log
+	15, // 12: tstr.common.v1.Run.scheduled_at:type_name -> google.protobuf.Timestamp
+	15, // 13: tstr.common.v1.Run.started_at:type_name -> google.protobuf.Timestamp
+	15, // 14: tstr.common.v1.Run.finished_at:type_name -> google.protobuf.Timestamp
+	13, // 15: tstr.common.v1.Runner.accept_test_labels:type_name -> tstr.common.v1.Runner.AcceptTestLabelsEntry
+	14, // 16: tstr.common.v1.Runner.reject_test_labels:type_name -> tstr.common.v1.Runner.RejectTestLabelsEntry
+	15, // 17: tstr.common.v1.Runner.registered_at:type_name -> google.protobuf.Timestamp
+	15, // 18: tstr.common.v1.Runner.approved_at:type_name -> google.protobuf.Timestamp
+	15, // 19: tstr.common.v1.Runner.last_heartbeat_at:type_name -> google.protobuf.Timestamp
+	2,  // 20: tstr.common.v1.AccessToken.scopes:type_name -> tstr.common.v1.AccessToken.Scope
+	15, // 21: tstr.common.v1.AccessToken.issued_at:type_name -> google.protobuf.Timestamp
+	15, // 22: tstr.common.v1.AccessToken.expires_at:type_name -> google.protobuf.Timestamp
+	15, // 23: tstr.common.v1.AccessToken.revoked_at:type_name -> google.protobuf.Timestamp
+	10, // 24: tstr.common.v1.Test.RunConfig.env:type_name -> tstr.common.v1.Test.RunConfig.EnvEntry
+	15, // 25: tstr.common.v1.Test.RunConfig.created_at:type_name -> google.protobuf.Timestamp
+	1,  // 26: tstr.common.v1.Run.Log.output_type:type_name -> tstr.common.v1.Run.Log.Output
+	27, // [27:27] is the sub-list for method output_type
+	27, // [27:27] is the sub-list for method input_type
+	27, // [27:27] is the sub-list for extension type_name
+	27, // [27:27] is the sub-list for extension extendee
+	0,  // [0:27] is the sub-list for field type_name
 }
 
 func init() { file_api_common_v1_common_proto_init() }

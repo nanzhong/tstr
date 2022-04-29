@@ -37,6 +37,13 @@ type Querier interface {
 	// ListAccessTokensScan scans the result of an executed ListAccessTokensBatch query.
 	ListAccessTokensScan(results pgx.BatchResults) ([]ListAccessTokensRow, error)
 
+	RegisterRunner(ctx context.Context, params RegisterRunnerParams) (RegisterRunnerRow, error)
+	// RegisterRunnerBatch enqueues a RegisterRunner query into batch to be executed
+	// later by the batch.
+	RegisterRunnerBatch(batch genericBatch, params RegisterRunnerParams)
+	// RegisterRunnerScan scans the result of an executed RegisterRunnerBatch query.
+	RegisterRunnerScan(results pgx.BatchResults) (RegisterRunnerRow, error)
+
 	GetRunner(ctx context.Context, id string) (GetRunnerRow, error)
 	// GetRunnerBatch enqueues a GetRunner query into batch to be executed
 	// later by the batch.
@@ -247,6 +254,9 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, listAccessTokensSQL, listAccessTokensSQL); err != nil {
 		return fmt.Errorf("prepare query 'ListAccessTokens': %w", err)
+	}
+	if _, err := p.Prepare(ctx, registerRunnerSQL, registerRunnerSQL); err != nil {
+		return fmt.Errorf("prepare query 'RegisterRunner': %w", err)
 	}
 	if _, err := p.Prepare(ctx, getRunnerSQL, getRunnerSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetRunner': %w", err)

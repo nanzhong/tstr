@@ -1,3 +1,8 @@
+-- name: RegisterRunner :one
+INSERT INTO runners (name, accept_test_labels, reject_test_labels)
+VALUES (pggen.arg('name'), pggen.arg('accept_test_labels'), pggen.arg('reject_test_labels'))
+RETURNING *;
+
 -- name: GetRunner :one
 SELECT *
 FROM runners

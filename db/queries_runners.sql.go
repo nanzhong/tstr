@@ -11,6 +11,53 @@ import (
 	"time"
 )
 
+const registerRunnerSQL = `INSERT INTO runners (name, accept_test_labels, reject_test_labels)
+VALUES ($1, $2, $3)
+RETURNING *;`
+
+type RegisterRunnerParams struct {
+	Name             string
+	AcceptTestLabels pgtype.JSONB
+	RejectTestLabels pgtype.JSONB
+}
+
+type RegisterRunnerRow struct {
+	ID               string       `json:"id"`
+	Name             string       `json:"name"`
+	AcceptTestLabels pgtype.JSONB `json:"accept_test_labels"`
+	RejectTestLabels pgtype.JSONB `json:"reject_test_labels"`
+	RegisteredAt     time.Time    `json:"registered_at"`
+	ApprovedAt       time.Time    `json:"approved_at"`
+	RevokedAt        time.Time    `json:"revoked_at"`
+	LastHeartbeatAt  time.Time    `json:"last_heartbeat_at"`
+}
+
+// RegisterRunner implements Querier.RegisterRunner.
+func (q *DBQuerier) RegisterRunner(ctx context.Context, params RegisterRunnerParams) (RegisterRunnerRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "RegisterRunner")
+	row := q.conn.QueryRow(ctx, registerRunnerSQL, params.Name, params.AcceptTestLabels, params.RejectTestLabels)
+	var item RegisterRunnerRow
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+		return item, fmt.Errorf("query RegisterRunner: %w", err)
+	}
+	return item, nil
+}
+
+// RegisterRunnerBatch implements Querier.RegisterRunnerBatch.
+func (q *DBQuerier) RegisterRunnerBatch(batch genericBatch, params RegisterRunnerParams) {
+	batch.Queue(registerRunnerSQL, params.Name, params.AcceptTestLabels, params.RejectTestLabels)
+}
+
+// RegisterRunnerScan implements Querier.RegisterRunnerScan.
+func (q *DBQuerier) RegisterRunnerScan(results pgx.BatchResults) (RegisterRunnerRow, error) {
+	row := results.QueryRow()
+	var item RegisterRunnerRow
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+		return item, fmt.Errorf("scan RegisterRunnerBatch row: %w", err)
+	}
+	return item, nil
+}
+
 const getRunnerSQL = `SELECT *
 FROM runners
 WHERE id = $1;`

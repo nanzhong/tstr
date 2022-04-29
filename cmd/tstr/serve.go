@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
@@ -18,8 +19,8 @@ import (
 	"github.com/nanzhong/tstr/webui"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/rs/zerolog/hlog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -59,10 +60,16 @@ var serveCmd = &cobra.Command{
 				Msg("failed to listen on web addr")
 		}
 
-
 		grpcServer := grpc.NewServer(
 			grpczerolog.UnaryInterceptor(),
+			grpc.ChainUnaryInterceptor(
+				grpc_validator.UnaryServerInterceptor(),
+			),
+			grpc.ChainStreamInterceptor(
+				grpc_validator.StreamServerInterceptor(),
+			),
 		)
+
 		controlServer := server.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
@@ -71,7 +78,6 @@ var serveCmd = &cobra.Command{
 
 		runnerServer := server.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
-
 
 		webui := webui.NewWebUI()
 

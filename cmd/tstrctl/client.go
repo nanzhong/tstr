@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
@@ -14,6 +15,9 @@ func withControlClient(ctx context.Context, fn func(context.Context, control.Con
 		viper.GetString("api-addr"),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithBlock(),
+		grpc.WithChainUnaryInterceptor(
+			grpc_validator.UnaryClientInterceptor(),
+		),
 	)
 	if err != nil {
 		return err

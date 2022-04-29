@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 overmind start --auto-restart serve,db --daemonize
-dbmate up
+dbmate --wait up

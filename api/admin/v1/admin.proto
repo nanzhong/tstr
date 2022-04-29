@@ -4,6 +4,8 @@ package tstr.admin.v1;
 
 import "api/common/v1/common.proto";
 
+import "validate/validate.proto";
+
 option go_package =  "github.com/nanzhong/tstr/api/admin/v1;admin";
 
 service AdminService {
@@ -17,8 +19,10 @@ service AdminService {
 }
 
 message IssueAccessTokenRequest {
-  string name = 1; // required
-  repeated tstr.common.v1.AccessToken.Scope scopes = 2; // required
+  string name = 1
+    [(validate.rules).string = {min_len: 1, max_len: 200}];
+  repeated tstr.common.v1.AccessToken.Scope scopes = 2
+    [(validate.rules).repeated.min_items = 1];
 }
 
 message IssueAccessTokenResponse {
@@ -26,7 +30,8 @@ message IssueAccessTokenResponse {
 }
 
 message GetAccessTokenRequest {
-  string id = 1; // required
+  string id = 1
+    [(validate.rules).string.len = 36];
 }
 
 message GetAccessTokenResponse {
@@ -43,19 +48,22 @@ message ListAccessTokensResponse {
 }
 
 message RevokeAccessTokenRequest {
-  string id = 1; // required
+  string id = 1
+    [(validate.rules).string.len = 36];
 }
 
 message RevokeAccessTokenResponse {}
 
 message ApproveRunnerRequest {
-  string id = 1; // required
+  string id = 1
+    [(validate.rules).string.len = 36];
 }
 
 message ApproveRunnerResponse {}
 
 message DenyRunnerRequest {
-  string id = 1; // required
+  string id = 1
+    [(validate.rules).string.len = 36];
 }
 
 message DenyRunnerResponse {}

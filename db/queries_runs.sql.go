@@ -64,22 +64,52 @@ FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
 WHERE
-  (($1 AND runs.test_id = ANY ($2::uuid[])) OR TRUE) AND
-  (($3 AND runs.test_id = ANY (
-    SELECT tests.id
-    FROM test_suites
-    JOIN tests
-    ON tests.labels @> test_suites.labels
-    WHERE test_suites.id = ANY ($4::uuid[])
-  )) OR TRUE) AND
-  (($5 AND runner_id = ANY ($6::uuid[])) OR TRUE) AND
-  (($7 AND result = ANY ($8::run_result[])) OR TRUE) AND
-  (($9 AND scheduled_at < ($10::timestamptz)) OR TRUE) AND
-  (($11 AND scheduled_at > ($12::timestamptz)) OR TRUE) AND
-  (($13 AND started_at < ($14::timestamptz)) OR TRUE) AND
-  (($15 AND started_at > ($16::timestamptz)) OR TRUE) AND
-  (($17 AND finished_at < ($18::timestamptz)) OR TRUE) AND
-  (($19 AND finished_at > ($20::timestamptz)) OR TRUE);`
+  CASE WHEN $1
+    THEN runs.test_id = ANY ($2::uuid[])
+    ELSE TRUE
+  END AND
+  CASE WHEN $3
+    THEN runs.test_id = ANY (
+      SELECT tests.id
+      FROM test_suites
+      JOIN tests
+      ON tests.labels @> test_suites.labels
+      WHERE test_suites.id = ANY ($4::uuid[])
+    )
+    ELSE TRUE
+  END AND
+  CASE WHEN $5
+    THEN runner_id = ANY ($6::uuid[])
+    ELSE TRUE
+  END AND
+  CASE WHEN $7
+    THEN result = ANY ($8::run_result[])
+    ELSE TRUE
+  END AND
+  CASE WHEN $9
+    THEN scheduled_at < $10::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN $11
+    THEN scheduled_at > $12::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN $13
+    THEN started_at < $14::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN $15
+    THEN started_at > $16::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN $17
+    THEN finished_at < $18::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN $19
+    THEN finished_at > $20::timestamptz
+    ELSE TRUE
+  END;`
 
 type ListRunsParams struct {
 	FilterTestIds         bool

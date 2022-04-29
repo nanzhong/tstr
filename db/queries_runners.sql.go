@@ -54,7 +54,11 @@ func (q *DBQuerier) GetRunnerScan(results pgx.BatchResults) (GetRunnerRow, error
 
 const listRunnersSQL = `SELECT *
 FROM runners
-WHERE $1 OR revoked_at IS NOT NULL;`
+WHERE
+  CASE WHEN $1
+    THEN revoked_at IS NOT NULL
+    ELSE TRUE
+  END;`
 
 type ListRunnersRow struct {
 	ID               string       `json:"id"`

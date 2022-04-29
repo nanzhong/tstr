@@ -6,7 +6,11 @@ WHERE id = pggen.arg('id');
 -- name: ListRunners :many
 SELECT *
 FROM runners
-WHERE pggen.arg('filter_revoked') OR revoked_at IS NOT NULL;
+WHERE
+  CASE WHEN pggen.arg('filter_revoked')
+    THEN revoked_at IS NOT NULL
+    ELSE TRUE
+  END;
 
 -- name: ApproveRunner :exec
 UPDATE runners

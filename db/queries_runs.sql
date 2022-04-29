@@ -11,22 +11,52 @@ FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
 WHERE
-  ((pggen.arg('filter_test_ids') AND runs.test_id = ANY (pggen.arg('test_ids')::uuid[])) OR TRUE) AND
-  ((pggen.arg('filter_test_suite_ids') AND runs.test_id = ANY (
-    SELECT tests.id
-    FROM test_suites
-    JOIN tests
-    ON tests.labels @> test_suites.labels
-    WHERE test_suites.id = ANY (pggen.arg('test_suite_ids')::uuid[])
-  )) OR TRUE) AND
-  ((pggen.arg('filter_runner_ids') AND runner_id = ANY (pggen.arg('runner_ids')::uuid[])) OR TRUE) AND
-  ((pggen.arg('filter_results') AND result = ANY (pggen.arg('results')::run_result[])) OR TRUE) AND
-  ((pggen.arg('filter_scheduled_before') AND scheduled_at < (pggen.arg('scheduled_before')::timestamptz)) OR TRUE) AND
-  ((pggen.arg('filter_scheduled_after') AND scheduled_at > (pggen.arg('scheduled_after')::timestamptz)) OR TRUE) AND
-  ((pggen.arg('filter_started_before') AND started_at < (pggen.arg('started_before')::timestamptz)) OR TRUE) AND
-  ((pggen.arg('filter_started_after') AND started_at > (pggen.arg('started_after')::timestamptz)) OR TRUE) AND
-  ((pggen.arg('filter_finished_before') AND finished_at < (pggen.arg('finished_before')::timestamptz)) OR TRUE) AND
-  ((pggen.arg('filter_finished_after') AND finished_at > (pggen.arg('finished_after')::timestamptz)) OR TRUE);
+  CASE WHEN pggen.arg('filter_test_ids')
+    THEN runs.test_id = ANY (pggen.arg('test_ids')::uuid[])
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_test_suite_ids')
+    THEN runs.test_id = ANY (
+      SELECT tests.id
+      FROM test_suites
+      JOIN tests
+      ON tests.labels @> test_suites.labels
+      WHERE test_suites.id = ANY (pggen.arg('test_suite_ids')::uuid[])
+    )
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_runner_ids')
+    THEN runner_id = ANY (pggen.arg('runner_ids')::uuid[])
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_results')
+    THEN result = ANY (pggen.arg('results')::run_result[])
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_scheduled_before')
+    THEN scheduled_at < pggen.arg('scheduled_before')::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_scheduled_after')
+    THEN scheduled_at > pggen.arg('scheduled_after')::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_started_before')
+    THEN started_at < pggen.arg('started_before')::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_started_after')
+    THEN started_at > pggen.arg('started_after')::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_finished_before')
+    THEN finished_at < pggen.arg('finished_before')::timestamptz
+    ELSE TRUE
+  END AND
+  CASE WHEN pggen.arg('filter_finished_after')
+    THEN finished_at > pggen.arg('finished_after')::timestamptz
+    ELSE TRUE
+  END;
 
 -- name: ScheduleRun :one
 INSERT INTO runs (test_id, test_run_config_id)

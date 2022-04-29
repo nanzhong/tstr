@@ -155,7 +155,9 @@ message GetRunnerResponse {
   tstr.common.v1.Runner runner = 1; // required
 }
 
-message ListRunnersRequest {}
+message ListRunnersRequest {
+  bool include_revoked = 1;
+}
 
 message ListRunnersResponse {
   repeated tstr.common.v1.Runner runners = 1; // required

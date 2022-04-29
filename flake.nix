@@ -94,6 +94,8 @@
                 protoc-gen-go-grpc
                 protoc-gen-validate
 
+                entr
+
                 postgresql_14
 
                 devTools.pggen

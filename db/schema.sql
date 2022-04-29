@@ -39,6 +39,7 @@ CREATE TYPE public.access_token_scope AS ENUM (
 --
 
 CREATE TYPE public.run_result AS ENUM (
+    'unknown',
     'pass',
     'fail',
     'error'
@@ -88,7 +89,7 @@ CREATE TABLE public.runs (
     test_id uuid,
     test_run_config_id integer,
     runner_id uuid,
-    result public.run_result,
+    result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,
     scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,

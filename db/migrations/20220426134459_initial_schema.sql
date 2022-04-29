@@ -45,13 +45,13 @@ CREATE TABLE runners (
 );
 CREATE INDEX ON runners(last_heartbeat_at);
 
-CREATE TYPE run_result AS ENUM ('pass', 'fail', 'error');
+CREATE TYPE run_result AS ENUM ('unknown', 'pass', 'fail', 'error');
 CREATE TABLE runs (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
        test_id uuid REFERENCES tests(id),
        test_run_config_id integer REFERENCES test_run_configs(id),
        runner_id uuid REFERENCES runners(id),
-       result run_result,
+       result run_result DEFAULT 'unknown'::run_result,
        logs jsonb,
        scheduled_at timestamptz DEFAULT CURRENT_TIMESTAMP,
        started_at timestamptz,

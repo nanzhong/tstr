@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-overmind s -r serve,db
+overmind start --auto-restart serve,db --daemonize
+dbmate up

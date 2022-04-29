@@ -13,7 +13,9 @@ import (
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
+	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/server"
+	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -30,6 +32,14 @@ var serveCmd = &cobra.Command{
 		// TODO Use console writer for now for easy development/debugging, perhaps remove and rely on humanlog in the future.
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+		pool, err := pgxpool.Connect(context.Background(), viper.GetString("serve-pg-dsn"))
+		if err != nil {
+			log.Fatal().Err(err).Msg("failed to connect to pg")
+		}
+		defer pool.Close()
+
+		dbQuerier := db.NewQuerier(pool)
+
 		l, err := net.Listen("tcp", viper.GetString("serve-api-addr"))
 		if err != nil {
 			log.Fatal().
@@ -38,8 +48,10 @@ var serveCmd = &cobra.Command{
 				Msg("failed to listen on api addr")
 		}
 
-		grpcServer := grpc.NewServer()
-		controlServer := server.NewControlServer()
+		grpcServer := grpc.NewServer(
+			grpczerolog.UnaryInterceptor(),
+		)
+		controlServer := server.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
 		adminServer := server.NewAdminServer()
@@ -47,14 +59,6 @@ var serveCmd = &cobra.Command{
 
 		runnerServer := server.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
-
-		pool, err := pgxpool.Connect(context.Background(), viper.GetString("serve-pg-dsn"))
-		if err != nil {
-			log.Fatal().Err(err).Msg("failed to connect to pg")
-		}
-		defer pool.Close()
-
-		// TODO setup db.
 
 		// TODO setup http handler for web ui.
 		mux := http.NewServeMux()

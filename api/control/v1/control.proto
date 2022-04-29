@@ -33,8 +33,8 @@ service ControlService {
 message RegisterTestRequest {
   string name = 1; // required
   map<string, string> labels = 2;
-  string cron_schedule = 3;
-  tstr.common.v1.Test.RunConfig run_config = 4; // required
+  string cron_schedule = 3 [json_name="cron_schedule"];
+  tstr.common.v1.Test.RunConfig run_config = 4 [json_name="run_config"]; // required
 }
 
 message RegisterTestResponse {
@@ -42,13 +42,13 @@ message RegisterTestResponse {
 }
 
 message UpdateTestRequest {
-  google.protobuf.FieldMask field_mask = 1;
+  google.protobuf.FieldMask field_mask = 1 [json_name="field_mask"];
 
   string id = 2; // required
   string name = 3;
   map<string, string> labels = 4;
-  string cron_schedule = 5;
-  tstr.common.v1.Test.RunConfig run_config = 6;
+  string cron_schedule = 5 [json_name="cron_schedule"];
+  tstr.common.v1.Test.RunConfig run_config = 6 [json_name="run_config"];
 }
 
 message GetTestRequest {
@@ -60,7 +60,7 @@ message GetTestResponse {
 }
 
 message ListTestsRequest {
-  repeated tstr.common.v1.Label labels = 1;
+  map<string, string> labels = 1;
 }
 
 message ListTestsResponse {
@@ -77,19 +77,19 @@ message ArchiveTestResponse {}
 
 message DefineTestSuiteRequest {
   string name = 1; // required
-  tstr.common.v1.Label labels = 2; // required
+  map<string, string> labels = 2; // required
 }
 
 message DefineTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1; // required
+  tstr.common.v1.TestSuite test_suite = 1 [json_name="test_suite"]; // required
 }
 
 message UpdateTestSuiteRequest {
-  google.protobuf.FieldMask field_mask = 1;
+  google.protobuf.FieldMask field_mask = 1 [json_name="field_mask"];
 
   string id = 2; // required
   string name = 3;
-  repeated tstr.common.v1.Label labels = 4;
+  map<string, string> labels = 4;
 }
 
 message UpdateTestSuiteResponse {}
@@ -99,13 +99,13 @@ message GetTestSuiteRequest {
 }
 
 message GetTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1; // required
+  tstr.common.v1.TestSuite test_suite = 1 [json_name="test_suite"]; // required
 }
 
 message ListTestSuitesRequest {}
 
 message ListTestSuitesResponse {
-  repeated tstr.common.v1.TestSuite test_suites = 1; // required
+  repeated tstr.common.v1.TestSuite test_suites = 1 [json_name="test_suites"]; // required
 }
 
 message ArchiveTestSuiteRequest {
@@ -123,16 +123,16 @@ message GetRunResponse {
 }
 
 message ListRunsRequest {
-  repeated string test_ids = 1;
-  repeated string test_suite_ids = 2;
-  repeated string runner_ids = 3;
+  repeated string test_ids = 1 [json_name="test_ids"];
+  repeated string test_suite_ids = 2 [json_name="test_suite_ids"];
+  repeated string runner_ids = 3 [json_name="runner_ids"];
   repeated tstr.common.v1.Run.Result results = 4;
-  google.protobuf.Timestamp scheduled_before = 5;
-  google.protobuf.Timestamp scheduled_after = 6;
-  google.protobuf.Timestamp started_before = 7;
-  google.protobuf.Timestamp started_after = 8;
-  google.protobuf.Timestamp finished_before = 9;
-  google.protobuf.Timestamp finished_after = 10;
+  google.protobuf.Timestamp scheduled_before = 5 [json_name="scheduled_before"];
+  google.protobuf.Timestamp scheduled_after = 6 [json_name="scheduled_after"];
+  google.protobuf.Timestamp started_before = 7 [json_name="started_before"];
+  google.protobuf.Timestamp started_after = 8 [json_name="started_after"];
+  google.protobuf.Timestamp finished_before = 9 [json_name="finished_before"];
+  google.protobuf.Timestamp finished_after = 10 [json_name="finished_after"];
 }
 
 message ListRunsResponse {

@@ -16,8 +16,8 @@ service RunnerService {
 
 message RegisterRunnerRequest {
   string name = 1; // required
-  repeated tstr.common.v1.Label accept_test_labels = 2;
-  repeated tstr.common.v1.Label reqect_test_labels = 3;
+  map<string, string> accept_test_labels = 2 [json_name="accept_test_labels"];
+  map<string, string> reject_test_labels = 3 [json_name="reject_test_labels"];
 }
 
 message RegisterRunnerResponse {
@@ -25,8 +25,8 @@ message RegisterRunnerResponse {
 }
 
 message NextRunRequest {
-  repeated tstr.common.v1.Label accept_test_labels = 1;
-  repeated tstr.common.v1.Label reqect_test_labels = 2;
+  map<string, string> accept_test_labels = 1 [json_name="accept_test_labels"];
+  map<string, string> reqect_test_labels = 2 [json_name="reject_test_labels"];
 }
 
 message NextRunResponse {
@@ -37,8 +37,8 @@ message SubmitRunRequest {
   tstr.common.v1.Run.Result result = 1;
   repeated tstr.common.v1.Run.Log logs = 2;
 
-  google.protobuf.Timestamp started_at = 10;
-  google.protobuf.Timestamp finished_at = 11;
+  google.protobuf.Timestamp started_at = 10 [json_name="started_at"];
+  google.protobuf.Timestamp finished_at = 11 [json_name="finished_at"];
 }
 
 message SubmitRunResponse {}

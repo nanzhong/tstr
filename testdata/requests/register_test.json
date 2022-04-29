@@ -1,0 +1,16 @@
+{
+  "name": "test",
+  "labels": {
+    "label_1": "value_1",
+    "label_2": "value_3"
+  },
+  "cron_schedule": "* * * * *",
+  "run_config": {
+    "container_image": "alpine:3",
+    "command": "date",
+    "args": ["--debug"],
+    "env": {
+      "TZ": "America/Toronto"
+    }
+  }
+}

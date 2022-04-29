@@ -30,7 +30,8 @@
             "cmd/tstr"
             "cmd/tstrctl"
           ];
-          vendorSha256 = "sha256-9q36pPzsY3eXSkCq7lY2jB/VQU7lfrxbcHIrj+X/lns=";
+          # vendorSha256 = pkgs.lib.fakeSha256;
+          vendorSha256 = "sha256-59ekBhdJZ39aWySexzUbBlo1MHRJM27dqgtR7KX3WTE=";
         };
 
         devTools = {

@@ -15,9 +15,13 @@
       url = "github:DarthSim/overmind";
       flake = false;
     };
+    quicktemplate = {
+      url = "github:valyala/quicktemplate";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, pggen, dbmate, overmind }:
+  outputs = { self, nixpkgs, flake-utils, pggen, dbmate, overmind, quicktemplate }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -52,6 +56,12 @@
             src = overmind;
             dbCheck = false;
             vendorSha256 = "sha256-KDMzR6qAruscgS6/bHTN6RnHOlLKCm9lxkr9k3oLY+Y=";
+          };
+          quicktemplate = pkgs.buildGoModule {
+            name = "quicktemplate";
+            src = quicktemplate;
+            dbCheck = false;
+            vendorSha256 = null;
           };
         };
       in
@@ -89,6 +99,7 @@
                 devTools.pggen
                 devTools.dbmate
                 devTools.overmind
+                devTools.quicktemplate
               ];
             };
         }

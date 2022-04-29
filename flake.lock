@@ -79,13 +79,30 @@
         "type": "github"
       }
     },
+    "quicktemplate": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1631687470,
+        "narHash": "sha256-GdsxIhMOfp/5wrtlX+kN0ggkwL0tSI2e8/VXSi/c+nc=",
+        "owner": "valyala",
+        "repo": "quicktemplate",
+        "rev": "dad80a9c2cc0c2a5abfe1bf13935a2a19f313e63",
+        "type": "github"
+      },
+      "original": {
+        "owner": "valyala",
+        "repo": "quicktemplate",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "dbmate": "dbmate",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "overmind": "overmind",
-        "pggen": "pggen"
+        "pggen": "pggen",
+        "quicktemplate": "quicktemplate"
       }
     }
   },

@@ -1,10 +1,27 @@
+# github.com/envoyproxy/protoc-gen-validate v0.1.0
+## explicit
+github.com/envoyproxy/protoc-gen-validate
+github.com/envoyproxy/protoc-gen-validate/gogoproto
+github.com/envoyproxy/protoc-gen-validate/module
+github.com/envoyproxy/protoc-gen-validate/templates
+github.com/envoyproxy/protoc-gen-validate/templates/cc
+github.com/envoyproxy/protoc-gen-validate/templates/go
+github.com/envoyproxy/protoc-gen-validate/templates/gogo
+github.com/envoyproxy/protoc-gen-validate/templates/goshared
+github.com/envoyproxy/protoc-gen-validate/templates/java
+github.com/envoyproxy/protoc-gen-validate/templates/shared
+github.com/envoyproxy/protoc-gen-validate/validate
 # github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
 github.com/fsnotify/fsnotify
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
+github.com/golang/protobuf/internal/gengogrpc
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
+github.com/golang/protobuf/protoc-gen-go
+github.com/golang/protobuf/protoc-gen-go/descriptor
+github.com/golang/protobuf/protoc-gen-go/plugin
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
@@ -24,6 +41,9 @@ github.com/hashicorp/hcl/hcl/token
 github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/iancoleman/strcase v0.2.0
+## explicit; go 1.16
+github.com/iancoleman/strcase
 # github.com/inconshreveable/mousetrap v1.0.0
 ## explicit
 github.com/inconshreveable/mousetrap
@@ -58,6 +78,10 @@ github.com/jackc/pgx/v4/pgxpool
 # github.com/jackc/puddle v1.2.1
 ## explicit; go 1.12
 github.com/jackc/puddle
+# github.com/lyft/protoc-gen-star v0.6.0
+## explicit; go 1.14
+github.com/lyft/protoc-gen-star
+github.com/lyft/protoc-gen-star/lang/go
 # github.com/magiconair/properties v1.8.6
 ## explicit; go 1.13
 github.com/magiconair/properties
@@ -211,6 +235,8 @@ google.golang.org/grpc/status
 google.golang.org/grpc/tap
 # google.golang.org/protobuf v1.28.0
 ## explicit; go 1.11
+google.golang.org/protobuf/cmd/protoc-gen-go/internal_gengo
+google.golang.org/protobuf/compiler/protogen
 google.golang.org/protobuf/encoding/protojson
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
@@ -244,6 +270,7 @@ google.golang.org/protobuf/types/known/anypb
 google.golang.org/protobuf/types/known/durationpb
 google.golang.org/protobuf/types/known/fieldmaskpb
 google.golang.org/protobuf/types/known/timestamppb
+google.golang.org/protobuf/types/pluginpb
 # gopkg.in/ini.v1 v1.66.4
 ## explicit
 gopkg.in/ini.v1

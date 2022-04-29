@@ -93,6 +93,20 @@ type Querier interface {
 	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
 	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
 
+	NextRun(ctx context.Context, runnerID string, labels pgtype.JSONB) (NextRunRow, error)
+	// NextRunBatch enqueues a NextRun query into batch to be executed
+	// later by the batch.
+	NextRunBatch(batch genericBatch, runnerID string, labels pgtype.JSONB)
+	// NextRunScan scans the result of an executed NextRunBatch query.
+	NextRunScan(results pgx.BatchResults) (NextRunRow, error)
+
+	UpdateRun(ctx context.Context, params UpdateRunParams) (pgconn.CommandTag, error)
+	// UpdateRunBatch enqueues a UpdateRun query into batch to be executed
+	// later by the batch.
+	UpdateRunBatch(batch genericBatch, params UpdateRunParams)
+	// UpdateRunScan scans the result of an executed UpdateRunBatch query.
+	UpdateRunScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
 	DefineTestSuite(ctx context.Context, name string, labels pgtype.JSONB) (DefineTestSuiteRow, error)
 	// DefineTestSuiteBatch enqueues a DefineTestSuite query into batch to be executed
 	// later by the batch.
@@ -278,6 +292,12 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, scheduleRunSQL, scheduleRunSQL); err != nil {
 		return fmt.Errorf("prepare query 'ScheduleRun': %w", err)
+	}
+	if _, err := p.Prepare(ctx, nextRunSQL, nextRunSQL); err != nil {
+		return fmt.Errorf("prepare query 'NextRun': %w", err)
+	}
+	if _, err := p.Prepare(ctx, updateRunSQL, updateRunSQL); err != nil {
+		return fmt.Errorf("prepare query 'UpdateRun': %w", err)
 	}
 	if _, err := p.Prepare(ctx, defineTestSuiteSQL, defineTestSuiteSQL); err != nil {
 		return fmt.Errorf("prepare query 'DefineTestSuite': %w", err)

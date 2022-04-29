@@ -62,3 +62,27 @@ WHERE
 INSERT INTO runs (test_id, test_run_config_id)
 VALUES (pggen.arg('test_id')::uuid, pggen.arg('test_run_config_id')::integer)
 RETURNING *;
+
+-- name: NextRun :one
+UPDATE runs
+SET runner_id = pggen.arg('runner_id'), scheduled_at = CURRENT_TIMESTAMP
+WHERE id = (
+  SELECT runs.id
+  FROM runs
+  JOIN tests
+  ON runs.test_id = tests.id
+  WHERE scheduled_at IS NULL AND tests.labels @> pggen.arg('labels')
+  ORDER BY scheduled_at ASC
+  LIMIT 1
+  FOR UPDATE
+)
+RETURNING *;
+
+-- name: UpdateRun :exec
+UPDATE runs
+SET
+  result = pggen.arg('result'),
+  logs = pggen.arg('logs'),
+  started_at = pggen.arg('started_at')::timestamptz,
+  finished_at = pggen.arg('finished_at')::timestamptz
+WHERE id = pggen.arg('id')::uuid;

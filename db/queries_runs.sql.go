@@ -5,6 +5,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"time"
@@ -239,4 +240,96 @@ func (q *DBQuerier) ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, e
 		return item, fmt.Errorf("scan ScheduleRunBatch row: %w", err)
 	}
 	return item, nil
+}
+
+const nextRunSQL = `UPDATE runs
+SET runner_id = $1, scheduled_at = CURRENT_TIMESTAMP
+WHERE id = (
+  SELECT runs.id
+  FROM runs
+  JOIN tests
+  ON runs.test_id = tests.id
+  WHERE scheduled_at IS NULL AND tests.labels @> $2
+  ORDER BY scheduled_at ASC
+  LIMIT 1
+  FOR UPDATE
+)
+RETURNING *;`
+
+type NextRunRow struct {
+	ID              string       `json:"id"`
+	TestID          string       `json:"test_id"`
+	TestRunConfigID int          `json:"test_run_config_id"`
+	RunnerID        string       `json:"runner_id"`
+	Result          RunResult    `json:"result"`
+	Logs            pgtype.JSONB `json:"logs"`
+	ScheduledAt     time.Time    `json:"scheduled_at"`
+	StartedAt       time.Time    `json:"started_at"`
+	FinishedAt      time.Time    `json:"finished_at"`
+}
+
+// NextRun implements Querier.NextRun.
+func (q *DBQuerier) NextRun(ctx context.Context, runnerID string, labels pgtype.JSONB) (NextRunRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "NextRun")
+	row := q.conn.QueryRow(ctx, nextRunSQL, runnerID, labels)
+	var item NextRunRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
+		return item, fmt.Errorf("query NextRun: %w", err)
+	}
+	return item, nil
+}
+
+// NextRunBatch implements Querier.NextRunBatch.
+func (q *DBQuerier) NextRunBatch(batch genericBatch, runnerID string, labels pgtype.JSONB) {
+	batch.Queue(nextRunSQL, runnerID, labels)
+}
+
+// NextRunScan implements Querier.NextRunScan.
+func (q *DBQuerier) NextRunScan(results pgx.BatchResults) (NextRunRow, error) {
+	row := results.QueryRow()
+	var item NextRunRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
+		return item, fmt.Errorf("scan NextRunBatch row: %w", err)
+	}
+	return item, nil
+}
+
+const updateRunSQL = `UPDATE runs
+SET
+  result = $1,
+  logs = $2,
+  started_at = $3::timestamptz,
+  finished_at = $4::timestamptz
+WHERE id = $5::uuid;`
+
+type UpdateRunParams struct {
+	Result     RunResult
+	Logs       pgtype.JSONB
+	StartedAt  time.Time
+	FinishedAt time.Time
+	ID         string
+}
+
+// UpdateRun implements Querier.UpdateRun.
+func (q *DBQuerier) UpdateRun(ctx context.Context, params UpdateRunParams) (pgconn.CommandTag, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "UpdateRun")
+	cmdTag, err := q.conn.Exec(ctx, updateRunSQL, params.Result, params.Logs, params.StartedAt, params.FinishedAt, params.ID)
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec query UpdateRun: %w", err)
+	}
+	return cmdTag, err
+}
+
+// UpdateRunBatch implements Querier.UpdateRunBatch.
+func (q *DBQuerier) UpdateRunBatch(batch genericBatch, params UpdateRunParams) {
+	batch.Queue(updateRunSQL, params.Result, params.Logs, params.StartedAt, params.FinishedAt, params.ID)
+}
+
+// UpdateRunScan implements Querier.UpdateRunScan.
+func (q *DBQuerier) UpdateRunScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
+	cmdTag, err := results.Exec()
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec UpdateRunBatch: %w", err)
+	}
+	return cmdTag, err
 }

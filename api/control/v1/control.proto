@@ -6,6 +6,7 @@ import "api/common/v1/common.proto";
 
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 option go_package =  "github.com/nanzhong/tstr/api/control/v1;control";
 
@@ -31,10 +32,10 @@ service ControlService {
 }
 
 message RegisterTestRequest {
-  string name = 1; // required
-  map<string, string> labels = 2;
-  string cron_schedule = 3 [json_name="cron_schedule"];
-  tstr.common.v1.Test.RunConfig run_config = 4 [json_name="run_config"]; // required
+  string name                              = 1 [(validate.rules).string = {min_len: 1, max_len: 200}];
+  map<string, string> labels               = 2;
+  string cron_schedule                     = 3 [json_name="cron_schedule"];
+  tstr.common.v1.Test.RunConfig run_config = 4 [(validate.rules).message.required = true, json_name="run_config"];
 }
 
 message RegisterTestResponse {

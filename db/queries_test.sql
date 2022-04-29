@@ -45,7 +45,8 @@ ORDER BY tests.name ASC;
 
 -- name: UpdateTest :exec
 UPDATE tests
-SET name = pggen.arg('name')::varchar,
+SET
+  name = pggen.arg('name')::varchar,
   labels = pggen.arg('labels')::jsonb,
   cron_schedule = pggen.arg('cron_schedule')::varchar,
   updated_at = CURRENT_TIMESTAMP

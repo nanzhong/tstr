@@ -15,9 +15,11 @@ import (
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/server"
+	"github.com/nanzhong/tstr/webui"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/rs/zerolog/hlog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
@@ -40,13 +42,23 @@ var serveCmd = &cobra.Command{
 
 		dbQuerier := db.NewQuerier(pool)
 
-		l, err := net.Listen("tcp", viper.GetString("serve-api-addr"))
+		// TODO: consider using cmux to serve http and grpc on the same port?
+		grpcListener, err := net.Listen("tcp", viper.GetString("serve-api-addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
 				Str("api-addr", viper.GetString("serve-api-addr")).
 				Msg("failed to listen on api addr")
 		}
+
+		webListener, err := net.Listen("tcp", viper.GetString("serve-web-addr"))
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Str("web-addr", viper.GetString("serve-web-addr")).
+				Msg("failed to listen on web addr")
+		}
+
 
 		grpcServer := grpc.NewServer(
 			grpczerolog.UnaryInterceptor(),
@@ -60,10 +72,11 @@ var serveCmd = &cobra.Command{
 		runnerServer := server.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
-		// TODO setup http handler for web ui.
-		mux := http.NewServeMux()
+
+		webui := webui.NewWebUI()
+
 		httpServer := http.Server{
-			Handler: mux,
+			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),
 		}
 
 		// TODO setup startup/shutdown for grpc server, scheduler, etc.
@@ -107,13 +120,13 @@ var serveCmd = &cobra.Command{
 			log.Info().
 				Str("api-addr", viper.GetString("serve-api-addr")).
 				Msg("starting grpc server")
-			return grpcServer.Serve(l)
+			return grpcServer.Serve(grpcListener)
 		})
 		eg.Go(func() error {
 			log.Info().
 				Str("web-addr", viper.GetString("serve-web-addr")).
 				Msg("starting http server")
-			return httpServer.Serve(l)
+			return httpServer.Serve(webListener)
 		})
 		err = eg.Wait()
 		log.Info().Msg("http server shutdown")

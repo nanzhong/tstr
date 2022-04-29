@@ -9,6 +9,9 @@ import (
 
 //go:generate qtc -dir=templates
 
+
+// XXX TODO XXX TODO: double check the output tags I've been using
+
 type WebUI struct{}
 
 func NewWebUI() *WebUI {

@@ -41,6 +41,7 @@ CREATE TABLE runners (
        reject_test_labels jsonb,
        registered_at timestamptz DEFAULT CURRENT_TIMESTAMP,
        approved_at timestamptz,
+       revoked_at timestamptz,
        last_heartbeat_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX ON runners(last_heartbeat_at);

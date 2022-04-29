@@ -76,6 +76,7 @@ CREATE TABLE public.runners (
     reject_test_labels jsonb,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     approved_at timestamp with time zone,
+    revoked_at timestamp with time zone,
     last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 

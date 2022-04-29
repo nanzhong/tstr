@@ -23,7 +23,7 @@ WITH data (name, labels, cron_schedule, container_image, command, args, env) AS 
 SELECT * FROM test, test_run_config;
 
 -- name: GetTest :one
-SELECT *
+SELECT tests.*, test_run_configs.id AS test_run_config_version, container_image, command, args, env, created_at
 FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
@@ -32,7 +32,7 @@ ORDER BY test_run_configs.id DESC
 LIMIT 1;
 
 -- name: ListTests :many
-SELECT *
+SELECT tests.*, latest_configs.id AS test_run_config_version, container_image, command, args, env, created_at
 FROM tests
 JOIN (
   SELECT *

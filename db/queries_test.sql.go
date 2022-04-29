@@ -11,236 +11,6 @@ import (
 	"time"
 )
 
-// Querier is a typesafe Go interface backed by SQL queries.
-//
-// Methods ending with Batch enqueue a query to run later in a pgx.Batch. After
-// calling SendBatch on pgx.Conn, pgxpool.Pool, or pgx.Tx, use the Scan methods
-// to parse the results.
-type Querier interface {
-	RegisterTest(ctx context.Context, params RegisterTestParams) (RegisterTestRow, error)
-	// RegisterTestBatch enqueues a RegisterTest query into batch to be executed
-	// later by the batch.
-	RegisterTestBatch(batch genericBatch, params RegisterTestParams)
-	// RegisterTestScan scans the result of an executed RegisterTestBatch query.
-	RegisterTestScan(results pgx.BatchResults) (RegisterTestRow, error)
-
-	GetTest(ctx context.Context, id string) (GetTestRow, error)
-	// GetTestBatch enqueues a GetTest query into batch to be executed
-	// later by the batch.
-	GetTestBatch(batch genericBatch, id string)
-	// GetTestScan scans the result of an executed GetTestBatch query.
-	GetTestScan(results pgx.BatchResults) (GetTestRow, error)
-
-	ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListTestsRow, error)
-	// ListTestsBatch enqueues a ListTests query into batch to be executed
-	// later by the batch.
-	ListTestsBatch(batch genericBatch, labels pgtype.JSONB)
-	// ListTestsScan scans the result of an executed ListTestsBatch query.
-	ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, error)
-
-	UpdateTest(ctx context.Context, params UpdateTestParams) (pgconn.CommandTag, error)
-	// UpdateTestBatch enqueues a UpdateTest query into batch to be executed
-	// later by the batch.
-	UpdateTestBatch(batch genericBatch, params UpdateTestParams)
-	// UpdateTestScan scans the result of an executed UpdateTestBatch query.
-	UpdateTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	CreateTestRunConfig(ctx context.Context, params CreateTestRunConfigParams) (CreateTestRunConfigRow, error)
-	// CreateTestRunConfigBatch enqueues a CreateTestRunConfig query into batch to be executed
-	// later by the batch.
-	CreateTestRunConfigBatch(batch genericBatch, params CreateTestRunConfigParams)
-	// CreateTestRunConfigScan scans the result of an executed CreateTestRunConfigBatch query.
-	CreateTestRunConfigScan(results pgx.BatchResults) (CreateTestRunConfigRow, error)
-
-	ArchiveTest(ctx context.Context, id string) (pgconn.CommandTag, error)
-	// ArchiveTestBatch enqueues a ArchiveTest query into batch to be executed
-	// later by the batch.
-	ArchiveTestBatch(batch genericBatch, id string)
-	// ArchiveTestScan scans the result of an executed ArchiveTestBatch query.
-	ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	DefineTestSuite(ctx context.Context, name string, labels pgtype.JSONB) (DefineTestSuiteRow, error)
-	// DefineTestSuiteBatch enqueues a DefineTestSuite query into batch to be executed
-	// later by the batch.
-	DefineTestSuiteBatch(batch genericBatch, name string, labels pgtype.JSONB)
-	// DefineTestSuiteScan scans the result of an executed DefineTestSuiteBatch query.
-	DefineTestSuiteScan(results pgx.BatchResults) (DefineTestSuiteRow, error)
-
-	UpdateTestSuite(ctx context.Context, params UpdateTestSuiteParams) (pgconn.CommandTag, error)
-	// UpdateTestSuiteBatch enqueues a UpdateTestSuite query into batch to be executed
-	// later by the batch.
-	UpdateTestSuiteBatch(batch genericBatch, params UpdateTestSuiteParams)
-	// UpdateTestSuiteScan scans the result of an executed UpdateTestSuiteBatch query.
-	UpdateTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	GetTestSuite(ctx context.Context, id string) (GetTestSuiteRow, error)
-	// GetTestSuiteBatch enqueues a GetTestSuite query into batch to be executed
-	// later by the batch.
-	GetTestSuiteBatch(batch genericBatch, id string)
-	// GetTestSuiteScan scans the result of an executed GetTestSuiteBatch query.
-	GetTestSuiteScan(results pgx.BatchResults) (GetTestSuiteRow, error)
-
-	ListTestSuites(ctx context.Context, labels pgtype.JSONB) ([]ListTestSuitesRow, error)
-	// ListTestSuitesBatch enqueues a ListTestSuites query into batch to be executed
-	// later by the batch.
-	ListTestSuitesBatch(batch genericBatch, labels pgtype.JSONB)
-	// ListTestSuitesScan scans the result of an executed ListTestSuitesBatch query.
-	ListTestSuitesScan(results pgx.BatchResults) ([]ListTestSuitesRow, error)
-
-	ArchiveTestSuite(ctx context.Context, id string) (pgconn.CommandTag, error)
-	// ArchiveTestSuiteBatch enqueues a ArchiveTestSuite query into batch to be executed
-	// later by the batch.
-	ArchiveTestSuiteBatch(batch genericBatch, id string)
-	// ArchiveTestSuiteScan scans the result of an executed ArchiveTestSuiteBatch query.
-	ArchiveTestSuiteScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-}
-
-type DBQuerier struct {
-	conn  genericConn   // underlying Postgres transport to use
-	types *typeResolver // resolve types by name
-}
-
-var _ Querier = &DBQuerier{}
-
-// genericConn is a connection to a Postgres database. This is usually backed by
-// *pgx.Conn, pgx.Tx, or *pgxpool.Pool.
-type genericConn interface {
-	// Query executes sql with args. If there is an error the returned Rows will
-	// be returned in an error state. So it is allowed to ignore the error
-	// returned from Query and handle it in Rows.
-	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
-
-	// QueryRow is a convenience wrapper over Query. Any error that occurs while
-	// querying is deferred until calling Scan on the returned Row. That Row will
-	// error with pgx.ErrNoRows if no rows are returned.
-	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
-
-	// Exec executes sql. sql can be either a prepared statement name or an SQL
-	// string. arguments should be referenced positionally from the sql string
-	// as $1, $2, etc.
-	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
-}
-
-// genericBatch batches queries to send in a single network request to a
-// Postgres server. This is usually backed by *pgx.Batch.
-type genericBatch interface {
-	// Queue queues a query to batch b. query can be an SQL query or the name of a
-	// prepared statement. See Queue on *pgx.Batch.
-	Queue(query string, arguments ...interface{})
-}
-
-// NewQuerier creates a DBQuerier that implements Querier. conn is typically
-// *pgx.Conn, pgx.Tx, or *pgxpool.Pool.
-func NewQuerier(conn genericConn) *DBQuerier {
-	return NewQuerierConfig(conn, QuerierConfig{})
-}
-
-type QuerierConfig struct {
-	// DataTypes contains pgtype.Value to use for encoding and decoding instead
-	// of pggen-generated pgtype.ValueTranscoder.
-	//
-	// If OIDs are available for an input parameter type and all of its
-	// transitive dependencies, pggen will use the binary encoding format for
-	// the input parameter.
-	DataTypes []pgtype.DataType
-}
-
-// NewQuerierConfig creates a DBQuerier that implements Querier with the given
-// config. conn is typically *pgx.Conn, pgx.Tx, or *pgxpool.Pool.
-func NewQuerierConfig(conn genericConn, cfg QuerierConfig) *DBQuerier {
-	return &DBQuerier{conn: conn, types: newTypeResolver(cfg.DataTypes)}
-}
-
-// WithTx creates a new DBQuerier that uses the transaction to run all queries.
-func (q *DBQuerier) WithTx(tx pgx.Tx) (*DBQuerier, error) {
-	return &DBQuerier{conn: tx}, nil
-}
-
-// preparer is any Postgres connection transport that provides a way to prepare
-// a statement, most commonly *pgx.Conn.
-type preparer interface {
-	Prepare(ctx context.Context, name, sql string) (sd *pgconn.StatementDescription, err error)
-}
-
-// PrepareAllQueries executes a PREPARE statement for all pggen generated SQL
-// queries in querier files. Typical usage is as the AfterConnect callback
-// for pgxpool.Config
-//
-// pgx will use the prepared statement if available. Calling PrepareAllQueries
-// is an optional optimization to avoid a network round-trip the first time pgx
-// runs a query if pgx statement caching is enabled.
-func PrepareAllQueries(ctx context.Context, p preparer) error {
-	if _, err := p.Prepare(ctx, registerTestSQL, registerTestSQL); err != nil {
-		return fmt.Errorf("prepare query 'RegisterTest': %w", err)
-	}
-	if _, err := p.Prepare(ctx, getTestSQL, getTestSQL); err != nil {
-		return fmt.Errorf("prepare query 'GetTest': %w", err)
-	}
-	if _, err := p.Prepare(ctx, listTestsSQL, listTestsSQL); err != nil {
-		return fmt.Errorf("prepare query 'ListTests': %w", err)
-	}
-	if _, err := p.Prepare(ctx, updateTestSQL, updateTestSQL); err != nil {
-		return fmt.Errorf("prepare query 'UpdateTest': %w", err)
-	}
-	if _, err := p.Prepare(ctx, createTestRunConfigSQL, createTestRunConfigSQL); err != nil {
-		return fmt.Errorf("prepare query 'CreateTestRunConfig': %w", err)
-	}
-	if _, err := p.Prepare(ctx, archiveTestSQL, archiveTestSQL); err != nil {
-		return fmt.Errorf("prepare query 'ArchiveTest': %w", err)
-	}
-	if _, err := p.Prepare(ctx, defineTestSuiteSQL, defineTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'DefineTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, updateTestSuiteSQL, updateTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'UpdateTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, getTestSuiteSQL, getTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'GetTestSuite': %w", err)
-	}
-	if _, err := p.Prepare(ctx, listTestSuitesSQL, listTestSuitesSQL); err != nil {
-		return fmt.Errorf("prepare query 'ListTestSuites': %w", err)
-	}
-	if _, err := p.Prepare(ctx, archiveTestSuiteSQL, archiveTestSuiteSQL); err != nil {
-		return fmt.Errorf("prepare query 'ArchiveTestSuite': %w", err)
-	}
-	return nil
-}
-
-// typeResolver looks up the pgtype.ValueTranscoder by Postgres type name.
-type typeResolver struct {
-	connInfo *pgtype.ConnInfo // types by Postgres type name
-}
-
-func newTypeResolver(types []pgtype.DataType) *typeResolver {
-	ci := pgtype.NewConnInfo()
-	for _, typ := range types {
-		if txt, ok := typ.Value.(textPreferrer); ok && typ.OID != unknownOID {
-			typ.Value = txt.ValueTranscoder
-		}
-		ci.RegisterDataType(typ)
-	}
-	return &typeResolver{connInfo: ci}
-}
-
-// findValue find the OID, and pgtype.ValueTranscoder for a Postgres type name.
-func (tr *typeResolver) findValue(name string) (uint32, pgtype.ValueTranscoder, bool) {
-	typ, ok := tr.connInfo.DataTypeForName(name)
-	if !ok {
-		return 0, nil, false
-	}
-	v := pgtype.NewValue(typ.Value)
-	return typ.OID, v.(pgtype.ValueTranscoder), true
-}
-
-// setValue sets the value of a ValueTranscoder to a value that should always
-// work and panics if it fails.
-func (tr *typeResolver) setValue(vt pgtype.ValueTranscoder, val interface{}) pgtype.ValueTranscoder {
-	if err := vt.Set(val); err != nil {
-		panic(fmt.Sprintf("set ValueTranscoder %T to %+v: %s", vt, val, err))
-	}
-	return vt
-}
-
 const registerTestSQL = `WITH data (name, labels, cron_schedule, container_image, command, args, env) AS (
   VALUES (
     $1::varchar,
@@ -315,7 +85,7 @@ func (q *DBQuerier) RegisterTestScan(results pgx.BatchResults) (RegisterTestRow,
 	return item, nil
 }
 
-const getTestSQL = `SELECT *
+const getTestSQL = `SELECT tests.*, test_run_configs.id AS test_run_config_version, container_image, command, args, env, created_at
 FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
@@ -324,20 +94,19 @@ ORDER BY test_run_configs.id DESC
 LIMIT 1;`
 
 type GetTestRow struct {
-	ID             string       `json:"id"`
-	Name           string       `json:"name"`
-	Labels         pgtype.JSONB `json:"labels"`
-	CronSchedule   string       `json:"cron_schedule"`
-	RegisteredAt   time.Time    `json:"registered_at"`
-	UpdatedAt      time.Time    `json:"updated_at"`
-	ArchivedAt     time.Time    `json:"archived_at"`
-	ID             int          `json:"id"`
-	TestID         string       `json:"test_id"`
-	ContainerImage string       `json:"container_image"`
-	Command        string       `json:"command"`
-	Args           []string     `json:"args"`
-	Env            pgtype.JSONB `json:"env"`
-	CreatedAt      time.Time    `json:"created_at"`
+	ID                   string       `json:"id"`
+	Name                 string       `json:"name"`
+	Labels               pgtype.JSONB `json:"labels"`
+	CronSchedule         string       `json:"cron_schedule"`
+	RegisteredAt         time.Time    `json:"registered_at"`
+	UpdatedAt            time.Time    `json:"updated_at"`
+	ArchivedAt           time.Time    `json:"archived_at"`
+	TestRunConfigVersion int          `json:"test_run_config_version"`
+	ContainerImage       string       `json:"container_image"`
+	Command              string       `json:"command"`
+	Args                 []string     `json:"args"`
+	Env                  pgtype.JSONB `json:"env"`
+	CreatedAt            time.Time    `json:"created_at"`
 }
 
 // GetTest implements Querier.GetTest.
@@ -345,7 +114,7 @@ func (q *DBQuerier) GetTest(ctx context.Context, id string) (GetTestRow, error) 
 	ctx = context.WithValue(ctx, "pggen_query_name", "GetTest")
 	row := q.conn.QueryRow(ctx, getTestSQL, id)
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("query GetTest: %w", err)
 	}
 	return item, nil
@@ -360,13 +129,13 @@ func (q *DBQuerier) GetTestBatch(batch genericBatch, id string) {
 func (q *DBQuerier) GetTestScan(results pgx.BatchResults) (GetTestRow, error) {
 	row := results.QueryRow()
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("scan GetTestBatch row: %w", err)
 	}
 	return item, nil
 }
 
-const listTestsSQL = `SELECT *
+const listTestsSQL = `SELECT tests.*, latest_configs.id AS test_run_config_version, container_image, command, args, env, created_at
 FROM tests
 JOIN (
   SELECT *
@@ -378,20 +147,19 @@ WHERE tests.labels @> $1::jsonb
 ORDER BY tests.name ASC;`
 
 type ListTestsRow struct {
-	ID             string       `json:"id"`
-	Name           string       `json:"name"`
-	Labels         pgtype.JSONB `json:"labels"`
-	CronSchedule   string       `json:"cron_schedule"`
-	RegisteredAt   time.Time    `json:"registered_at"`
-	UpdatedAt      time.Time    `json:"updated_at"`
-	ArchivedAt     time.Time    `json:"archived_at"`
-	ID             int          `json:"id"`
-	TestID         string       `json:"test_id"`
-	ContainerImage string       `json:"container_image"`
-	Command        string       `json:"command"`
-	Args           []string     `json:"args"`
-	Env            pgtype.JSONB `json:"env"`
-	CreatedAt      time.Time    `json:"created_at"`
+	ID                   string       `json:"id"`
+	Name                 string       `json:"name"`
+	Labels               pgtype.JSONB `json:"labels"`
+	CronSchedule         string       `json:"cron_schedule"`
+	RegisteredAt         time.Time    `json:"registered_at"`
+	UpdatedAt            time.Time    `json:"updated_at"`
+	ArchivedAt           time.Time    `json:"archived_at"`
+	TestRunConfigVersion int          `json:"test_run_config_version"`
+	ContainerImage       string       `json:"container_image"`
+	Command              string       `json:"command"`
+	Args                 []string     `json:"args"`
+	Env                  pgtype.JSONB `json:"env"`
+	CreatedAt            time.Time    `json:"created_at"`
 }
 
 // ListTests implements Querier.ListTests.
@@ -405,7 +173,7 @@ func (q *DBQuerier) ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListT
 	items := []ListTestsRow{}
 	for rows.Next() {
 		var item ListTestsRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan ListTests row: %w", err)
 		}
 		items = append(items, item)
@@ -431,7 +199,7 @@ func (q *DBQuerier) ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, err
 	items := []ListTestsRow{}
 	for rows.Next() {
 		var item ListTestsRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.ID, &item.TestID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan ListTestsBatch row: %w", err)
 		}
 		items = append(items, item)
@@ -560,29 +328,3 @@ func (q *DBQuerier) ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag
 	}
 	return cmdTag, err
 }
-
-// textPreferrer wraps a pgtype.ValueTranscoder and sets the preferred encoding
-// format to text instead binary (the default). pggen uses the text format
-// when the OID is unknownOID because the binary format requires the OID.
-// Typically occurs if the results from QueryAllDataTypes aren't passed to
-// NewQuerierConfig.
-type textPreferrer struct {
-	pgtype.ValueTranscoder
-	typeName string
-}
-
-// PreferredParamFormat implements pgtype.ParamFormatPreferrer.
-func (t textPreferrer) PreferredParamFormat() int16 { return pgtype.TextFormatCode }
-
-func (t textPreferrer) NewTypeValue() pgtype.Value {
-	return textPreferrer{pgtype.NewValue(t.ValueTranscoder).(pgtype.ValueTranscoder), t.typeName}
-}
-
-func (t textPreferrer) TypeName() string {
-	return t.typeName
-}
-
-// unknownOID means we don't know the OID for a type. This is okay for decoding
-// because pgx call DecodeText or DecodeBinary without requiring the OID. For
-// encoding parameters, pggen uses textPreferrer if the OID is unknown.
-const unknownOID = 0

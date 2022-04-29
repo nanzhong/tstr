@@ -1,0 +1,110 @@
+{% import "time" %}
+{% import "fmt" %}
+{% import "github.com/nanzhong/tstr/api/common/v1" %}
+{% import timestamppb "google.golang.org/protobuf/types/known/timestamppb" %}
+
+{% code
+type RunsPage struct {
+    Runs []common.Run
+    HasPendingRuns bool
+    HasFinishedRuns bool
+}
+%}
+
+{% func (p *RunsPage) Title() %}
+Tester
+{% endfunc %}
+
+{% func fmtAbsTime(t time.Time) %}
+    {%s t.Format("2006-01-02 15:04:05") %}
+{% endfunc %}
+
+{% func fmtRelativeTime(t time.Time) %}
+    {%s fmt.Sprintf("%s ago", time.Since(t).Round(time.Second).String()) %}
+{% endfunc %}
+
+{% func timeCell(timestamp *timestamppb.Timestamp) %}
+    <span data-toggle="tooltip" data-placement="top" title="{%s fmtAbsTime(timestamp.AsTime()) %}">{%s fmtRelativeTime(timestamp.AsTime()) %}</span>
+{% endfunc %}
+
+{% func (p *RunsPage) Body() %}
+<div class="runs">
+  
+  <div class="row">
+    <div class="col">
+      <h1 class="h5">Pending Runs</h1>
+      {% if p.HasPendingRuns %}
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Labels</th>
+            <th scope="col">Args</th>
+            <th scope="col">Enqueued At</th>
+            <th scope="col">Started At</th>
+            <th scope="col">Runner</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        {% for _, run := range p.Runs %}
+        {% if run.FinishedAt == nil %}
+          <tr>
+            <td scope="row"><a href="/runs/{%s run.Id %}">{%s run.Id %}<i class="fas fa-link"></i></a></td>
+            <td scope="row"> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
+            <td scope="row"> {% for _, arg := range run.TestRunConfig.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
+            <td>{%= timeCell(run.ScheduledAt) %}</td>
+            <td>{% if run.StartedAt != nil %} {%= timeCell(run.StartedAt) %} {% endif %}</td>
+            <td>{%s run.RunnerId %} </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No pending runs...</p>
+      {% endif %}
+    </div>
+  </div>
+
+
+  <div class="row">
+    <div class="col">
+      <h1 class="h5">Recently Finished Runs (Last 50)</h1>
+      {% if p.HasFinishedRuns %}
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Labels</th>
+            <th scope="col">Args</th>
+            <th scope="col">Enqueued At</th>
+            <th scope="col">Started At</th>
+            <th scope="col">Finished At</th>
+            <th scope="col">Runner</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for _, run := range p.Runs[:50]  %}
+        {% if run.FinishedAt != nil %}
+          <tr>
+            <td><a href="/runs/{%s run.Id %}">{%s run.Id %}<i class="fas fa-link"></i></a></td>
+            <td> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
+            <td> {% for _, arg := range run.TestRunConfig.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
+            <td>{%= timeCell(run.ScheduledAt) %}</td>
+            <td>{%= timeCell(run.StartedAt) %}</td>
+            <td> {%= timeCell(run.FinishedAt) %}</td>
+            <td>{%s run.RunnerId %} </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No finished runs...</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endfunc %}
+

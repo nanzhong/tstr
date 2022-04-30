@@ -95,6 +95,7 @@
                 protoc-gen-validate
 
                 entr
+                grpcurl
 
                 postgresql_14
 

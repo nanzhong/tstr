@@ -25,6 +25,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 var serveCmd = &cobra.Command{
@@ -69,6 +70,8 @@ var serveCmd = &cobra.Command{
 				grpc_validator.StreamServerInterceptor(),
 			),
 		)
+
+		reflection.Register(grpcServer)
 
 		controlServer := grpcserver.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)

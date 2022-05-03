@@ -4,6 +4,8 @@ package tstr.admin.v1;
 
 import "api/common/v1/common.proto";
 
+import "google/protobuf/duration.proto";
+
 import "validate/validate.proto";
 
 option go_package =  "github.com/nanzhong/tstr/api/admin/v1;admin";
@@ -22,7 +24,8 @@ message IssueAccessTokenRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
   repeated tstr.common.v1.AccessToken.Scope scopes = 2
-    [(validate.rules).repeated.min_items = 1];
+    [(validate.rules).repeated = {min_items: 1, unique: true, items: {enum: {in: [1,2,3]}}}];
+  google.protobuf.Duration valid_duration = 3;
 }
 
 message IssueAccessTokenResponse {

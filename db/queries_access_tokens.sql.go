@@ -5,36 +5,36 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
-const issueAccessTokenSQL = `INSERT INTO access_tokens (name, token_hash, scopes)
-VALUES ($1, $2, $3)
-RETURNING id, name, scopes, issued_at, expires_at, revoked_at;`
+const issueAccessTokenSQL = `INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, scopes, issued_at, expires_at;`
 
 type IssueAccessTokenParams struct {
 	Name      string
 	TokenHash string
 	Scopes    []AccessTokenScope
+	ExpiresAt pgtype.Timestamptz
 }
 
 type IssueAccessTokenRow struct {
 	ID        string             `json:"id"`
 	Name      string             `json:"name"`
 	Scopes    []AccessTokenScope `json:"scopes"`
-	IssuedAt  time.Time          `json:"issued_at"`
-	ExpiresAt time.Time          `json:"expires_at"`
-	RevokedAt time.Time          `json:"revoked_at"`
+	IssuedAt  pgtype.Timestamptz `json:"issued_at"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
 }
 
 // IssueAccessToken implements Querier.IssueAccessToken.
 func (q *DBQuerier) IssueAccessToken(ctx context.Context, params IssueAccessTokenParams) (IssueAccessTokenRow, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "IssueAccessToken")
-	row := q.conn.QueryRow(ctx, issueAccessTokenSQL, params.Name, params.TokenHash, q.types.newAccessTokenScopeArrayInit(params.Scopes))
+	row := q.conn.QueryRow(ctx, issueAccessTokenSQL, params.Name, params.TokenHash, q.types.newAccessTokenScopeArrayInit(params.Scopes), params.ExpiresAt)
 	var item IssueAccessTokenRow
 	scopesArray := q.types.newAccessTokenScopeArray()
-	if err := row.Scan(&item.ID, &item.Name, scopesArray, &item.IssuedAt, &item.ExpiresAt, &item.RevokedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, scopesArray, &item.IssuedAt, &item.ExpiresAt); err != nil {
 		return item, fmt.Errorf("query IssueAccessToken: %w", err)
 	}
 	if err := scopesArray.AssignTo(&item.Scopes); err != nil {
@@ -45,7 +45,7 @@ func (q *DBQuerier) IssueAccessToken(ctx context.Context, params IssueAccessToke
 
 // IssueAccessTokenBatch implements Querier.IssueAccessTokenBatch.
 func (q *DBQuerier) IssueAccessTokenBatch(batch genericBatch, params IssueAccessTokenParams) {
-	batch.Queue(issueAccessTokenSQL, params.Name, params.TokenHash, q.types.newAccessTokenScopeArrayInit(params.Scopes))
+	batch.Queue(issueAccessTokenSQL, params.Name, params.TokenHash, q.types.newAccessTokenScopeArrayInit(params.Scopes), params.ExpiresAt)
 }
 
 // IssueAccessTokenScan implements Querier.IssueAccessTokenScan.
@@ -53,11 +53,41 @@ func (q *DBQuerier) IssueAccessTokenScan(results pgx.BatchResults) (IssueAccessT
 	row := results.QueryRow()
 	var item IssueAccessTokenRow
 	scopesArray := q.types.newAccessTokenScopeArray()
-	if err := row.Scan(&item.ID, &item.Name, scopesArray, &item.IssuedAt, &item.ExpiresAt, &item.RevokedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, scopesArray, &item.IssuedAt, &item.ExpiresAt); err != nil {
 		return item, fmt.Errorf("scan IssueAccessTokenBatch row: %w", err)
 	}
 	if err := scopesArray.AssignTo(&item.Scopes); err != nil {
 		return item, fmt.Errorf("assign IssueAccessToken row: %w", err)
+	}
+	return item, nil
+}
+
+const validateAccessTokenSQL = `SELECT TRUE
+FROM access_tokens
+WHERE token_hash = $1 AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);`
+
+// ValidateAccessToken implements Querier.ValidateAccessToken.
+func (q *DBQuerier) ValidateAccessToken(ctx context.Context, tokenHash string) (bool, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "ValidateAccessToken")
+	row := q.conn.QueryRow(ctx, validateAccessTokenSQL, tokenHash)
+	var item bool
+	if err := row.Scan(&item); err != nil {
+		return item, fmt.Errorf("query ValidateAccessToken: %w", err)
+	}
+	return item, nil
+}
+
+// ValidateAccessTokenBatch implements Querier.ValidateAccessTokenBatch.
+func (q *DBQuerier) ValidateAccessTokenBatch(batch genericBatch, tokenHash string) {
+	batch.Queue(validateAccessTokenSQL, tokenHash)
+}
+
+// ValidateAccessTokenScan implements Querier.ValidateAccessTokenScan.
+func (q *DBQuerier) ValidateAccessTokenScan(results pgx.BatchResults) (bool, error) {
+	row := results.QueryRow()
+	var item bool
+	if err := row.Scan(&item); err != nil {
+		return item, fmt.Errorf("scan ValidateAccessTokenBatch row: %w", err)
 	}
 	return item, nil
 }
@@ -70,9 +100,9 @@ type GetAccessTokenRow struct {
 	ID        string             `json:"id"`
 	Name      string             `json:"name"`
 	Scopes    []AccessTokenScope `json:"scopes"`
-	IssuedAt  time.Time          `json:"issued_at"`
-	ExpiresAt time.Time          `json:"expires_at"`
-	RevokedAt time.Time          `json:"revoked_at"`
+	IssuedAt  pgtype.Timestamptz `json:"issued_at"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	RevokedAt pgtype.Timestamptz `json:"revoked_at"`
 }
 
 // GetAccessToken implements Querier.GetAccessToken.
@@ -125,9 +155,9 @@ type ListAccessTokensRow struct {
 	ID        string             `json:"id"`
 	Name      string             `json:"name"`
 	Scopes    []AccessTokenScope `json:"scopes"`
-	IssuedAt  time.Time          `json:"issued_at"`
-	ExpiresAt time.Time          `json:"expires_at"`
-	RevokedAt time.Time          `json:"revoked_at"`
+	IssuedAt  pgtype.Timestamptz `json:"issued_at"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	RevokedAt pgtype.Timestamptz `json:"revoked_at"`
 }
 
 // ListAccessTokens implements Querier.ListAccessTokens.

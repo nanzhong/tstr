@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
 const registerTestSQL = `WITH data (name, labels, cron_schedule, container_image, command, args, env) AS (
@@ -45,18 +44,18 @@ type RegisterTestParams struct {
 }
 
 type RegisterTestRow struct {
-	ID                     string       `json:"id"`
-	Name                   string       `json:"name"`
-	Labels                 pgtype.JSONB `json:"labels"`
-	CronSchedule           string       `json:"cron_schedule"`
-	RegisteredAt           time.Time    `json:"registered_at"`
-	UpdatedAt              time.Time    `json:"updated_at"`
-	TestRunConfigVersion   int          `json:"test_run_config_version"`
-	ContainerImage         string       `json:"container_image"`
-	Command                string       `json:"command"`
-	Args                   []string     `json:"args"`
-	Env                    pgtype.JSONB `json:"env"`
-	TestRunConfigCreatedAt time.Time    `json:"test_run_config_created_at"`
+	ID                     string             `json:"id"`
+	Name                   string             `json:"name"`
+	Labels                 pgtype.JSONB       `json:"labels"`
+	CronSchedule           string             `json:"cron_schedule"`
+	RegisteredAt           pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+	TestRunConfigVersion   int                `json:"test_run_config_version"`
+	ContainerImage         string             `json:"container_image"`
+	Command                string             `json:"command"`
+	Args                   []string           `json:"args"`
+	Env                    pgtype.JSONB       `json:"env"`
+	TestRunConfigCreatedAt pgtype.Timestamptz `json:"test_run_config_created_at"`
 }
 
 // RegisterTest implements Querier.RegisterTest.
@@ -94,19 +93,19 @@ ORDER BY test_run_configs.id DESC
 LIMIT 1;`
 
 type GetTestRow struct {
-	ID                   string       `json:"id"`
-	Name                 string       `json:"name"`
-	Labels               pgtype.JSONB `json:"labels"`
-	CronSchedule         string       `json:"cron_schedule"`
-	RegisteredAt         time.Time    `json:"registered_at"`
-	UpdatedAt            time.Time    `json:"updated_at"`
-	ArchivedAt           time.Time    `json:"archived_at"`
-	TestRunConfigVersion int          `json:"test_run_config_version"`
-	ContainerImage       string       `json:"container_image"`
-	Command              string       `json:"command"`
-	Args                 []string     `json:"args"`
-	Env                  pgtype.JSONB `json:"env"`
-	CreatedAt            time.Time    `json:"created_at"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	Labels               pgtype.JSONB       `json:"labels"`
+	CronSchedule         string             `json:"cron_schedule"`
+	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
+	TestRunConfigVersion int                `json:"test_run_config_version"`
+	ContainerImage       string             `json:"container_image"`
+	Command              string             `json:"command"`
+	Args                 []string           `json:"args"`
+	Env                  pgtype.JSONB       `json:"env"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
 }
 
 // GetTest implements Querier.GetTest.
@@ -147,19 +146,19 @@ WHERE tests.labels @> $1::jsonb
 ORDER BY tests.name ASC;`
 
 type ListTestsRow struct {
-	ID                   string       `json:"id"`
-	Name                 string       `json:"name"`
-	Labels               pgtype.JSONB `json:"labels"`
-	CronSchedule         string       `json:"cron_schedule"`
-	RegisteredAt         time.Time    `json:"registered_at"`
-	UpdatedAt            time.Time    `json:"updated_at"`
-	ArchivedAt           time.Time    `json:"archived_at"`
-	TestRunConfigVersion int          `json:"test_run_config_version"`
-	ContainerImage       string       `json:"container_image"`
-	Command              string       `json:"command"`
-	Args                 []string     `json:"args"`
-	Env                  pgtype.JSONB `json:"env"`
-	CreatedAt            time.Time    `json:"created_at"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	Labels               pgtype.JSONB       `json:"labels"`
+	CronSchedule         string             `json:"cron_schedule"`
+	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
+	TestRunConfigVersion int                `json:"test_run_config_version"`
+	ContainerImage       string             `json:"container_image"`
+	Command              string             `json:"command"`
+	Args                 []string           `json:"args"`
+	Env                  pgtype.JSONB       `json:"env"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
 }
 
 // ListTests implements Querier.ListTests.
@@ -266,13 +265,13 @@ type CreateTestRunConfigParams struct {
 }
 
 type CreateTestRunConfigRow struct {
-	ID             int          `json:"id"`
-	TestID         string       `json:"test_id"`
-	ContainerImage string       `json:"container_image"`
-	Command        string       `json:"command"`
-	Args           []string     `json:"args"`
-	Env            pgtype.JSONB `json:"env"`
-	CreatedAt      time.Time    `json:"created_at"`
+	ID             int                `json:"id"`
+	TestID         string             `json:"test_id"`
+	ContainerImage string             `json:"container_image"`
+	Command        string             `json:"command"`
+	Args           []string           `json:"args"`
+	Env            pgtype.JSONB       `json:"env"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 // CreateTestRunConfig implements Querier.CreateTestRunConfig.

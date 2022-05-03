@@ -73,7 +73,7 @@ var serveCmd = &cobra.Command{
 		controlServer := grpcserver.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
-		adminServer := grpcserver.NewAdminServer()
+		adminServer := grpcserver.NewAdminServer(dbQuerier)
 		admin.RegisterAdminServiceServer(grpcServer, adminServer)
 
 		runnerServer := grpcserver.NewRunnerServer()

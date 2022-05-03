@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
 const registerRunnerSQL = `INSERT INTO runners (name, accept_test_labels, reject_test_labels)
@@ -22,14 +21,14 @@ type RegisterRunnerParams struct {
 }
 
 type RegisterRunnerRow struct {
-	ID               string       `json:"id"`
-	Name             string       `json:"name"`
-	AcceptTestLabels pgtype.JSONB `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB `json:"reject_test_labels"`
-	RegisteredAt     time.Time    `json:"registered_at"`
-	ApprovedAt       time.Time    `json:"approved_at"`
-	RevokedAt        time.Time    `json:"revoked_at"`
-	LastHeartbeatAt  time.Time    `json:"last_heartbeat_at"`
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
+	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
+	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
+	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
+	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
+	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // RegisterRunner implements Querier.RegisterRunner.
@@ -63,14 +62,14 @@ FROM runners
 WHERE id = $1;`
 
 type GetRunnerRow struct {
-	ID               string       `json:"id"`
-	Name             string       `json:"name"`
-	AcceptTestLabels pgtype.JSONB `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB `json:"reject_test_labels"`
-	RegisteredAt     time.Time    `json:"registered_at"`
-	ApprovedAt       time.Time    `json:"approved_at"`
-	RevokedAt        time.Time    `json:"revoked_at"`
-	LastHeartbeatAt  time.Time    `json:"last_heartbeat_at"`
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
+	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
+	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
+	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
+	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
+	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // GetRunner implements Querier.GetRunner.
@@ -108,14 +107,14 @@ WHERE
   END;`
 
 type ListRunnersRow struct {
-	ID               string       `json:"id"`
-	Name             string       `json:"name"`
-	AcceptTestLabels pgtype.JSONB `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB `json:"reject_test_labels"`
-	RegisteredAt     time.Time    `json:"registered_at"`
-	ApprovedAt       time.Time    `json:"approved_at"`
-	RevokedAt        time.Time    `json:"revoked_at"`
-	LastHeartbeatAt  time.Time    `json:"last_heartbeat_at"`
+	ID               string             `json:"id"`
+	Name             string             `json:"name"`
+	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
+	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
+	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
+	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
+	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
+	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // ListRunners implements Querier.ListRunners.

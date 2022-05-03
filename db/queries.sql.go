@@ -23,6 +23,13 @@ type Querier interface {
 	// IssueAccessTokenScan scans the result of an executed IssueAccessTokenBatch query.
 	IssueAccessTokenScan(results pgx.BatchResults) (IssueAccessTokenRow, error)
 
+	ValidateAccessToken(ctx context.Context, tokenHash string) (bool, error)
+	// ValidateAccessTokenBatch enqueues a ValidateAccessToken query into batch to be executed
+	// later by the batch.
+	ValidateAccessTokenBatch(batch genericBatch, tokenHash string)
+	// ValidateAccessTokenScan scans the result of an executed ValidateAccessTokenBatch query.
+	ValidateAccessTokenScan(results pgx.BatchResults) (bool, error)
+
 	GetAccessToken(ctx context.Context, id string) (GetAccessTokenRow, error)
 	// GetAccessTokenBatch enqueues a GetAccessToken query into batch to be executed
 	// later by the batch.
@@ -262,6 +269,9 @@ type preparer interface {
 func PrepareAllQueries(ctx context.Context, p preparer) error {
 	if _, err := p.Prepare(ctx, issueAccessTokenSQL, issueAccessTokenSQL); err != nil {
 		return fmt.Errorf("prepare query 'IssueAccessToken': %w", err)
+	}
+	if _, err := p.Prepare(ctx, validateAccessTokenSQL, validateAccessTokenSQL); err != nil {
+		return fmt.Errorf("prepare query 'ValidateAccessToken': %w", err)
 	}
 	if _, err := p.Prepare(ctx, getAccessTokenSQL, getAccessTokenSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetAccessToken': %w", err)

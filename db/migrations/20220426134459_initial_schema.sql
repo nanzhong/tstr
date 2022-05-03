@@ -70,7 +70,7 @@ CREATE TABLE access_tokens (
        token_hash varchar NOT NULL,
        scopes access_token_scope[],
        issued_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-       expires_at timestamptz NOT NULL,
+       expires_at timestamptz,
        revoked_at timestamptz
 );
 CREATE INDEX ON access_tokens (revoked_at, expires_at, token_hash);

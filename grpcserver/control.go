@@ -2,6 +2,7 @@ package grpcserver
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgtype"
 	"github.com/nanzhong/tstr/api/common/v1"
@@ -63,6 +64,24 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 		return nil, status.Error(codes.Internal, "failed to format env")
 	}
 
+	var (
+		dbRunConfigCreatedAt time.Time
+		dbRegisteredAt       time.Time
+		dbUpdatedAt          time.Time
+	)
+	if err := result.TestRunConfigCreatedAt.AssignTo(&dbRunConfigCreatedAt); err != nil {
+		log.Error().Err(err).Msg("failed to convert run config created at")
+		return nil, status.Error(codes.Internal, "failed to format run config created at time")
+	}
+	if err := result.RegisteredAt.AssignTo(&dbRegisteredAt); err != nil {
+		log.Error().Err(err).Msg("failed to convert registered at")
+		return nil, status.Error(codes.Internal, "failed to format registered at time")
+	}
+	if err := result.UpdatedAt.AssignTo(&dbUpdatedAt); err != nil {
+		log.Error().Err(err).Msg("failed to convert updated at")
+		return nil, status.Error(codes.Internal, "failed to format updated at time")
+	}
+
 	return &control.RegisterTestResponse{
 		Test: &common.Test{
 			Id:           result.ID,
@@ -75,10 +94,10 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 				Command:        result.Command,
 				Args:           result.Args,
 				Env:            resultEnv,
-				CreatedAt:      timestamppb.New(result.TestRunConfigCreatedAt),
+				CreatedAt:      timestamppb.New(dbRunConfigCreatedAt),
 			},
-			RegisteredAt: timestamppb.New(result.RegisteredAt),
-			UpdatedAt:    timestamppb.New(result.UpdatedAt),
+			RegisteredAt: timestamppb.New(dbRegisteredAt),
+			UpdatedAt:    timestamppb.New(dbUpdatedAt),
 		},
 	}, nil
 }

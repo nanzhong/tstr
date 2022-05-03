@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
 const getRunSQL = `SELECT runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at
@@ -18,20 +17,20 @@ ON runs.test_run_config_id = test_run_configs.id
 WHERE runs.id = $1;`
 
 type GetRunRow struct {
-	ID              string       `json:"id"`
-	TestID          string       `json:"test_id"`
-	TestRunConfigID int          `json:"test_run_config_id"`
-	RunnerID        string       `json:"runner_id"`
-	Result          RunResult    `json:"result"`
-	Logs            pgtype.JSONB `json:"logs"`
-	ScheduledAt     time.Time    `json:"scheduled_at"`
-	StartedAt       time.Time    `json:"started_at"`
-	FinishedAt      time.Time    `json:"finished_at"`
-	ContainerImage  string       `json:"container_image"`
-	Command         string       `json:"command"`
-	Args            []string     `json:"args"`
-	Env             pgtype.JSONB `json:"env"`
-	CreatedAt       time.Time    `json:"created_at"`
+	ID              string             `json:"id"`
+	TestID          string             `json:"test_id"`
+	TestRunConfigID int                `json:"test_run_config_id"`
+	RunnerID        string             `json:"runner_id"`
+	Result          RunResult          `json:"result"`
+	Logs            pgtype.JSONB       `json:"logs"`
+	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt       pgtype.Timestamptz `json:"started_at"`
+	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
+	ContainerImage  string             `json:"container_image"`
+	Command         string             `json:"command"`
+	Args            []string           `json:"args"`
+	Env             pgtype.JSONB       `json:"env"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 // GetRun implements Querier.GetRun.
@@ -122,34 +121,34 @@ type ListRunsParams struct {
 	FilterResults         bool
 	Results               []RunResult
 	FilterScheduledBefore bool
-	ScheduledBefore       time.Time
+	ScheduledBefore       pgtype.Timestamptz
 	FilterScheduledAfter  bool
-	ScheduledAfter        time.Time
+	ScheduledAfter        pgtype.Timestamptz
 	FilterStartedBefore   bool
-	StartedBefore         time.Time
+	StartedBefore         pgtype.Timestamptz
 	FilterStartedAfter    bool
-	StartedAfter          time.Time
+	StartedAfter          pgtype.Timestamptz
 	FilterFinishedBefore  bool
-	FinishedBefore        time.Time
+	FinishedBefore        pgtype.Timestamptz
 	FilterFinishedAfter   bool
-	FinishedAfter         time.Time
+	FinishedAfter         pgtype.Timestamptz
 }
 
 type ListRunsRow struct {
-	ID              string       `json:"id"`
-	TestID          string       `json:"test_id"`
-	TestRunConfigID int          `json:"test_run_config_id"`
-	RunnerID        string       `json:"runner_id"`
-	Result          RunResult    `json:"result"`
-	Logs            pgtype.JSONB `json:"logs"`
-	ScheduledAt     time.Time    `json:"scheduled_at"`
-	StartedAt       time.Time    `json:"started_at"`
-	FinishedAt      time.Time    `json:"finished_at"`
-	ContainerImage  string       `json:"container_image"`
-	Command         string       `json:"command"`
-	Args            []string     `json:"args"`
-	Env             pgtype.JSONB `json:"env"`
-	CreatedAt       time.Time    `json:"created_at"`
+	ID              string             `json:"id"`
+	TestID          string             `json:"test_id"`
+	TestRunConfigID int                `json:"test_run_config_id"`
+	RunnerID        string             `json:"runner_id"`
+	Result          RunResult          `json:"result"`
+	Logs            pgtype.JSONB       `json:"logs"`
+	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt       pgtype.Timestamptz `json:"started_at"`
+	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
+	ContainerImage  string             `json:"container_image"`
+	Command         string             `json:"command"`
+	Args            []string           `json:"args"`
+	Env             pgtype.JSONB       `json:"env"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 // ListRuns implements Querier.ListRuns.
@@ -205,15 +204,15 @@ VALUES ($1::uuid, $2::integer)
 RETURNING *;`
 
 type ScheduleRunRow struct {
-	ID              string       `json:"id"`
-	TestID          string       `json:"test_id"`
-	TestRunConfigID int          `json:"test_run_config_id"`
-	RunnerID        string       `json:"runner_id"`
-	Result          RunResult    `json:"result"`
-	Logs            pgtype.JSONB `json:"logs"`
-	ScheduledAt     time.Time    `json:"scheduled_at"`
-	StartedAt       time.Time    `json:"started_at"`
-	FinishedAt      time.Time    `json:"finished_at"`
+	ID              string             `json:"id"`
+	TestID          string             `json:"test_id"`
+	TestRunConfigID int                `json:"test_run_config_id"`
+	RunnerID        string             `json:"runner_id"`
+	Result          RunResult          `json:"result"`
+	Logs            pgtype.JSONB       `json:"logs"`
+	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt       pgtype.Timestamptz `json:"started_at"`
+	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
 }
 
 // ScheduleRun implements Querier.ScheduleRun.
@@ -257,15 +256,15 @@ WHERE id = (
 RETURNING *;`
 
 type NextRunRow struct {
-	ID              string       `json:"id"`
-	TestID          string       `json:"test_id"`
-	TestRunConfigID int          `json:"test_run_config_id"`
-	RunnerID        string       `json:"runner_id"`
-	Result          RunResult    `json:"result"`
-	Logs            pgtype.JSONB `json:"logs"`
-	ScheduledAt     time.Time    `json:"scheduled_at"`
-	StartedAt       time.Time    `json:"started_at"`
-	FinishedAt      time.Time    `json:"finished_at"`
+	ID              string             `json:"id"`
+	TestID          string             `json:"test_id"`
+	TestRunConfigID int                `json:"test_run_config_id"`
+	RunnerID        string             `json:"runner_id"`
+	Result          RunResult          `json:"result"`
+	Logs            pgtype.JSONB       `json:"logs"`
+	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt       pgtype.Timestamptz `json:"started_at"`
+	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
 }
 
 // NextRun implements Querier.NextRun.
@@ -305,8 +304,8 @@ WHERE id = $5::uuid;`
 type UpdateRunParams struct {
 	Result     RunResult
 	Logs       pgtype.JSONB
-	StartedAt  time.Time
-	FinishedAt time.Time
+	StartedAt  pgtype.Timestamptz
+	FinishedAt pgtype.Timestamptz
 	ID         string
 }
 

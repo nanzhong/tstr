@@ -20,8 +20,6 @@ func init() {
 
 	rootCmd.PersistentFlags().Duration("timeout", 15*time.Second, "The amount of time to wait API requests.")
 	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
-
-	rootCmd.AddCommand(testCmd)
 }
 
 func main() {

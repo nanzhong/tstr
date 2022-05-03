@@ -8,5 +8,5 @@ var testCmd = &cobra.Command{
 }
 
 func init() {
-	testCmd.AddCommand(testRegisterCmd)
+	rootCmd.AddCommand(testCmd)
 }

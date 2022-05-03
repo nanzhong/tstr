@@ -60,7 +60,7 @@ CREATE TABLE public.access_tokens (
     token_hash character varying NOT NULL,
     scopes public.access_token_scope[],
     issued_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    expires_at timestamp with time zone NOT NULL,
+    expires_at timestamp with time zone,
     revoked_at timestamp with time zone
 );
 

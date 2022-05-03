@@ -8,7 +8,6 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
-	"time"
 )
 
 const defineTestSuiteSQL = `INSERT INTO test_suites (name, labels)
@@ -16,12 +15,12 @@ VALUES ($1::varchar, $2::jsonb)
 RETURNING *;`
 
 type DefineTestSuiteRow struct {
-	ID         string       `json:"id"`
-	Name       string       `json:"name"`
-	Labels     pgtype.JSONB `json:"labels"`
-	CreatedAt  time.Time    `json:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at"`
-	ArchivedAt time.Time    `json:"archived_at"`
+	ID         string             `json:"id"`
+	Name       string             `json:"name"`
+	Labels     pgtype.JSONB       `json:"labels"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
 }
 
 // DefineTestSuite implements Querier.DefineTestSuite.
@@ -92,12 +91,12 @@ FROM test_suites
 WHERE id = $1::uuid;`
 
 type GetTestSuiteRow struct {
-	ID         string       `json:"id"`
-	Name       string       `json:"name"`
-	Labels     pgtype.JSONB `json:"labels"`
-	CreatedAt  time.Time    `json:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at"`
-	ArchivedAt time.Time    `json:"archived_at"`
+	ID         string             `json:"id"`
+	Name       string             `json:"name"`
+	Labels     pgtype.JSONB       `json:"labels"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
 }
 
 // GetTestSuite implements Querier.GetTestSuite.
@@ -132,12 +131,12 @@ WHERE labels @> $1::jsonb
 ORDER BY name ASC;`
 
 type ListTestSuitesRow struct {
-	ID         string       `json:"id"`
-	Name       string       `json:"name"`
-	Labels     pgtype.JSONB `json:"labels"`
-	CreatedAt  time.Time    `json:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at"`
-	ArchivedAt time.Time    `json:"archived_at"`
+	ID         string             `json:"id"`
+	Name       string             `json:"name"`
+	Labels     pgtype.JSONB       `json:"labels"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt pgtype.Timestamptz `json:"archived_at"`
 }
 
 // ListTestSuites implements Querier.ListTestSuites.

@@ -63,6 +63,35 @@ func (m *IssueAccessTokenRequest) validate(all bool) error {
 
 	// no validation rules for Name
 
+	if all {
+		switch v := interface{}(m.GetValidDuration()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, IssueAccessTokenRequestValidationError{
+					field:  "ValidDuration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, IssueAccessTokenRequestValidationError{
+					field:  "ValidDuration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetValidDuration()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return IssueAccessTokenRequestValidationError{
+				field:  "ValidDuration",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	if len(errors) > 0 {
 		return IssueAccessTokenRequestMultiError(errors)
 	}

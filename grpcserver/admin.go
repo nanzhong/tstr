@@ -128,11 +128,19 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 }
 
 func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAccessTokenRequest) (*admin.RevokeAccessTokenResponse, error) {
-	return nil, nil
+	_, err := s.dbQuerier.RevokeAccessToken(ctx, req.Id)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to revoke access tokens")
+		return nil, status.Error(codes.Internal, "failed to revoke access tokens")
+	}
+
+	return &admin.RevokeAccessTokenResponse{}, nil
 }
+
 func (s *AdminServer) ApproveRunner(ctx context.Context, req *admin.ApproveRunnerRequest) (*admin.ApproveRunnerResponse, error) {
 	return nil, nil
 }
+
 func (s *AdminServer) DenyRunner(ctx context.Context, req *admin.DenyRunnerRequest) (*admin.DenyRunnerResponse, error) {
 	return nil, nil
 }

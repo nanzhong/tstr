@@ -25,3 +25,8 @@ WHERE
    THEN TRUE
    ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
   END;
+
+-- name: RevokeAccessToken :exec
+UPDATE access_tokens
+SET revoked_at = CURRENT_TIMESTAMP
+WHERE id = pggen.arg('id')::uuid;

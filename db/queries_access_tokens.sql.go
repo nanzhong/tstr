@@ -5,6 +5,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
@@ -214,4 +215,32 @@ func (q *DBQuerier) ListAccessTokensScan(results pgx.BatchResults) ([]ListAccess
 		return nil, fmt.Errorf("close ListAccessTokensBatch rows: %w", err)
 	}
 	return items, err
+}
+
+const revokeAccessTokenSQL = `UPDATE access_tokens
+SET revoked_at = CURRENT_TIMESTAMP
+WHERE id = $1::uuid;`
+
+// RevokeAccessToken implements Querier.RevokeAccessToken.
+func (q *DBQuerier) RevokeAccessToken(ctx context.Context, id string) (pgconn.CommandTag, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "RevokeAccessToken")
+	cmdTag, err := q.conn.Exec(ctx, revokeAccessTokenSQL, id)
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec query RevokeAccessToken: %w", err)
+	}
+	return cmdTag, err
+}
+
+// RevokeAccessTokenBatch implements Querier.RevokeAccessTokenBatch.
+func (q *DBQuerier) RevokeAccessTokenBatch(batch genericBatch, id string) {
+	batch.Queue(revokeAccessTokenSQL, id)
+}
+
+// RevokeAccessTokenScan implements Querier.RevokeAccessTokenScan.
+func (q *DBQuerier) RevokeAccessTokenScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
+	cmdTag, err := results.Exec()
+	if err != nil {
+		return cmdTag, fmt.Errorf("exec RevokeAccessTokenBatch: %w", err)
+	}
+	return cmdTag, err
 }

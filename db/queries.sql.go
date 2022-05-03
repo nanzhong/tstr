@@ -44,6 +44,13 @@ type Querier interface {
 	// ListAccessTokensScan scans the result of an executed ListAccessTokensBatch query.
 	ListAccessTokensScan(results pgx.BatchResults) ([]ListAccessTokensRow, error)
 
+	RevokeAccessToken(ctx context.Context, id string) (pgconn.CommandTag, error)
+	// RevokeAccessTokenBatch enqueues a RevokeAccessToken query into batch to be executed
+	// later by the batch.
+	RevokeAccessTokenBatch(batch genericBatch, id string)
+	// RevokeAccessTokenScan scans the result of an executed RevokeAccessTokenBatch query.
+	RevokeAccessTokenScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
 	RegisterRunner(ctx context.Context, params RegisterRunnerParams) (RegisterRunnerRow, error)
 	// RegisterRunnerBatch enqueues a RegisterRunner query into batch to be executed
 	// later by the batch.
@@ -278,6 +285,9 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, listAccessTokensSQL, listAccessTokensSQL); err != nil {
 		return fmt.Errorf("prepare query 'ListAccessTokens': %w", err)
+	}
+	if _, err := p.Prepare(ctx, revokeAccessTokenSQL, revokeAccessTokenSQL); err != nil {
+		return fmt.Errorf("prepare query 'RevokeAccessToken': %w", err)
 	}
 	if _, err := p.Prepare(ctx, registerRunnerSQL, registerRunnerSQL); err != nil {
 		return fmt.Errorf("prepare query 'RegisterRunner': %w", err)

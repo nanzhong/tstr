@@ -60,7 +60,7 @@ WHERE
 
 -- name: ScheduleRun :one
 INSERT INTO runs (test_id, test_run_config_id)
-VALUES (pggen.arg('test_id')::uuid, pggen.arg('test_run_config_id')::integer)
+VALUES (pggen.arg('test_id')::uuid, pggen.arg('test_run_config_id')::uuid)
 RETURNING *;
 
 -- name: NextRun :one

@@ -14,7 +14,7 @@ CREATE INDEX ON tests USING GIN (labels);
 CREATE UNIQUE INDEX tests_unique_name ON tests(name) WHERE archived_at IS NULL;
 
 CREATE TABLE test_run_configs (
-       id serial PRIMARY KEY,
+       id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
        test_id uuid REFERENCES tests(id),
        container_image varchar NOT NULL,
        command varchar,
@@ -22,6 +22,7 @@ CREATE TABLE test_run_configs (
        env jsonb,
        created_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );
+CREATE INDEX ON test_run_configs(created_at);
 
 CREATE TABLE test_suites (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -50,7 +51,7 @@ CREATE TYPE run_result AS ENUM ('unknown', 'pass', 'fail', 'error');
 CREATE TABLE runs (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
        test_id uuid REFERENCES tests(id),
-       test_run_config_id integer REFERENCES test_run_configs(id),
+       test_run_config_id uuid REFERENCES test_run_configs(id),
        runner_id uuid REFERENCES runners(id),
        result run_result DEFAULT 'unknown'::run_result,
        logs jsonb,

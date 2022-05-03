@@ -28,19 +28,17 @@ FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
 WHERE tests.id = pggen.arg('id')::uuid
-ORDER BY test_run_configs.id DESC
+ORDER BY test_run_configs.created_at DESC
 LIMIT 1;
 
 -- name: ListTests :many
-SELECT tests.*, latest_configs.id AS test_run_config_version, container_image, command, args, env, created_at
+SELECT tests.*, latest_configs.id AS test_run_config_version, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
-JOIN (
-  SELECT *
-  FROM test_run_configs
-  WHERE id IN (SELECT MAX(id) from test_run_configs GROUP BY test_id)
-) AS latest_configs
+JOIN test_run_configs AS latest_configs
 ON tests.id = latest_configs.test_id
-WHERE tests.labels @> pggen.arg('labels')::jsonb
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
+WHERE test_run_configs IS NULL AND tests.labels @> pggen.arg('labels')::jsonb
 ORDER BY tests.name ASC;
 
 -- name: UpdateTest :exec

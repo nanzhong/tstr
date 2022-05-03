@@ -88,7 +88,7 @@ CREATE TABLE public.runners (
 CREATE TABLE public.runs (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     test_id uuid,
-    test_run_config_id integer,
+    test_run_config_id uuid,
     runner_id uuid,
     result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,
@@ -112,7 +112,7 @@ CREATE TABLE public.schema_migrations (
 --
 
 CREATE TABLE public.test_run_configs (
-    id integer NOT NULL,
+    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     test_id uuid,
     container_image character varying NOT NULL,
     command character varying,
@@ -120,26 +120,6 @@ CREATE TABLE public.test_run_configs (
     env jsonb,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
-
-
---
--- Name: test_run_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.test_run_configs_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: test_run_configs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.test_run_configs_id_seq OWNED BY public.test_run_configs.id;
 
 
 --
@@ -169,13 +149,6 @@ CREATE TABLE public.tests (
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     archived_at timestamp with time zone
 );
-
-
---
--- Name: test_run_configs id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_run_configs ALTER COLUMN id SET DEFAULT nextval('public.test_run_configs_id_seq'::regclass);
 
 
 --
@@ -290,6 +263,13 @@ CREATE INDEX runs_scheduled_at_started_at_finished_at_idx ON public.runs USING b
 --
 
 CREATE INDEX runs_test_id_test_run_config_id_idx ON public.runs USING btree (test_id, test_run_config_id);
+
+
+--
+-- Name: test_run_configs_created_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX test_run_configs_created_at_idx ON public.test_run_configs USING btree (created_at);
 
 
 --

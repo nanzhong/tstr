@@ -89,7 +89,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 			Labels:       resultLabels,
 			CronSchedule: result.CronSchedule,
 			RunConfig: &common.Test_RunConfig{
-				Version:        uint32(result.TestRunConfigVersion),
+				Version:        result.TestRunConfigVersion,
 				ContainerImage: result.ContainerImage,
 				Command:        result.Command,
 				Args:           result.Args,

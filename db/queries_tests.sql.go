@@ -50,7 +50,7 @@ type RegisterTestRow struct {
 	CronSchedule           string             `json:"cron_schedule"`
 	RegisteredAt           pgtype.Timestamptz `json:"registered_at"`
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
-	TestRunConfigVersion   int                `json:"test_run_config_version"`
+	TestRunConfigVersion   string             `json:"test_run_config_version"`
 	ContainerImage         string             `json:"container_image"`
 	Command                string             `json:"command"`
 	Args                   []string           `json:"args"`
@@ -89,7 +89,7 @@ FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
 WHERE tests.id = $1::uuid
-ORDER BY test_run_configs.id DESC
+ORDER BY test_run_configs.created_at DESC
 LIMIT 1;`
 
 type GetTestRow struct {
@@ -100,7 +100,7 @@ type GetTestRow struct {
 	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
 	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
-	TestRunConfigVersion int                `json:"test_run_config_version"`
+	TestRunConfigVersion string             `json:"test_run_config_version"`
 	ContainerImage       string             `json:"container_image"`
 	Command              string             `json:"command"`
 	Args                 []string           `json:"args"`
@@ -134,15 +134,13 @@ func (q *DBQuerier) GetTestScan(results pgx.BatchResults) (GetTestRow, error) {
 	return item, nil
 }
 
-const listTestsSQL = `SELECT tests.*, latest_configs.id AS test_run_config_version, container_image, command, args, env, created_at
+const listTestsSQL = `SELECT tests.*, latest_configs.id AS test_run_config_version, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
-JOIN (
-  SELECT *
-  FROM test_run_configs
-  WHERE id IN (SELECT MAX(id) from test_run_configs GROUP BY test_id)
-) AS latest_configs
+JOIN test_run_configs AS latest_configs
 ON tests.id = latest_configs.test_id
-WHERE tests.labels @> $1::jsonb
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
+WHERE test_run_configs IS NULL AND tests.labels @> $1::jsonb
 ORDER BY tests.name ASC;`
 
 type ListTestsRow struct {
@@ -153,7 +151,7 @@ type ListTestsRow struct {
 	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
 	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
 	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
-	TestRunConfigVersion int                `json:"test_run_config_version"`
+	TestRunConfigVersion string             `json:"test_run_config_version"`
 	ContainerImage       string             `json:"container_image"`
 	Command              string             `json:"command"`
 	Args                 []string           `json:"args"`
@@ -265,7 +263,7 @@ type CreateTestRunConfigParams struct {
 }
 
 type CreateTestRunConfigRow struct {
-	ID             int                `json:"id"`
+	ID             string             `json:"id"`
 	TestID         string             `json:"test_id"`
 	ContainerImage string             `json:"container_image"`
 	Command        string             `json:"command"`

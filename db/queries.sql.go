@@ -100,10 +100,10 @@ type Querier interface {
 	// ListRunsScan scans the result of an executed ListRunsBatch query.
 	ListRunsScan(results pgx.BatchResults) ([]ListRunsRow, error)
 
-	ScheduleRun(ctx context.Context, testID string, testRunConfigID int) (ScheduleRunRow, error)
+	ScheduleRun(ctx context.Context, testID string, testRunConfigID string) (ScheduleRunRow, error)
 	// ScheduleRunBatch enqueues a ScheduleRun query into batch to be executed
 	// later by the batch.
-	ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID int)
+	ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID string)
 	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
 	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
 

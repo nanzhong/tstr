@@ -19,7 +19,7 @@ WHERE runs.id = $1;`
 type GetRunRow struct {
 	ID              string             `json:"id"`
 	TestID          string             `json:"test_id"`
-	TestRunConfigID int                `json:"test_run_config_id"`
+	TestRunConfigID string             `json:"test_run_config_id"`
 	RunnerID        string             `json:"runner_id"`
 	Result          RunResult          `json:"result"`
 	Logs            pgtype.JSONB       `json:"logs"`
@@ -137,7 +137,7 @@ type ListRunsParams struct {
 type ListRunsRow struct {
 	ID              string             `json:"id"`
 	TestID          string             `json:"test_id"`
-	TestRunConfigID int                `json:"test_run_config_id"`
+	TestRunConfigID string             `json:"test_run_config_id"`
 	RunnerID        string             `json:"runner_id"`
 	Result          RunResult          `json:"result"`
 	Logs            pgtype.JSONB       `json:"logs"`
@@ -200,13 +200,13 @@ func (q *DBQuerier) ListRunsScan(results pgx.BatchResults) ([]ListRunsRow, error
 }
 
 const scheduleRunSQL = `INSERT INTO runs (test_id, test_run_config_id)
-VALUES ($1::uuid, $2::integer)
+VALUES ($1::uuid, $2::uuid)
 RETURNING *;`
 
 type ScheduleRunRow struct {
 	ID              string             `json:"id"`
 	TestID          string             `json:"test_id"`
-	TestRunConfigID int                `json:"test_run_config_id"`
+	TestRunConfigID string             `json:"test_run_config_id"`
 	RunnerID        string             `json:"runner_id"`
 	Result          RunResult          `json:"result"`
 	Logs            pgtype.JSONB       `json:"logs"`
@@ -216,7 +216,7 @@ type ScheduleRunRow struct {
 }
 
 // ScheduleRun implements Querier.ScheduleRun.
-func (q *DBQuerier) ScheduleRun(ctx context.Context, testID string, testRunConfigID int) (ScheduleRunRow, error) {
+func (q *DBQuerier) ScheduleRun(ctx context.Context, testID string, testRunConfigID string) (ScheduleRunRow, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "ScheduleRun")
 	row := q.conn.QueryRow(ctx, scheduleRunSQL, testID, testRunConfigID)
 	var item ScheduleRunRow
@@ -227,7 +227,7 @@ func (q *DBQuerier) ScheduleRun(ctx context.Context, testID string, testRunConfi
 }
 
 // ScheduleRunBatch implements Querier.ScheduleRunBatch.
-func (q *DBQuerier) ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID int) {
+func (q *DBQuerier) ScheduleRunBatch(batch genericBatch, testID string, testRunConfigID string) {
 	batch.Queue(scheduleRunSQL, testID, testRunConfigID)
 }
 
@@ -258,7 +258,7 @@ RETURNING *;`
 type NextRunRow struct {
 	ID              string             `json:"id"`
 	TestID          string             `json:"test_id"`
-	TestRunConfigID int                `json:"test_run_config_id"`
+	TestRunConfigID string             `json:"test_run_config_id"`
 	RunnerID        string             `json:"runner_id"`
 	Result          RunResult          `json:"result"`
 	Logs            pgtype.JSONB       `json:"logs"`

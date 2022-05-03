@@ -143,12 +143,12 @@ const listAccessTokensSQL = `SELECT id, name, scopes, issued_at, expires_at, rev
 FROM access_tokens
 WHERE
   CASE WHEN $1
-   THEN expires_at IS NOT NULL
-   ELSE TRUE
+   THEN TRUE
+   ELSE expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP
   END AND
   CASE WHEN $2
-   THEN revoked_at IS NOT NULL
-   ELSE TRUE
+   THEN TRUE
+   ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
   END;`
 
 type ListAccessTokensRow struct {
@@ -161,9 +161,9 @@ type ListAccessTokensRow struct {
 }
 
 // ListAccessTokens implements Querier.ListAccessTokens.
-func (q *DBQuerier) ListAccessTokens(ctx context.Context, filterExpired bool, filterRevoked bool) ([]ListAccessTokensRow, error) {
+func (q *DBQuerier) ListAccessTokens(ctx context.Context, includeExpired bool, includeRevoked bool) ([]ListAccessTokensRow, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "ListAccessTokens")
-	rows, err := q.conn.Query(ctx, listAccessTokensSQL, filterExpired, filterRevoked)
+	rows, err := q.conn.Query(ctx, listAccessTokensSQL, includeExpired, includeRevoked)
 	if err != nil {
 		return nil, fmt.Errorf("query ListAccessTokens: %w", err)
 	}
@@ -187,8 +187,8 @@ func (q *DBQuerier) ListAccessTokens(ctx context.Context, filterExpired bool, fi
 }
 
 // ListAccessTokensBatch implements Querier.ListAccessTokensBatch.
-func (q *DBQuerier) ListAccessTokensBatch(batch genericBatch, filterExpired bool, filterRevoked bool) {
-	batch.Queue(listAccessTokensSQL, filterExpired, filterRevoked)
+func (q *DBQuerier) ListAccessTokensBatch(batch genericBatch, includeExpired bool, includeRevoked bool) {
+	batch.Queue(listAccessTokensSQL, includeExpired, includeRevoked)
 }
 
 // ListAccessTokensScan implements Querier.ListAccessTokensScan.

@@ -37,10 +37,10 @@ type Querier interface {
 	// GetAccessTokenScan scans the result of an executed GetAccessTokenBatch query.
 	GetAccessTokenScan(results pgx.BatchResults) (GetAccessTokenRow, error)
 
-	ListAccessTokens(ctx context.Context, filterExpired bool, filterRevoked bool) ([]ListAccessTokensRow, error)
+	ListAccessTokens(ctx context.Context, includeExpired bool, includeRevoked bool) ([]ListAccessTokensRow, error)
 	// ListAccessTokensBatch enqueues a ListAccessTokens query into batch to be executed
 	// later by the batch.
-	ListAccessTokensBatch(batch genericBatch, filterExpired bool, filterRevoked bool)
+	ListAccessTokensBatch(batch genericBatch, includeExpired bool, includeRevoked bool)
 	// ListAccessTokensScan scans the result of an executed ListAccessTokensBatch query.
 	ListAccessTokensScan(results pgx.BatchResults) ([]ListAccessTokensRow, error)
 

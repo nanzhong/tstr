@@ -106,7 +106,25 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 }
 
 func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAccessTokensRequest) (*admin.ListAccessTokensResponse, error) {
-	return nil, nil
+	tokens, err := s.dbQuerier.ListAccessTokens(ctx, req.IncludeExpired, req.IncludeRevoked)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to query for access tokens")
+		return nil, status.Error(codes.Internal, "failed to list access tokens")
+	}
+
+	res := &admin.ListAccessTokensResponse{}
+	for _, token := range tokens {
+		res.AccessTokens = append(res.AccessTokens, &common.AccessToken{
+			Id:        token.ID,
+			Name:      token.Name,
+			Scopes:    toProtoScopes(token.Scopes),
+			IssuedAt:  toProtoTimestamp(token.IssuedAt),
+			ExpiresAt: toProtoTimestamp(token.ExpiresAt),
+			RevokedAt: toProtoTimestamp(token.RevokedAt),
+		})
+	}
+
+	return res, nil
 }
 
 func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAccessTokenRequest) (*admin.RevokeAccessTokenResponse, error) {

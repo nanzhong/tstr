@@ -17,11 +17,11 @@ WHERE id = pggen.arg('id')::uuid;
 SELECT id, name, scopes, issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
-  CASE WHEN pggen.arg('filter_expired')
-   THEN expires_at IS NOT NULL
-   ELSE TRUE
+  CASE WHEN pggen.arg('include_expired')
+   THEN TRUE
+   ELSE expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP
   END AND
-  CASE WHEN pggen.arg('filter_revoked')
-   THEN revoked_at IS NOT NULL
-   ELSE TRUE
+  CASE WHEN pggen.arg('include_revoked')
+   THEN TRUE
+   ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
   END;

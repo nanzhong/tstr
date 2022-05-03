@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
+mkdir -p .dev
 overmind start --auto-restart serve,db --daemonize
 dbmate --wait up

@@ -1,11 +1,11 @@
 {% import "time" %}
 {% import "fmt" %}
-{% import "github.com/nanzhong/tstr/api/common/v1" %}
-{% import timestamppb "google.golang.org/protobuf/types/known/timestamppb" %}
+{% import "github.com/nanzhong/tstr/db" %}
+{% import  "github.com/jackc/pgtype" %}
 
 {% code
 type RunsPage struct {
-    Runs []common.Run
+    Runs []db.UIListRecentRunsRow
     HasPendingRuns bool
     HasFinishedRuns bool
 }
@@ -23,8 +23,8 @@ Tester
     {%s fmt.Sprintf("%s ago", time.Since(t).Round(time.Second).String()) %}
 {% endfunc %}
 
-{% func timeCell(timestamp *timestamppb.Timestamp) %}
-    <span data-toggle="tooltip" data-placement="top" title="{%s fmtAbsTime(timestamp.AsTime()) %}">{%s fmtRelativeTime(timestamp.AsTime()) %}</span>
+{% func timeCell(timestamp pgtype.Timestamptz) %}
+    <span data-toggle="tooltip" data-placement="top" title="{%s fmtAbsTime(timestamp.Time) %}">{%s fmtRelativeTime(timestamp.Time) %}</span>
 {% endfunc %}
 
 {% func (p *RunsPage) Body() %}
@@ -48,14 +48,18 @@ Tester
         <tbody>
 
         {% for _, run := range p.Runs %}
-        {% if run.FinishedAt == nil %}
+        {% if run.FinishedAt.Status == pgtype.Null %}
           <tr>
-            <td scope="row"><a href="/runs/{%s run.Id %}">{%s run.Id %}<i class="fas fa-link"></i></a></td>
-            <td scope="row"> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
-            <td scope="row"> {% for _, arg := range run.TestRunConfig.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
+            <td scope="row"><a href="/runs/{%s run.ID %}">{%s run.ID %}<i class="fas fa-link"></i></a></td>
+            <td scope="row">
+            {% for _, label := range labelsAsSlice(run.Labels,": ") %}
+            <span class="badge bg-secondary">{%s label %}</span>
+            {% endfor %}
+            </td>
+            <td scope="row"> {% for _, arg := range run.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
             <td>{%= timeCell(run.ScheduledAt) %}</td>
-            <td>{% if run.StartedAt != nil %} {%= timeCell(run.StartedAt) %} {% endif %}</td>
-            <td>{%s run.RunnerId %} </td>
+            <td>{% if run.StartedAt.Status == pgtype.Present  %} {%= timeCell(run.StartedAt) %} {% endif %}</td>
+            <td>{%s run.RunnerName %} </td>
           </tr>
           {% endif %}
           {% endfor %}
@@ -81,20 +85,32 @@ Tester
             <th scope="col">Enqueued At</th>
             <th scope="col">Started At</th>
             <th scope="col">Finished At</th>
+            <th scope="col">Result</th>
             <th scope="col">Runner</th>
           </tr>
         </thead>
         <tbody>
         {% for _, run := range p.Runs[:50]  %}
-        {% if run.FinishedAt != nil %}
+        {% if run.FinishedAt.Status == pgtype.Present %}
           <tr>
-            <td><a href="/runs/{%s run.Id %}">{%s run.Id %}<i class="fas fa-link"></i></a></td>
-            <td> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
-            <td> {% for _, arg := range run.TestRunConfig.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
+            <td><a href="/runs/{%s run.ID %}">{%s run.ID %}<i class="fas fa-link"></i></a></td>
+            <td>
+            {% for _, label := range labelsAsSlice(run.Labels,": ") %}
+            <span class="badge bg-secondary">{%s label %}</span>
+            {% endfor %}
+            </td>
+            <td>{% for _, arg := range run.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %}</td>
             <td>{%= timeCell(run.ScheduledAt) %}</td>
             <td>{%= timeCell(run.StartedAt) %}</td>
-            <td> {%= timeCell(run.FinishedAt) %}</td>
-            <td>{%s run.RunnerId %} </td>
+            <td>{%= timeCell(run.FinishedAt) %}</td>
+            <td>
+            {% if run.Result == db.RunResultPass %}
+            <span class="badge bg-success">{%s string(run.Result) %}</span>
+            {% else %}
+            <span class="badge bg-danger">{%s string(run.Result) %}</span>
+            {% endif %}
+            </td>
+            <td>{%s run.RunnerName %} </td>
           </tr>
           {% endif %}
           {% endfor %}

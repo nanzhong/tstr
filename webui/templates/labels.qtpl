@@ -1,34 +1,12 @@
 
-{% import "time" %}
 {% import "fmt" %}
+{% import "strings" %}
+{% import "github.com/nanzhong/tstr/db" %}
 
 {% code
-
-
-const height = 100
-const heightDiff = 20
-
-type DayReport struct {
-    Timestamp time.Time
-
-    Runs int
-    ErredRuns int
-
-    // Tests
-    Total int
-    Passed int
-    Skipped int
-    Failed int 
-    Unknown int
-}
-
-type LabelSummary struct {
-    Label string
-    MonthReport []DayReport
-}
-
 type LabelsPage struct {
-    MonthSummary []LabelSummary
+    TestsByLabel []db.UITestsByLabelsRow
+    ResultsByTest map[string][]db.RunResult
 }
 %}
 
@@ -40,114 +18,28 @@ Tester - Labels
 {% func (p *LabelsPage) Body() %}
 
 <div class="packages">
-{% for _, summary := range p.MonthSummary  %}
+{% for _, byLabel := range p.TestsByLabel  %}
+{% code 
 
-{% if len(summary.MonthReport) > 0 %}
+ labelsAsString := strings.Join(labelsAsSlice(byLabel.Labels,": ")," ")
+%}
   <div class="row mb-2">
     <div class="col">
-      <h2 class="h4"><a href="/labels/{%s summary.Label %}">{%s summary.Label %}</a></h2>
-      {%= GenerateMonthReport(summary.MonthReport) %}
+      <h2 class="h4"><a href="/labels/{%s fmt.Sprintf("TODO") %}">{%s labelsAsString %}</a></h2>
+      {% for _, test := range byLabel.Tests  %}
+     <!-- <h4>{%s test.Name %}</h4> -->
+        {% for _, result := range p.ResultsByTest[test.ID] %}
+
+            {% if result == db.RunResultPass %}
+            <span class="badge bg-success">&nbsp;</span>
+            {% else %}
+            <span class="badge bg-danger">&nbsp;</span>
+            {% endif %}
+        {% endfor %}
+      {% endfor  %}
     </div>
   </div>
-  {% else  %}
-  <div class="row">
-    <div class="col">
-      <h5>No results yet</h5>
-      <p>Kick off a test run and publish the results...</p>
-    </div>
-  </div>
-  {% endif %}
 {% endfor %}
 </div>
 {% endfunc %}
 
-
-{% code 
-func percent( a int , b int ) string {
-    return fmt.Sprintf("%.1f", float64(a)/float64(b)*100)
-}
-%}
-
-
-{% func SummaryTooltip(dayReport DayReport) %}
-<div>
-  <div class='row'>
-    <div class='col'><strong>Runs</strong></div>
-  </div>
-  <div class='row'>
-    <div class='col'>Total: {%d dayReport.Runs %} {% if dayReport.ErredRuns > 0 %} <small>({%d dayReport.ErredRuns %} erred) {% endif  %} </div>
-  </div>
-  <hr>
-  <div class='row'>
-    <div class='col'><strong>Tests</strong></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Passed</div>
-    <div class='col-7'>{%d dayReport.Passed %} <small>( {%s percent(dayReport.Passed, dayReport.Total) %} %)</small></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Skipped</div>
-    <div class='col-7'>{%d dayReport.Skipped %} <small>( {%s percent(dayReport.Skipped, dayReport.Total) %} %)</small></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Failed</div>
-    <div class='col-7'>{%d dayReport.Failed %} <small>( {%s percent(dayReport.Failed, dayReport.Total) %} %)</small></div>
-  </div>
-</div>
-{% endfunc %}
-
-{% func PackageRunSummaryBar(dayReport DayReport) %}
-{% code
-pctFailed := float64(dayReport.Failed)/ float64(dayReport.Total)
-pctSkipped := float64(dayReport.Skipped)/ float64(dayReport.Total)
-pctPassed := float64(dayReport.Passed)/ float64(dayReport.Total)
-%}
-<div class="bg-danger bg-gradient" style="min-height: calc(100% * {%f pctFailed %});"></div>
-<div class="bg-warning bg-gradient" style="min-height: calc(100% * {%f pctSkipped %});"></div>
-<div class="bg-success bg-gradient" style="min-height: calc(100% * {%f pctPassed %});"></div>
-{% endfunc %}
-
-{% func GenerateMonthReport(month []DayReport) %}
-<div class="border p-1">
-  <div class="d-flex">
-  {% for _, dayReport := range month %}
-
-  {% comment %}
-    {{ $pkgSummary := index .PackageSummary $.Name }}
-    {% endcomment %}
-    <a class="flex-grow-1" style="margin: 1px; min-width: 2px; min-height: {%d height %}px; max-height: {%d height %}px;"
-       href="/run_summary?package={{ $.Name }}&begin={{ .Time.Unix }}&window={{ .Duration.Seconds }}"
-       {{if $pkgSummary}}
-       data-toggle="popover"
-       data-trigger="hover"
-       data-placement="bottom"
-       data-html="true"
-       data-title="<small>{%s dayReport.Timestamp.Format(time.UnixDate) %}  </small>"
-       data-content="{%= SummaryTooltip(dayReport) %}"
-       {{end}}
-       >
-
-  {% comment %}
-      {{if not $pkgSummary}}
-      <div class="bg-light" style="min-height: 100%;"></div>
-      {{else}}
-      {% endcomment %}
-      <div style="min-height: calc(2 * {%d heightDiff %}px);"></div>
-      <div style="height: calc({%d height %}px - 2 * {%d heightDiff %}px);">
-        {% comment %}
-        {{ template "package_run_summary_bar" $pkgSummary }}
-        {% endcomment %}
-        {%= PackageRunSummaryBar(dayReport) %}
-      </div>
-    </a>
-    {% endfor %}
-    <div class="d-flex justify-content-between">
-        <div style="width: calc(100% * 58 / (58 + 23 + 12));"><small class="text-muted">30d</small></div>
-        <div style="width: calc(100% * 23 / (58 + 23 + 12));"><small class="text-muted">24h</small></div>
-        <div class="flex-grow-1"><small class="text-muted">1h</small></div>
-    <div><small class="text-muted">now</small></div>
-  </div>
-</div>
-
-
-{% endfunc %}

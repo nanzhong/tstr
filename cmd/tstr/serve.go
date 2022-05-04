@@ -82,7 +82,7 @@ var serveCmd = &cobra.Command{
 		runnerServer := grpcserver.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
-		webui := webui.NewWebUI()
+		webui := webui.NewWebUI(dbQuerier)
 
 		httpServer := http.Server{
 			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),

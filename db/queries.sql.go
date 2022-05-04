@@ -197,6 +197,27 @@ type Querier interface {
 	ArchiveTestBatch(batch genericBatch, id string)
 	// ArchiveTestScan scans the result of an executed ArchiveTestBatch query.
 	ArchiveTestScan(results pgx.BatchResults) (pgconn.CommandTag, error)
+
+	UIListRecentRuns(ctx context.Context, limit int) ([]UIListRecentRunsRow, error)
+	// UIListRecentRunsBatch enqueues a UIListRecentRuns query into batch to be executed
+	// later by the batch.
+	UIListRecentRunsBatch(batch genericBatch, limit int)
+	// UIListRecentRunsScan scans the result of an executed UIListRecentRunsBatch query.
+	UIListRecentRunsScan(results pgx.BatchResults) ([]UIListRecentRunsRow, error)
+
+	UITestsByLabels(ctx context.Context) ([]UITestsByLabelsRow, error)
+	// UITestsByLabelsBatch enqueues a UITestsByLabels query into batch to be executed
+	// later by the batch.
+	UITestsByLabelsBatch(batch genericBatch)
+	// UITestsByLabelsScan scans the result of an executed UITestsByLabelsBatch query.
+	UITestsByLabelsScan(results pgx.BatchResults) ([]UITestsByLabelsRow, error)
+
+	UITestResults(ctx context.Context) ([]UITestResultsRow, error)
+	// UITestResultsBatch enqueues a UITestResults query into batch to be executed
+	// later by the batch.
+	UITestResultsBatch(batch genericBatch)
+	// UITestResultsScan scans the result of an executed UITestResultsBatch query.
+	UITestResultsScan(results pgx.BatchResults) ([]UITestResultsRow, error)
 }
 
 type DBQuerier struct {
@@ -352,7 +373,27 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	if _, err := p.Prepare(ctx, archiveTestSQL, archiveTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'ArchiveTest': %w", err)
 	}
+	if _, err := p.Prepare(ctx, uilistRecentRunsSQL, uilistRecentRunsSQL); err != nil {
+		return fmt.Errorf("prepare query 'UIListRecentRuns': %w", err)
+	}
+	if _, err := p.Prepare(ctx, uitestsByLabelsSQL, uitestsByLabelsSQL); err != nil {
+		return fmt.Errorf("prepare query 'UITestsByLabels': %w", err)
+	}
+	if _, err := p.Prepare(ctx, uitestResultsSQL, uitestResultsSQL); err != nil {
+		return fmt.Errorf("prepare query 'UITestResults': %w", err)
+	}
 	return nil
+}
+
+// Tests represents the Postgres composite type "tests".
+type Tests struct {
+	ID           string             `json:"id"`
+	Name         string             `json:"name"`
+	Labels       pgtype.JSONB       `json:"labels"`
+	CronSchedule string             `json:"cron_schedule"`
+	RegisteredAt pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt   pgtype.Timestamptz `json:"archived_at"`
 }
 
 // AccessTokenScope represents the Postgres enum "access_token_scope".
@@ -464,6 +505,21 @@ func (tr *typeResolver) newArrayValue(name, elemName string, defaultVal func() p
 	return typ
 }
 
+// newTests creates a new pgtype.ValueTranscoder for the Postgres
+// composite type 'tests'.
+func (tr *typeResolver) newTests() pgtype.ValueTranscoder {
+	return tr.newCompositeValue(
+		"tests",
+		compositeField{"id", "uuid", &pgtype.UUID{}},
+		compositeField{"name", "varchar", &pgtype.Varchar{}},
+		compositeField{"labels", "jsonb", &pgtype.JSONB{}},
+		compositeField{"cron_schedule", "varchar", &pgtype.Varchar{}},
+		compositeField{"registered_at", "timestamptz", &pgtype.Timestamptz{}},
+		compositeField{"updated_at", "timestamptz", &pgtype.Timestamptz{}},
+		compositeField{"archived_at", "timestamptz", &pgtype.Timestamptz{}},
+	)
+}
+
 // newAccessTokenScopeArray creates a new pgtype.ValueTranscoder for the Postgres
 // '_access_token_scope' array type.
 func (tr *typeResolver) newAccessTokenScopeArray() pgtype.ValueTranscoder {
@@ -514,6 +570,12 @@ func (tr *typeResolver) newRunResultArrayRaw(vs []RunResult) []interface{} {
 		elems[i] = v
 	}
 	return elems
+}
+
+// newTestsArray creates a new pgtype.ValueTranscoder for the Postgres
+// '_tests' array type.
+func (tr *typeResolver) newTestsArray() pgtype.ValueTranscoder {
+	return tr.newArrayValue("_tests", "tests", tr.newTests)
 }
 
 // textPreferrer wraps a pgtype.ValueTranscoder and sets the preferred encoding

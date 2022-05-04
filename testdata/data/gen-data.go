@@ -46,7 +46,7 @@ type Test struct {
 }
 
 type TestRunConfig struct {
-	ID             int                `json:"id"`
+	ID             string             `json:"id"`
 	TestID         string             `json:"test_id"`
 	ContainerImage string             `json:"container_image"`
 	Command        string             `json:"command"`
@@ -64,7 +64,7 @@ type RunLogEntry struct {
 type Run struct {
 	ID              string             `json:"id"`
 	TestID          string             `json:"test_id"`
-	TestRunConfigID int                `json:"test_run_config_id"`
+	TestRunConfigID string             `json:"test_run_config_id"`
 	RunnerID        string             `json:"runner_id"`
 	Result          db.RunResult       `json:"result"`
 	Logs            []RunLogEntry      `json:"logs"`
@@ -151,13 +151,12 @@ func main() {
 
 	tests := []Test{}
 	testRunConfigs := []TestRunConfig{}
-	testRunConfigID := 1
 	testRuns := []Run{}
 
 	for i := 0; i < numTests; i++ {
 
 		// registered in the last [5:35[ days
-		registeredAt := time.Now().Add(time.Hour * 24 * time.Duration(5+rand.Intn(30)))
+		registeredAt := time.Now().Add(-time.Hour * 24 * time.Duration(5+rand.Intn(30)))
 
 		archivedAt := pgtype.Timestamptz{}
 		if rand.Float64() <= 0.15 {
@@ -180,7 +179,7 @@ func main() {
 		// for each test create 1 (for now) TestRunConfig
 
 		testRunConfig := TestRunConfig{
-			ID:             testRunConfigID,
+			ID:             uuid.New().String(),
 			TestID:         test.ID,
 			ContainerImage: "busybox:latest",
 			Command:        "/bin/sh",
@@ -188,7 +187,6 @@ func main() {
 			Env:            map[string]string{"LANG": "C"},
 			CreatedAt:      pgtype.Timestamptz{Time: test.UpdatedAt.Time.Add(1 + time.Duration(rand.Intn(10))*time.Minute), Status: pgtype.Present},
 		}
-		testRunConfigID++
 		testRunConfigs = append(testRunConfigs, testRunConfig)
 		tests = append(tests, test)
 

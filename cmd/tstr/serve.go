@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"net"
 	"net/http"
 	"os"
@@ -10,12 +12,14 @@ import (
 	"time"
 
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
-	"github.com/nanzhong/tstr/grpcserver"
+	"github.com/nanzhong/tstr/grpc/auth"
+	"github.com/nanzhong/tstr/grpc/server"
 	"github.com/nanzhong/tstr/webui"
 	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
@@ -32,6 +36,8 @@ var serveCmd = &cobra.Command{
 	Short: "serve the gRPC API and web UI.",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx := context.Background()
+
 		// TODO Use console writer for now for easy development/debugging, perhaps remove and rely on humanlog in the future.
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
@@ -42,6 +48,20 @@ var serveCmd = &cobra.Command{
 		defer pool.Close()
 
 		dbQuerier := db.NewQuerier(pool)
+		if viper.GetString("serve-bootstrap-token") != "" {
+			tokenHashBytes := sha256.Sum256([]byte(viper.GetString("serve-bootstrap-token")))
+			tokenHash := hex.EncodeToString(tokenHashBytes[:])
+
+			var expiresAt pgtype.Timestamptz
+			expiresAt.Set(time.Now().Add(24 * time.Hour))
+
+			dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
+				Name:      "bootstrap-token",
+				TokenHash: tokenHash,
+				Scopes:    []db.AccessTokenScope{db.AccessTokenScopeAdmin},
+				ExpiresAt: expiresAt,
+			})
+		}
 
 		// TODO: consider using cmux to serve http and grpc on the same port?
 		grpcListener, err := net.Listen("tcp", viper.GetString("serve-api-addr"))
@@ -64,19 +84,21 @@ var serveCmd = &cobra.Command{
 			grpczerolog.UnaryInterceptor(),
 			grpc.ChainUnaryInterceptor(
 				grpc_validator.UnaryServerInterceptor(),
+				auth.UnaryServerInterceptor(dbQuerier),
 			),
 			grpc.ChainStreamInterceptor(
 				grpc_validator.StreamServerInterceptor(),
+				auth.StreamServerInterceptor(dbQuerier),
 			),
 		)
 
-		controlServer := grpcserver.NewControlServer(dbQuerier)
+		controlServer := server.NewControlServer(dbQuerier)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
-		adminServer := grpcserver.NewAdminServer(dbQuerier)
+		adminServer := server.NewAdminServer(dbQuerier)
 		admin.RegisterAdminServiceServer(grpcServer, adminServer)
 
-		runnerServer := grpcserver.NewRunnerServer()
+		runnerServer := server.NewRunnerServer()
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 		webui := webui.NewWebUI()
@@ -148,4 +170,7 @@ func init() {
 
 	serveCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")
 	viper.BindPFlag("serve-pg-dsn", serveCmd.Flags().Lookup("pg-dsn"))
+
+	serveCmd.Flags().String("bootstrap-token", "", "Bootstrap with provided access token (note that this token will have admin scope valid for 24h).")
+	viper.BindPFlag("serve-bootstrap-token", serveCmd.Flags().Lookup("bootstrap-token"))
 }

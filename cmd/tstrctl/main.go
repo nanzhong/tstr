@@ -20,6 +20,9 @@ func init() {
 
 	rootCmd.PersistentFlags().Duration("timeout", 15*time.Second, "The amount of time to wait API requests.")
 	viper.BindPFlag("timeout", rootCmd.PersistentFlags().Lookup("timeout"))
+
+	rootCmd.PersistentFlags().String("access-token", "", "The access token to use for authentication.")
+	viper.BindPFlag("access-token", rootCmd.PersistentFlags().Lookup("access-token"))
 }
 
 func main() {

@@ -23,10 +23,10 @@ type Querier interface {
 	// IssueAccessTokenScan scans the result of an executed IssueAccessTokenBatch query.
 	IssueAccessTokenScan(results pgx.BatchResults) (IssueAccessTokenRow, error)
 
-	ValidateAccessToken(ctx context.Context, tokenHash string) (bool, error)
+	ValidateAccessToken(ctx context.Context, tokenHash string, scopes []AccessTokenScope) (bool, error)
 	// ValidateAccessTokenBatch enqueues a ValidateAccessToken query into batch to be executed
 	// later by the batch.
-	ValidateAccessTokenBatch(batch genericBatch, tokenHash string)
+	ValidateAccessTokenBatch(batch genericBatch, tokenHash string, scopes []AccessTokenScope)
 	// ValidateAccessTokenScan scans the result of an executed ValidateAccessTokenBatch query.
 	ValidateAccessTokenScan(results pgx.BatchResults) (bool, error)
 
@@ -362,6 +362,7 @@ const (
 	AccessTokenScopeAdmin     AccessTokenScope = "admin"
 	AccessTokenScopeControlR  AccessTokenScope = "control_r"
 	AccessTokenScopeControlRW AccessTokenScope = "control_rw"
+	AccessTokenScopeRunner    AccessTokenScope = "runner"
 )
 
 func (a AccessTokenScope) String() string { return string(a) }

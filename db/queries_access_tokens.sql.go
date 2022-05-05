@@ -63,14 +63,18 @@ func (q *DBQuerier) IssueAccessTokenScan(results pgx.BatchResults) (IssueAccessT
 	return item, nil
 }
 
-const validateAccessTokenSQL = `SELECT TRUE
-FROM access_tokens
-WHERE token_hash = $1 AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);`
+const validateAccessTokenSQL = `SELECT EXISTS(
+  SELECT TRUE
+  FROM access_tokens
+  WHERE
+    token_hash = $1 AND
+    (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND
+    scopes @> $2);`
 
 // ValidateAccessToken implements Querier.ValidateAccessToken.
-func (q *DBQuerier) ValidateAccessToken(ctx context.Context, tokenHash string) (bool, error) {
+func (q *DBQuerier) ValidateAccessToken(ctx context.Context, tokenHash string, scopes []AccessTokenScope) (bool, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "ValidateAccessToken")
-	row := q.conn.QueryRow(ctx, validateAccessTokenSQL, tokenHash)
+	row := q.conn.QueryRow(ctx, validateAccessTokenSQL, tokenHash, q.types.newAccessTokenScopeArrayInit(scopes))
 	var item bool
 	if err := row.Scan(&item); err != nil {
 		return item, fmt.Errorf("query ValidateAccessToken: %w", err)
@@ -79,8 +83,8 @@ func (q *DBQuerier) ValidateAccessToken(ctx context.Context, tokenHash string) (
 }
 
 // ValidateAccessTokenBatch implements Querier.ValidateAccessTokenBatch.
-func (q *DBQuerier) ValidateAccessTokenBatch(batch genericBatch, tokenHash string) {
-	batch.Queue(validateAccessTokenSQL, tokenHash)
+func (q *DBQuerier) ValidateAccessTokenBatch(batch genericBatch, tokenHash string, scopes []AccessTokenScope) {
+	batch.Queue(validateAccessTokenSQL, tokenHash, q.types.newAccessTokenScopeArrayInit(scopes))
 }
 
 // ValidateAccessTokenScan implements Querier.ValidateAccessTokenScan.

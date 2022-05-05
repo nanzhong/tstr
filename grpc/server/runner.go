@@ -1,4 +1,4 @@
-package grpcserver
+package server
 
 import "github.com/nanzhong/tstr/api/runner/v1"
 

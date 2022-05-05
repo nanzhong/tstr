@@ -30,7 +30,8 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 CREATE TYPE public.access_token_scope AS ENUM (
     'admin',
     'control_r',
-    'control_rw'
+    'control_rw',
+    'runner'
 );
 
 

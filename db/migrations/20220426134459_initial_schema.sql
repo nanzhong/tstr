@@ -64,7 +64,7 @@ CREATE INDEX ON runs(runner_id);
 CREATE INDEX ON runs(result);
 CREATE INDEX ON runs(scheduled_at, started_at, finished_at);
 
-CREATE TYPE access_token_scope AS ENUM ('admin', 'control_r', 'control_rw');
+CREATE TYPE access_token_scope AS ENUM ('admin', 'control_r', 'control_rw', 'runner');
 CREATE TABLE access_tokens (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
        name varchar NOT NULL,

@@ -78,7 +78,6 @@ func init() {
 			if len(args) > 0 {
 				req.RunConfig.Args = args
 			}
-			fmt.Println(args, req.RunConfig.Args)
 
 			if len(env) > 0 {
 				for _, ev := range env {

@@ -4,9 +4,13 @@ VALUES (pggen.arg('name'), pggen.arg('token_hash'), pggen.arg('scopes'), pggen.a
 RETURNING id, name, scopes, issued_at, expires_at;
 
 -- name: ValidateAccessToken :one
-SELECT TRUE
-FROM access_tokens
-WHERE token_hash = pggen.arg('token_hash') AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);
+SELECT EXISTS(
+  SELECT TRUE
+  FROM access_tokens
+  WHERE
+    token_hash = pggen.arg('token_hash') AND
+    (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND
+    scopes @> pggen.arg('scopes'));
 
 -- name: GetAccessToken :one
 SELECT id, name, scopes, issued_at, expires_at, revoked_at

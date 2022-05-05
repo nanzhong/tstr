@@ -1,8 +1,9 @@
-package grpcserver
+package server
 
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -57,15 +57,12 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	}
 	token := hex.EncodeToString(tokenData)
 
-	tokenHash, err := bcrypt.GenerateFromPassword([]byte(token), bcrypt.DefaultCost)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to hash token")
-		return nil, status.Error(codes.Internal, "failed to issue access token")
-	}
+	tokenHashBytes := sha256.Sum256([]byte(tokenData))
+	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 		Name:      req.Name,
-		TokenHash: string(tokenHash),
+		TokenHash: tokenHash,
 		Scopes:    scopes,
 		ExpiresAt: expiresAt,
 	})

@@ -41,6 +41,8 @@ func init() {
 					req.Scopes = append(req.Scopes, common.AccessToken_CONTROL_R)
 				case "control_rw":
 					req.Scopes = append(req.Scopes, common.AccessToken_CONTROL_RW)
+				case "runner":
+					req.Scopes = append(req.Scopes, common.AccessToken_RUNNER)
 				default:
 					return fmt.Errorf("invalid access token scope %s", s)
 				}

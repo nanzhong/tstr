@@ -8,11 +8,11 @@ import (
 	"text/template"
 
 	"github.com/envoyproxy/protoc-gen-validate/templates/shared"
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/iancoleman/strcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func RegisterModule(tpl *template.Template, params pgs.Parameters) {
@@ -77,6 +77,7 @@ func RegisterModule(tpl *template.Template, params pgs.Parameters) {
 	template.Must(tpl.New("email").Parse(emailTpl))
 	template.Must(tpl.New("hostname").Parse(hostTpl))
 	template.Must(tpl.New("address").Parse(hostTpl))
+	template.Must(tpl.New("uuid").Parse(uuidTpl))
 
 	template.Must(tpl.New("enum").Parse(enumTpl))
 	template.Must(tpl.New("message").Parse(messageTpl))
@@ -94,9 +95,9 @@ func RegisterHeader(tpl *template.Template, params pgs.Parameters) {
 	fns := CCFuncs{pgsgo.InitContext(params)}
 
 	tpl.Funcs(map[string]interface{}{
-		"class":  fns.className,
-		"output": fns.output,
-		"upper":  strings.ToUpper,
+		"class":                fns.className,
+		"output":               fns.output,
+		"screaming_snake_case": strcase.ToScreamingSnake,
 	})
 
 	template.Must(tpl.Parse(headerFileTpl))
@@ -199,12 +200,12 @@ func (fns CCFuncs) errIdxCause(ctx shared.RuleContext, idx, cause string, reason
 			errName, fns.lit(pgsgo.PGGUpperCamelCase(f.Name()))))
 
 	if idx != "" {
-		output = append(output, fmt.Sprintf(`msg << "[" << %s << "]";`, fns.lit(idx)))
+		output = append(output, fmt.Sprintf(`msg << "[" << %s << "]";`, idx))
 	} else if ctx.Index != "" {
-		output = append(output, fmt.Sprintf(`msg << "[" << %s << "]";`, fns.lit(ctx.Index)))
+		output = append(output, fmt.Sprintf(`msg << "[" << %s << "]";`, ctx.Index))
 	}
 
-	output = append(output, fmt.Sprintf(`msg << ": " << %s;`, fns.lit(fmt.Sprintf("%q", reason))))
+	output = append(output, fmt.Sprintf(`msg << ": " << %q;`, fmt.Sprint(reason...)))
 
 	if cause != "nil" && cause != "" {
 		output = append(output, fmt.Sprintf(`msg << " | caused by " << %s;`, cause))
@@ -240,7 +241,7 @@ func (fns CCFuncs) lit(x interface{}) string {
 	case reflect.String:
 		return fmt.Sprintf("%q", x)
 	case reflect.Uint8:
-		return fmt.Sprintf("0x%X", x)
+		return fmt.Sprintf("%d", x)
 	case reflect.Slice:
 		els := make([]string, val.Len())
 		switch reflect.TypeOf(x).Elem().Kind() {
@@ -278,8 +279,7 @@ func (fns CCFuncs) oneofTypeName(f pgs.Field) pgsgo.TypeName {
 	return pgsgo.TypeName(fmt.Sprintf("%s::%sCase::k%s",
 		fns.className(f.Message()),
 		pgsgo.PGGUpperCamelCase(f.OneOf().Name()),
-		pgsgo.PGGUpperCamelCase(f.Name()),
-	))
+		strings.ReplaceAll(pgsgo.PGGUpperCamelCase(f.Name()).String(), "_", "")))
 }
 
 func (fns CCFuncs) inType(f pgs.Field, x interface{}) string {
@@ -290,7 +290,7 @@ func (fns CCFuncs) inType(f pgs.Field, x interface{}) string {
 		switch x.(type) {
 		case []string:
 			return "string"
-		case []*duration.Duration:
+		case []*durationpb.Duration:
 			return "pgv::protobuf_wkt::Duration"
 		default:
 			return fns.className(f.Type().Element().Embed())
@@ -310,9 +310,16 @@ func (fns CCFuncs) cType(t pgs.FieldType) string {
 		}
 		// Strip the leading []
 		return fns.cTypeOfString(fns.Type(t.Field()).String()[2:])
+	} else if t.IsMap() {
+		if t.Element().IsEmbed() {
+			return fns.className(t.Element().Embed())
+		}
+
+		return fns.cTypeOfString(fns.Type(t.Field()).Element().String())
 	}
 
-	return fns.cTypeOfString(fns.Type(t.Field()).String())
+	// Use Value() to strip any potential pointer type.
+	return fns.cTypeOfString(fns.Type(t.Field()).Value().String())
 }
 
 func (fns CCFuncs) cTypeOfString(s string) string {
@@ -342,7 +349,7 @@ func (fns CCFuncs) inKey(f pgs.Field, x interface{}) string {
 		return fns.byteStr(x.([]byte))
 	case pgs.MessageT:
 		switch x := x.(type) {
-		case *duration.Duration:
+		case *durationpb.Duration:
 			return fns.durLit(x)
 		default:
 			return fns.lit(x)
@@ -354,40 +361,40 @@ func (fns CCFuncs) inKey(f pgs.Field, x interface{}) string {
 	}
 }
 
-func (fns CCFuncs) durLit(dur *duration.Duration) string {
+func (fns CCFuncs) durLit(dur *durationpb.Duration) string {
 	return fmt.Sprintf(
 		"pgv::protobuf::util::TimeUtil::SecondsToDuration(%d) + pgv::protobuf::util::TimeUtil::NanosecondsToDuration(%d)",
 		dur.GetSeconds(), dur.GetNanos())
 }
 
-func (fns CCFuncs) durStr(dur *duration.Duration) string {
-	d, _ := ptypes.Duration(dur)
+func (fns CCFuncs) durStr(dur *durationpb.Duration) string {
+	d := dur.AsDuration()
 	return d.String()
 }
 
-func (fns CCFuncs) durGt(a, b *duration.Duration) bool {
-	ad, _ := ptypes.Duration(a)
-	bd, _ := ptypes.Duration(b)
+func (fns CCFuncs) durGt(a, b *durationpb.Duration) bool {
+	ad := a.AsDuration()
+	bd := b.AsDuration()
 
 	return ad > bd
 }
 
-func (fns CCFuncs) tsLit(ts *timestamp.Timestamp) string {
+func (fns CCFuncs) tsLit(ts *timestamppb.Timestamp) string {
 	return fmt.Sprintf(
 		"time.Unix(%d, %d)",
 		ts.GetSeconds(), ts.GetNanos(),
 	)
 }
 
-func (fns CCFuncs) tsGt(a, b *timestamp.Timestamp) bool {
-	at, _ := ptypes.Timestamp(a)
-	bt, _ := ptypes.Timestamp(b)
+func (fns CCFuncs) tsGt(a, b *timestamppb.Timestamp) bool {
+	at := a.AsTime()
+	bt := b.AsTime()
 
 	return !bt.Before(at)
 }
 
-func (fns CCFuncs) tsStr(ts *timestamp.Timestamp) string {
-	t, _ := ptypes.Timestamp(ts)
+func (fns CCFuncs) tsStr(ts *timestamppb.Timestamp) string {
+	t := ts.AsTime()
 	return t.String()
 }
 
@@ -403,8 +410,12 @@ func (fns CCFuncs) unwrap(ctx shared.RuleContext, name string) (shared.RuleConte
 	return ctx, nil
 }
 
-func (fns CCFuncs) failUnimplemented() string {
-	return "throw pgv::UnimplementedException();"
+func (fns CCFuncs) failUnimplemented(message string) string {
+	if len(message) == 0 {
+		return "throw pgv::UnimplementedException();"
+	}
+
+	return fmt.Sprintf(`throw pgv::UnimplementedException(%q);`, message)
 }
 
 func (fns CCFuncs) staticVarName(msg pgs.Message) string {

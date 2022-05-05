@@ -2,43 +2,38 @@ package cc
 
 const strTpl = `
 	{{ $f := .Field }}{{ $r := .Rules }}
+	{{ if $r.GetIgnoreEmpty }}
+		if ({{ accessor . }} != "") {
+	{{ end }}
 	{{ template "const" . }}
 	{{ template "in" . }}
 	{{ if or $r.Len (and $r.MinLen $r.MaxLen (eq $r.GetMinLen $r.GetMaxLen)) }}
-		{{ unimplemented }}
 		{{ if $r.Len }}
-			{{/* TODO(akonradi) implement UTF-8 length constraints
-			if utf8.RuneCountInString({{ accessor . }}) != {{ $r.GetLen }} {
-				return {{ err . "value length must be " $r.GetLen " runes" }}
+			if (pgv::Utf8Len({{ accessor . }}) != {{ $r.GetLen }}) {
+				{{ err . "value must be " $r.GetLen " characters" }}
 			}
-			*/}}
 		{{ else }}
-			{{/* TODO(akonradi) implement UTF-8 length constraints
-			if utf8.RuneCountInString({{ accessor . }}) != {{ $r.GetMinLen }} {
-				return {{ err . "value length must be " $r.GetMinLen " runes" }}
+			if (pgv::Utf8Len({{ accessor . }}) != {{ $r.GetMinLen }}) {
+				{{ err . "value must be " $r.GetMinLen " characters" }}
 			}
-			*/}}
 		{{ end }}
 	{{ else if $r.MinLen }}
-		{{ unimplemented }}
-		{{/* TODO(akonradi) implement UTF-8 length constraints
 		{{ if $r.MaxLen }}
-			if l := utf8.RuneCountInString({{ accessor . }}); l < {{ $r.GetMinLen }} || l > {{ $r.GetMaxLen }} {
-				return {{ err . "value length must be between " $r.GetMinLen " and " $r.GetMaxLen " runes, inclusive" }}
+			{
+				const auto length = pgv::Utf8Len({{ accessor . }});
+				if (length < {{ $r.GetMinLen }} || length > {{ $r.GetMaxLen }}) {
+					{{ err . "value must have between " $r.GetMinLen " and " $r.GetMaxLen " characters inclusive" }}
+				}
 			}
 		{{ else }}
-			if utf8.RuneCountInString({{ accessor . }}) < {{ $r.GetMinLen }} {
-				return {{ err . "value length must be at least " $r.GetMinLen " runes" }}
+			if (pgv::Utf8Len({{ accessor . }}) < {{ $r.GetMinLen }}) {
+				{{ err . "value length must be at least " $r.GetMinLen " characters" }}
 			}
 		{{ end }}
-		*/}}
 	{{ else if $r.MaxLen }}
-		{{ unimplemented }}
-		{{/* TODO(akonradi) implement UTF-8 length constraints
-		if utf8.RuneCountInString({{ accessor . }}) > {{ $r.GetMaxLen }} {
-			return {{ err . "value length must be at most " $r.GetMaxLen " runes" }}
+		if (pgv::Utf8Len({{ accessor . }}) > {{ $r.GetMaxLen }}) {
+			{{ err . "value length must be at most " $r.GetMaxLen " characters" }}
 		}
-		*/}}
 	{{ end }}
 
 	{{ if or $r.LenBytes (and $r.MinBytes $r.MaxBytes (eq $r.GetMinBytes $r.GetMaxBytes)) }}
@@ -104,6 +99,23 @@ const strTpl = `
 			{{ err . "value does not contain substring " (lit $r.GetContains) }}
 		}
 	}
+        {{ end }}
+
+	{{ if $r.NotContains }}
+	{
+		if (pgv::Contains({{ accessor . }}, {{ lit $r.GetNotContains }})) {
+			{{ err . "value contains substring " (lit $r.GetNotContains) }}
+		}
+	}
+	{{ end }}
+
+        {{ if $r.Pattern }}
+        {
+                if (!RE2::FullMatch(re2::StringPiece({{ accessor . }}.c_str(), {{ accessor . }}.size()),
+                                    {{ lookup $f "Pattern" }})) {
+		        {{ err . "value does not match regex pattern " (lit $r.GetPattern) }}
+	        }
+        }
 	{{ end }}
 
 	{{ if $r.GetIp }}
@@ -128,7 +140,7 @@ const strTpl = `
 		}
 	}
 	{{ else if $r.GetEmail }}
-		{{ unimplemented }}
+		{{ unimplemented "C++ email address validation is not implemented" }}
 		{{/* TODO(akonradi) implement email address constraints
 		if err := m._validateEmail({{ accessor . }}); err != nil {
 			return {{ errCause . "err" "value must be a valid email address" }}
@@ -151,7 +163,7 @@ const strTpl = `
 		}
 	}
 	{{ else if $r.GetUri }}
-		{{ unimplemented }}
+		{{ unimplemented "C++ URI validation is not implemented" }}
 		{{/* TODO(akonradi) implement URI constraints
 		if uri, err := url.Parse({{ accessor . }}); err != nil {
 			return {{ errCause . "err" "value must be a valid URI" }}
@@ -160,20 +172,18 @@ const strTpl = `
 		}
 		*/}}
 	{{ else if $r.GetUriRef }}
-		{{ unimplemented }}
+		{{ unimplemented "C++ URI validation is not implemented" }}
 		{{/* TODO(akonradi) implement URI constraints
 		if _, err := url.Parse({{ accessor . }}); err != nil {
 			return {{ errCause . "err" "value must be a valid URI" }}
 		}
 		*/}}
+	{{ else if $r.GetUuid }}
+                if (!RE2::FullMatch(re2::StringPiece({{ accessor . }}), pgv::validate::_uuidPattern)) {
+                        {{ err . "value must be a valid UUID" }}
+                }
 	{{ end }}
-
-	{{ if $r.Pattern }}
-	{{ unimplemented }}
-	{{/* TODO(akonradi) implement regular expression constraints.
-	if !{{ lookup $f "Pattern" }}.MatchString({{ accessor . }}) {
-		return {{ err . "value does not match regex pattern " (lit $r.GetPattern) }}
-	}
-	*/}}
+	{{ if $r.GetIgnoreEmpty }}
+		}
 	{{ end }}
 `

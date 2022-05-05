@@ -81,11 +81,9 @@ make build
 
 - **`lang`**: specify the target language to generate. Currently, the only supported options are:
   - `go`
-  - `gogo` for [gogo proto](https://github.com/gogo/protobuf) (experimental)
   - `cc` for c++ (partially implemented)
   - `java`
-
-Support for `python` is planned.
+- Note: Python works via runtime code generation. There's no compile-time generation. See the Python section for details.
 
 ### Examples
 
@@ -103,33 +101,20 @@ protoc \
   example.proto
 ```
 
-All messages generated include the new `Validate() error` method. PGV requires no additional runtime dependencies from the existing generated code.
+All messages generated include the following methods:
+- `Validate() error` which returns the first error encountered during validation.
+- `ValidateAll() error` which returns all errors encountered during validation.
+  
+PGV requires no additional runtime dependencies from the existing generated code.
 
-#### Gogo
+**Note**: by default **example.pb.validate.go** is nested in a directory structure that matches your `option go_package` name. You can change this using the protoc parameter `paths=source_relative:.`. Then `--validate_out` will output the file where it is expected. See Google's protobuf documentation or [packages and input paths](https://github.com/golang/protobuf#packages-and-input-paths) or [parameters](https://github.com/golang/protobuf#parameters) for more information.
 
-There is an experimental support for [gogo
-protobuf](https://github.com/gogo/protobuf) plugin for `go`. Use the following
-command to generate `gogo`-compatible validation code:
-
-```sh
-protoc \
-  -I . \
-  -I ${GOPATH}/src \
-  -I ${GOPATH}/src/github.com/envoyproxy/protoc-gen-validate \
-  --gogofast_out=":../generated"\
-  --validate_out="lang=gogo:../generated" \ example.proto
-```
-
-Gogo support has the following limitations:
-- only `gogofast` plugin is supported and tested, meaning that the fields
-  should be properly annotated with `gogoproto` annotations;
-- `gogoproto.nullable` is supported on fields;
-- `gogoproto.stdduration` is supported on fields;
-- `gogoproto.stdtime` is supported on fields;
+There's also support for the `module=example.com/foo` flag [described here](https://developers.google.com/protocol-buffers/docs/reference/go-generated#invocation).
 
 #### Java
 
-Java generation is integrated with the existing protobuf toolchain for java projects. For Maven projects, add the following to your pom.xml.
+Java generation is integrated with the existing protobuf toolchain for java projects. For Maven projects, add the
+following to your pom.xml or build.gradle.
 
 ```xml
 <dependencies>
@@ -152,10 +137,11 @@ Java generation is integrated with the existing protobuf toolchain for java proj
         <plugin>
             <groupId>org.xolstice.maven.plugins</groupId>
             <artifactId>protobuf-maven-plugin</artifactId>
-            <version>0.5.0</version>
+            <version>0.6.1</version>
             <configuration>
                 <protocArtifact>com.google.protobuf:protoc:${protoc.version}:exe:${os.detected.classifier}</protocArtifact>
             </configuration>
+            <executions>
                 <execution>
                     <id>protoc-java-pgv</id>
                     <goals>
@@ -173,7 +159,66 @@ Java generation is integrated with the existing protobuf toolchain for java proj
 </build>
 ```
 
-Gradle projects follow a similar pattern.
+```gradle
+plugins {
+    ...
+    id "com.google.protobuf" version "${protobuf.version}"
+    ...
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:${protoc.version}"
+    }
+
+    plugins {
+        javapgv {
+            artifact = "io.envoyproxy.protoc-gen-validate:protoc-gen-validate:${pgv.version}"
+        }
+    }
+
+    generateProtoTasks {
+        all()*.plugins {
+            javapgv {
+                option "lang=java"
+            }
+        }
+    }
+}
+```
+
+```java
+// Create a validator index that reflectively loads generated validators
+ValidatorIndex index = new ReflectiveValidatorIndex();
+// Assert that a message is valid
+index.validatorFor(message.getClass()).assertValid(message);
+
+// Create a gRPC client and server interceptor to automatically validate messages (requires pgv-java-grpc module)
+clientStub = clientStub.withInterceptors(new ValidatingClientInterceptor(index));
+serverBuilder.addService(ServerInterceptors.intercept(svc, new ValidatingServerInterceptor(index)));
+```
+
+#### Python
+
+The python implementation works via JIT code generation. In other words, the `validate(msg)` function is written
+on-demand and [exec-ed](https://docs.python.org/3/library/functions.html#exec). An LRU-cache improves performance by 
+storing generated functions per descriptor. 
+ 
+The python package is available on [PyPI](https://pypi.org/project/protoc-gen-validate).
+
+To run `validate()`, do the following: 
+```python
+from entities_pb2 import Person
+from protoc_gen_validate.validator import validate, ValidationFailed
+
+p = Person(first_name="Foo", last_name="Bar", age=42)
+try:
+    validate(p)
+except ValidationFailed as err:
+    print(err)
+```
+
+You can view what code has been generated by using the `print_validate()` function.
 
 ## Constraint Rules
 
@@ -212,7 +257,7 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
   double x = 1 [(validate.rules).double = {lt:30, gte:40}];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the values of a field.
+- **in/not_in**: these two rules permit specifying allow/denylists for the values of a field.
 
   ```protobuf
   // x must be either 1, 2, or 3
@@ -220,6 +265,12 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
 
   // x cannot be 0 nor 0.99
   float x = 1 [(validate.rules).float = {not_in: [0, 0.99]}];
+  ```
+
+- **ignore_empty**: this rule specifies that if field is empty or set to the default value, to ignore any validation rules. These are typically useful where being able to unset a field in an update request, or to skip validation for optional fields where switching to WKTs is not feasible.
+
+  ```protobuf
+  unint32 x = 1 [(validate.rules).uint32 = {ignore_empty: true, gte: 200}];
   ```
 
 ### Bools
@@ -273,7 +324,7 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
   string x = 1 [(validate.rules).string.pattern = "(?i)^[0-9a-f]+$"];
   ```
 
-- **prefix/suffix/contains**: the field must contain the specified substring in an optionally explicit location.
+- **prefix/suffix/contains/not_contains**: the field must contain the specified substring in an optionally explicit location, or not contain the specified substring.
 
   ```protobuf
   // x must begin with "foo"
@@ -284,6 +335,9 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
 
   // x must contain "baz" anywhere inside it
   string x = 1 [(validate.rules).string.contains = "baz"];
+  
+  // x cannot contain "baz" anywhere inside it
+  string x = 1 [(validate.rules).string.not_contains = "baz"];
 
   // x must begin with "fizz" and end with "buzz"
   string x = 1 [(validate.rules).string = {prefix: "fizz", suffix: "buzz"}];
@@ -292,7 +346,7 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
   string x = 1 [(validate.rules).string = {suffix: ".proto", max_len:64}];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the values of a field.
+- **in/not_in**: these two rules permit specifying allow/denylists for the values of a field.
 
   ```protobuf
   // x must be either "foo", "bar", or "baz"
@@ -300,6 +354,12 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
 
   // x cannot be "fizz" nor "buzz"
   string x = 1 [(validate.rules).string = {not_in: ["fizz", "buzz"]}];
+  ```
+
+- **ignore_empty**: this rule specifies that if field is empty or set to the default value, to ignore any validation rules. These are typically useful where being able to unset a field in an update request, or to skip validation for optional fields where switching to WKTs is not feasible.
+
+  ```protobuf
+  string CountryCode = 1 [(validate.rules).string = {ignore_empty: true, len: 2}];
   ```
 
 - **well-known formats**: these rules provide advanced constraints for common string patterns. These constraints will typically be more permissive and performant than equivalent regular expression patterns, while providing more explanatory failure descriptions.
@@ -330,6 +390,18 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
 
   // x must be a valid URI reference (either absolute or relative)
   string x = 1 [(validate.rules).string.uri_ref = true];
+
+  // x must be a valid UUID (via RFC 4122)
+  string x = 1 [(validate.rules).string.uuid = true];
+  
+  // x must conform to a well known regex for HTTP header names (via RFC 7230)
+  string x = 1 [(validate.rules).string.well_known_regex = HTTP_HEADER_NAME]
+  
+  // x must conform to a well known regex for HTTP header values (via RFC 7230) 
+  string x = 1 [(validate.rules).string.well_known_regex = HTTP_HEADER_VALUE];
+  
+  // x must conform to a well known regex for headers, disallowing \r\n\0 characters.
+  string x = 1 [(validate.rules).string {well_known_regex: HTTP_HEADER_VALUE, strict: false}];
   ```
 
 ### Bytes
@@ -379,7 +451,7 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
   bytes x = 1 [(validate.rules).bytes.contains = "baz"];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the values of a field.
+- **in/not_in**: these two rules permit specifying allow/denylists for the values of a field.
 
   ```protobuf
   // x must be either "foo", "bar", or "baz"
@@ -387,6 +459,12 @@ Check the [constraint rule comparison matrix](rule_comparison.md) for language-s
 
   // x cannot be "fizz" nor "buzz"
   bytes x = 1 [(validate.rules).bytes = {not_in: ["fizz", "buzz"]}];
+  ```
+
+- **ignore_empty**: this rule specifies that if field is empty or set to the default value, to ignore any validation rules. These are typically useful where being able to unset a field in an update request, or to skip validation for optional fields where switching to WKTs is not feasible.
+
+  ```protobuf
+  bytes x = 1 [(validate.rules).bytes = {ignore_empty: true, in: ["foo", "bar", "baz"]}];
   ```
 
 - **well-known formats**: these rules provide advanced constraints for common patterns. These constraints will typically be more permissive and performant than equivalent regular expression patterns, while providing more explanatory failure descriptions.
@@ -432,7 +510,7 @@ enum State {
   State x = 1 [(validate.rules).enum.defined_only = true];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the values of a field.
+- **in/not_in**: these two rules permit specifying allow/denylists for the values of a field.
 
   ```protobuf
   // x must be either INACTIVE (0) or ACTIVE (2)
@@ -501,6 +579,12 @@ Person x = 1;
   repeated Person x = 1 [(validate.rules).repeated.items.message.skip = true];
   ```
 
+- **ignore_empty**: this rule specifies that if field is empty or set to the default value, to ignore any validation rules. These are typically useful where being able to unset a field in an update request, or to skip validation for optional fields where switching to WKTs is not feasible.
+
+  ```protobuf
+  repeated int64 x = 1 [(validate.rules).repeated = {ignore_empty: true, items: {int64: {gt: 200}}}];
+  ```
+
 ### Maps
 
 - **min_pairs/max_pairs**: these rules control how many KV pairs are contained in this field
@@ -540,6 +624,12 @@ Person x = 1;
   map<string, Person> x = 1 [(validate.rules).map.values.message.skip = true];
   ```
 
+- **ignore_empty**: this rule specifies that if field is empty or set to the default value, to ignore any validation rules. These are typically useful where being able to unset a field in an update request, or to skip validation for optional fields where switching to WKTs is not feasible.
+
+  ```protobuf
+  map<string, string> x = 1 [(validate.rules).map = {ignore_empty: true, values: {string: {min_len: 3}}}];
+  ```
+
 ### Well-Known Types (WKTs)
 
 A set of [WKTs][wkts] are packaged with protoc and common message patterns useful in many domains.
@@ -553,6 +643,13 @@ In the `proto3` syntax, there is no way of distinguishing between unset and the 
 google.protobuf.Int32Value x = 1 [(validate.rules).int32.gt = 3];
 ```
 
+Message Rules can also be used with scalar Well-Known Types (WKTs):
+
+```protobuf
+// Ensures that if a value is not set for age, it would not pass the validation despite its zero value being 0.
+message X { google.protobuf.Int32Value age = 1 [(validate.rules).int32.gt = -1, (validate.rules).message.required = true]; }
+```
+
 #### Anys
 
 - **required**: this rule specifies that the field must be set
@@ -562,7 +659,7 @@ google.protobuf.Int32Value x = 1 [(validate.rules).int32.gt = 3];
   google.protobuf.Any x = 1 [(validate.rules).any.required = true];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the `type_url` value in this field. Consider using a `oneof` union instead of `in` if possible.
+- **in/not_in**: these two rules permit specifying allow/denylists for the `type_url` value in this field. Consider using a `oneof` union instead of `in` if possible.
 
   ```protobuf
   // x must not be the Duration or Timestamp WKT
@@ -617,7 +714,7 @@ google.protobuf.Int32Value x = 1 [(validate.rules).int32.gt = 3];
     }];
   ```
 
-- **in/not_in**: these two rules permit specifying white/blacklists for the values of a field.
+- **in/not_in**: these two rules permit specifying allow/denylists for the values of a field.
 
   ```protobuf
   // x must be either 0s or 1s
@@ -646,7 +743,7 @@ google.protobuf.Int32Value x = 1 [(validate.rules).int32.gt = 3];
 
   ```protobuf
   // x must equal 2009/11/10T23:00:00.500Z exactly
-  google.protobuf.Timestamp x = 1 [(validate.rules).timestamp = {
+  google.protobuf.Timestamp x = 1 [(validate.rules).timestamp.const = {
       seconds: 63393490800,
       nanos:   500000000
     }];
@@ -713,6 +810,20 @@ google.protobuf.Int32Value x = 1 [(validate.rules).int32.gt = 3];
   }
   ```
 
+- **ignored**: Don't generate a validate method or any related validation code for this message.
+
+  ```protobuf
+  message Person {
+    option (validate.ignored) = true;
+
+    // x will not be required to be greater than 123
+    uint64 x = 1 [(validate.rules).uint64.gt = 123];
+
+    // y's fields will not be validated
+    Person y = 2;
+  }
+  ```
+
 ### OneOfs
 
 - **required**: require that one of the fields in a `oneof` must be set. By default, none or one of the unioned fields can be set. Enabling this rules disallows having all of them unset.
@@ -742,14 +853,6 @@ All PGV dependencies are currently checked into the project. To test PGV, `proto
 
 - **`make lint`**: runs static-analysis rules against the PGV codebase, including `golint`, `go vet`, and `gofmt -s`
 
-- **`make tests`**: runs all tests with race detection and coverage percentage
-
-- **`make quick`**: runs all tests without the race detector or coverage percentage
-
-- **`make cover`**: runs all tests with race detection, generating a coverage report and opening it in a browser
-
-- **`make kitchensink`**: generates the proto files in [`/tests/kitchensink`](/tests/kitchensink). This includes the officially generated code, as well as the validations.
-
 - **`make testcases`**: generates the proto files in [`/tests/harness/cases`](/tests/harness/cases). These are used by the test harness to verify the validation rules generated for each language.
 
 - **`make harness`**: executes the test-cases against each language's test harness.
@@ -759,7 +862,7 @@ All PGV dependencies are currently checked into the project. To test PGV, `proto
 Ensure that your `PATH` is setup to include `protoc-gen-go` and `protoc`, then:
 
 ```
-bazel run //tests/harness/executor:executor
+bazel test //tests/...
 ```
 
 ### Docker

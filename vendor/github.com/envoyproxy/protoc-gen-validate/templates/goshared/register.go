@@ -3,15 +3,17 @@ package goshared
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"text/template"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"github.com/lyft/protoc-gen-star"
-	"github.com/lyft/protoc-gen-star/lang/go"
+	"github.com/iancoleman/strcase"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
+
 	"github.com/envoyproxy/protoc-gen-validate/templates/shared"
+	pgs "github.com/lyft/protoc-gen-star"
+	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
 )
 
 func Register(tpl *template.Template, params pgs.Parameters) {
@@ -29,6 +31,7 @@ func Register(tpl *template.Template, params pgs.Parameters) {
 		"errIdx":        fns.errIdx,
 		"errIdxCause":   fns.errIdxCause,
 		"errname":       fns.errName,
+		"multierrname":  fns.multiErrName,
 		"inKey":         fns.inKey,
 		"inType":        fns.inType,
 		"isBytes":       fns.isBytes,
@@ -38,12 +41,14 @@ func Register(tpl *template.Template, params pgs.Parameters) {
 		"name":          fns.Name,
 		"oneof":         fns.oneofTypeName,
 		"pkg":           fns.PackageName,
+		"snakeCase":     fns.snakeCase,
 		"tsGt":          fns.tsGt,
 		"tsLit":         fns.tsLit,
 		"tsStr":         fns.tsStr,
 		"typ":           fns.Type,
 		"unwrap":        fns.unwrap,
 		"externalEnums": fns.externalEnums,
+		"enumName":      fns.enumName,
 		"enumPackages":  fns.enumPackages,
 	})
 
@@ -73,6 +78,7 @@ func Register(tpl *template.Template, params pgs.Parameters) {
 	template.Must(tpl.New("email").Parse(emailTpl))
 	template.Must(tpl.New("hostname").Parse(hostTpl))
 	template.Must(tpl.New("address").Parse(hostTpl))
+	template.Must(tpl.New("uuid").Parse(uuidTpl))
 
 	template.Must(tpl.New("enum").Parse(enumTpl))
 	template.Must(tpl.New("repeated").Parse(repTpl))
@@ -97,6 +103,10 @@ func (fns goSharedFuncs) accessor(ctx shared.RuleContext) string {
 
 func (fns goSharedFuncs) errName(m pgs.Message) pgs.Name {
 	return fns.Name(m) + "ValidationError"
+}
+
+func (fns goSharedFuncs) multiErrName(m pgs.Message) pgs.Name {
+	return fns.Name(m) + "MultiError"
 }
 
 func (fns goSharedFuncs) errIdxCause(ctx shared.RuleContext, idx, cause string, reason ...interface{}) string {
@@ -207,13 +217,21 @@ func (fns goSharedFuncs) inType(f pgs.Field, x interface{}) string {
 		return "string"
 	case pgs.MessageT:
 		switch x.(type) {
-		case []*duration.Duration:
+		case []*durationpb.Duration:
 			return "time.Duration"
 		default:
 			return pgsgo.TypeName(fmt.Sprintf("%T", x)).Element().String()
 		}
+	case pgs.EnumT:
+		if f.Type().IsRepeated() {
+			return strings.TrimLeft(fns.Type(f).String(), "[]")
+		} else {
+			// Use Value() to strip any potential pointer type.
+			return fns.Type(f).Value().String()
+		}
 	default:
-		return fns.Type(f).String()
+		// Use Value() to strip any potential pointer type.
+		return fns.Type(f).Value().String()
 	}
 }
 
@@ -223,8 +241,8 @@ func (fns goSharedFuncs) inKey(f pgs.Field, x interface{}) string {
 		return fns.byteStr(x.([]byte))
 	case pgs.MessageT:
 		switch x := x.(type) {
-		case *duration.Duration:
-			dur, _ := ptypes.Duration(x)
+		case *durationpb.Duration:
+			dur := x.AsDuration()
 			return fns.lit(int64(dur))
 		default:
 			return fns.lit(x)
@@ -234,40 +252,40 @@ func (fns goSharedFuncs) inKey(f pgs.Field, x interface{}) string {
 	}
 }
 
-func (fns goSharedFuncs) durLit(dur *duration.Duration) string {
+func (fns goSharedFuncs) durLit(dur *durationpb.Duration) string {
 	return fmt.Sprintf(
 		"time.Duration(%d * time.Second + %d * time.Nanosecond)",
 		dur.GetSeconds(), dur.GetNanos())
 }
 
-func (fns goSharedFuncs) durStr(dur *duration.Duration) string {
-	d, _ := ptypes.Duration(dur)
+func (fns goSharedFuncs) durStr(dur *durationpb.Duration) string {
+	d := dur.AsDuration()
 	return d.String()
 }
 
-func (fns goSharedFuncs) durGt(a, b *duration.Duration) bool {
-	ad, _ := ptypes.Duration(a)
-	bd, _ := ptypes.Duration(b)
+func (fns goSharedFuncs) durGt(a, b *durationpb.Duration) bool {
+	ad := a.AsDuration()
+	bd := b.AsDuration()
 
 	return ad > bd
 }
 
-func (fns goSharedFuncs) tsLit(ts *timestamp.Timestamp) string {
+func (fns goSharedFuncs) tsLit(ts *timestamppb.Timestamp) string {
 	return fmt.Sprintf(
 		"time.Unix(%d, %d)",
 		ts.GetSeconds(), ts.GetNanos(),
 	)
 }
 
-func (fns goSharedFuncs) tsGt(a, b *timestamp.Timestamp) bool {
-	at, _ := ptypes.Timestamp(a)
-	bt, _ := ptypes.Timestamp(b)
+func (fns goSharedFuncs) tsGt(a, b *timestamppb.Timestamp) bool {
+	at := a.AsTime()
+	bt := b.AsTime()
 
 	return bt.Before(at)
 }
 
-func (fns goSharedFuncs) tsStr(ts *timestamp.Timestamp) string {
-	t, _ := ptypes.Timestamp(ts)
+func (fns goSharedFuncs) tsStr(ts *timestamppb.Timestamp) string {
+	t := ts.AsTime()
 	return t.String()
 }
 
@@ -292,7 +310,17 @@ func (fns goSharedFuncs) externalEnums(file pgs.File) []pgs.Enum {
 
 	for _, msg := range file.AllMessages() {
 		for _, fld := range msg.Fields() {
-			if en := fld.Type().Enum(); fld.Type().IsEnum() && en.Package().ProtoName() != fld.Package().ProtoName() && fns.PackageName(en) != fns.PackageName(fld) {
+			var en pgs.Enum
+
+			if fld.Type().IsEnum() {
+				en = fld.Type().Enum()
+			}
+
+			if fld.Type().IsRepeated() {
+				en = fld.Type().Element().Enum()
+			}
+
+			if en != nil && en.Package().ProtoName() != fld.Package().ProtoName() && fns.PackageName(en) != fns.PackageName(fld) {
 				out = append(out, en)
 			}
 		}
@@ -301,12 +329,42 @@ func (fns goSharedFuncs) externalEnums(file pgs.File) []pgs.Enum {
 	return out
 }
 
-func (fns goSharedFuncs) enumPackages(enums []pgs.Enum) map[pgs.FilePath]pgs.Name {
-	out := make(map[pgs.FilePath]pgs.Name, len(enums))
+func (fns goSharedFuncs) enumName(enum pgs.Enum) string {
+	out := string(enum.Name())
+	parent := enum.Parent()
+	for {
+		message, ok := parent.(pgs.Message)
+		if ok {
+			out = string(message.Name()) + "_" + out
+			parent = message.Parent()
+		} else {
+			return out
+		}
+	}
+}
+
+func (fns goSharedFuncs) enumPackages(enums []pgs.Enum) map[pgs.Name]pgs.FilePath {
+	out := make(map[pgs.Name]pgs.FilePath, len(enums))
+
+	nameCollision := make(map[pgs.Name]int)
 
 	for _, en := range enums {
-		out[fns.ImportPath(en)] = fns.PackageName(en)
+
+		pkgName := fns.PackageName(en)
+
+		path, ok := out[pkgName]
+
+		if ok && path != fns.ImportPath(en) {
+			nameCollision[pkgName] = nameCollision[pkgName] + 1
+			pkgName = pkgName + pgs.Name(strconv.Itoa(nameCollision[pkgName]))
+		}
+
+		out[pkgName] = fns.ImportPath(en)
 	}
 
 	return out
+}
+
+func (fns goSharedFuncs) snakeCase(name string) string {
+	return strcase.ToSnake(name)
 }

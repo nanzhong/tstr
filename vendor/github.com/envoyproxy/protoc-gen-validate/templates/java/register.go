@@ -9,11 +9,11 @@ import (
 	"unicode"
 
 	"github.com/envoyproxy/protoc-gen-validate/templates/shared"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/iancoleman/strcase"
 	pgs "github.com/lyft/protoc-gen-star"
 	pgsgo "github.com/lyft/protoc-gen-star/lang/go"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func RegisterIndex(tpl *template.Template, params pgs.Parameters) {
@@ -161,7 +161,15 @@ func classNameFile(f pgs.File) string {
 }
 
 func classNameMessage(m pgs.Message) string {
-	return sanitizeClassName(m.Name().String())
+	className := m.Name().String()
+	// This is really silly, but when the multiple files option is true, protoc puts underscores in file names.
+	// When multiple files is false, underscores are stripped. Short of rewriting all the name sanitization
+	// logic for java, using "UnderscoreUnderscoreUnderscore" is an escape sequence seems to work with an extremely
+	// small likelihood of name conflict.
+	className = strings.Replace(className, "_", "UnderscoreUnderscoreUnderscore", -1)
+	className = sanitizeClassName(className)
+	className = strings.Replace(className, "UnderscoreUnderscoreUnderscore", "_", -1)
+	return className
 }
 
 func sanitizeClassName(className string) string {
@@ -390,29 +398,45 @@ func (fns javaFuncs) javaTypeForProtoType(t pgs.ProtoType) string {
 	}
 }
 
-func (fns javaFuncs) javaTypeLiteralSuffixFor(f pgs.Field) string {
-	switch f.Type().ProtoType() {
+func (fns javaFuncs) javaTypeLiteralSuffixFor(ctx shared.RuleContext) string {
+	t := ctx.Field.Type()
+
+	if t.IsMap() {
+		switch ctx.AccessorOverride {
+		case "key":
+			return fns.javaTypeLiteralSuffixForPrototype(t.Key().ProtoType())
+		case "value":
+			return fns.javaTypeLiteralSuffixForPrototype(t.Element().ProtoType())
+		}
+	}
+
+	if t.IsEmbed() {
+		if embed := t.Embed(); embed.IsWellKnown() {
+			switch embed.WellKnownType() {
+			case pgs.Int64ValueWKT, pgs.UInt64ValueWKT:
+				return "L"
+			case pgs.FloatValueWKT:
+				return "F"
+			case pgs.DoubleValueWKT:
+				return "D"
+			}
+		}
+	}
+
+	return fns.javaTypeLiteralSuffixForPrototype(t.ProtoType())
+}
+
+func (fns javaFuncs) javaTypeLiteralSuffixForPrototype(t pgs.ProtoType) string {
+	switch t {
 	case pgs.Int64T, pgs.UInt64T, pgs.SInt64, pgs.Fixed64T, pgs.SFixed64:
 		return "L"
 	case pgs.FloatT:
 		return "F"
 	case pgs.DoubleT:
 		return "D"
+	default:
+		return ""
 	}
-
-	emb := f.Type().Embed()
-	if emb != nil && emb.IsWellKnown() {
-		switch emb.WellKnownType() {
-		case pgs.Int64ValueWKT, pgs.UInt64ValueWKT:
-			return "L"
-		case pgs.FloatValueWKT:
-			return "F"
-		case pgs.DoubleValueWKT:
-			return "D"
-		}
-	}
-
-	return ""
 }
 
 func (fns javaFuncs) javaStringEscape(s string) string {
@@ -440,13 +464,13 @@ func (fns javaFuncs) byteArrayLit(bytes []uint8) string {
 	return sb
 }
 
-func (fns javaFuncs) durLit(dur *duration.Duration) string {
+func (fns javaFuncs) durLit(dur *durationpb.Duration) string {
 	return fmt.Sprintf(
 		"io.envoyproxy.pgv.TimestampValidation.toDuration(%d,%d)",
 		dur.GetSeconds(), dur.GetNanos())
 }
 
-func (fns javaFuncs) tsLit(ts *timestamp.Timestamp) string {
+func (fns javaFuncs) tsLit(ts *timestamppb.Timestamp) string {
 	return fmt.Sprintf(
 		"io.envoyproxy.pgv.TimestampValidation.toTimestamp(%d,%d)",
 		ts.GetSeconds(), ts.GetNanos())

@@ -1,19 +1,21 @@
 package java
 
 const msgTpl = `
+{{ if not (ignored .) -}}
 	/**
 	 * Validates {@code {{ simpleName . }}} protobuf objects.
 	 */
 	public static class {{ simpleName . }}Validator implements io.envoyproxy.pgv.ValidatorImpl<{{ qualifiedName . }}> {
 		{{- template "msgInner" . -}}
 	}
+{{- end -}}
 `
 
 const msgInnerTpl = `
 	{{- range .NonOneOfFields }}
 		{{ renderConstants (context .) }}
 	{{ end }}
-	{{ range .OneOfs }}
+	{{ range .RealOneOfs }}
 		{{ template "oneOfConst" . }}
 	{{ end }}
 
@@ -25,7 +27,7 @@ const msgInnerTpl = `
 	{{ range .NonOneOfFields -}}
 		{{ render (context .) }}
 	{{ end -}}
-	{{ range .OneOfs }}
+	{{ range .RealOneOfs }}
 		{{ template "oneOf" . }}
 	{{- end -}}
 	{{- end }}

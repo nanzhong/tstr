@@ -2,36 +2,39 @@ package java
 
 const numConstTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
 {{- if $r.Const }}
-		private final {{ javaTypeFor .}} {{ constantName . "Const" }} = {{ $r.GetConst }}{{ javaTypeLiteralSuffixFor $f }};
+		private final {{ javaTypeFor .}} {{ constantName . "Const" }} = {{ $r.GetConst }}{{ javaTypeLiteralSuffixFor . }};
 {{- end -}}
 {{- if $r.Lt }}
-		private final {{ javaTypeFor .}} {{ constantName . "Lt" }} = {{ $r.GetLt }}{{ javaTypeLiteralSuffixFor $f }};
+		private final {{ javaTypeFor .}} {{ constantName . "Lt" }} = {{ $r.GetLt }}{{ javaTypeLiteralSuffixFor . }};
 {{- end -}}
 {{- if $r.Lte }}
-		private final {{ javaTypeFor .}} {{ constantName . "Lte" }} = {{ $r.GetLte }}{{ javaTypeLiteralSuffixFor $f }};
+		private final {{ javaTypeFor .}} {{ constantName . "Lte" }} = {{ $r.GetLte }}{{ javaTypeLiteralSuffixFor . }};
 {{- end -}}
 {{- if $r.Gt }}
-		private final {{ javaTypeFor .}} {{ constantName . "Gt" }} = {{ $r.GetGt }}{{ javaTypeLiteralSuffixFor $f }};
+		private final {{ javaTypeFor .}} {{ constantName . "Gt" }} = {{ $r.GetGt }}{{ javaTypeLiteralSuffixFor . }};
 {{- end -}}
 {{- if $r.Gte }}
-		private final {{ javaTypeFor .}} {{ constantName . "Gte" }} = {{ $r.GetGte }}{{ javaTypeLiteralSuffixFor $f }};
+		private final {{ javaTypeFor .}} {{ constantName . "Gte" }} = {{ $r.GetGte }}{{ javaTypeLiteralSuffixFor . }};
 {{- end -}}
 {{- if $r.In }}
 		private final {{ javaTypeFor . }}[] {{ constantName . "In" }} = new {{ javaTypeFor . }}[]{
 			{{- range $r.In -}}
-				{{- sprintf "%v" . -}}{{ javaTypeLiteralSuffixFor $f }},
+				{{- sprintf "%v" . -}}{{ javaTypeLiteralSuffixFor $ }},
 			{{- end -}}
 		};
 {{- end -}}
 {{- if $r.NotIn }}
 		private final {{ javaTypeFor . }}[] {{ constantName . "NotIn" }} = new {{ javaTypeFor . }}[]{
 			{{- range $r.NotIn -}}
-				{{- sprintf "%v" . -}}{{ javaTypeLiteralSuffixFor $f }},
+				{{- sprintf "%v" . -}}{{ javaTypeLiteralSuffixFor $ }},
 			{{- end -}}
 		};
 {{- end -}}`
 
 const numTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
+{{- if $r.GetIgnoreEmpty }}
+			if ( {{ accessor . }} != 0 ) {
+{{- end -}}
 {{- if $r.Const }}
 			io.envoyproxy.pgv.ConstantValidation.constant("{{ $f.FullyQualifiedName }}", {{ accessor . }}, {{ constantName . "Const" }});
 {{- end -}}
@@ -56,5 +59,8 @@ const numTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
 {{- end -}}
 {{- if $r.NotIn }}
 			io.envoyproxy.pgv.CollectiveValidation.notIn("{{ $f.FullyQualifiedName }}", {{ accessor . }}, {{ constantName . "NotIn" }});
+{{- end -}}
+{{- if $r.GetIgnoreEmpty }}
+			}
 {{- end -}}
 `

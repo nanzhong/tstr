@@ -1,15 +1,23 @@
 bazel-*
-
+**/.DS_Store
 !vendor/*
 
-/gogofast
-/gogofast.exe
+/bin
 /protoc-gen-validate
+
+/python/LICENSE
+/python/validate.proto
+/python/dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
 
 /tests/harness/cases/go
 /tests/harness/cases/gogo
 /tests/harness/cases/other_package/go
 /tests/harness/cases/other_package/gogo
+/tests/harness/cases/yet_another_package/go
+/tests/harness/cases/yet_another_package/gogo
 /tests/harness/go/harness.pb.go
 /tests/harness/go/main/go-harness
 /tests/harness/go/main/go-harness.exe
@@ -18,6 +26,8 @@ bazel-*
 /tests/harness/gogo/main/go-harness.exe
 /tests/harness/cc/cc-harness
 /tests/harness/cc/cc-harness.exe
+
+/validate/__pycache__
 
 /tests/harness/cases/**/*.cc
 /tests/harness/cases/**/*.h
@@ -31,3 +41,5 @@ bazel-*
 .project
 .classpath
 .settings
+.idea/
+.ijwb/

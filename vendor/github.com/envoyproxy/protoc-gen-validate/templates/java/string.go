@@ -20,6 +20,9 @@ const stringConstTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
 {{- end -}}`
 
 const stringTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
+{{- if $r.GetIgnoreEmpty }}
+			if ( !{{ accessor . }}.isEmpty() ) {
+{{- end -}}
 {{- if $r.Const }}
 			io.envoyproxy.pgv.ConstantValidation.constant("{{ $f.FullyQualifiedName }}", {{ accessor . }}, "{{ $r.GetConst }}");
 {{- end -}}
@@ -56,6 +59,9 @@ const stringTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
 {{- if $r.Contains }}
 			io.envoyproxy.pgv.StringValidation.contains("{{ $f.FullyQualifiedName }}", {{ accessor . }}, "{{ $r.GetContains }}");
 {{- end -}}
+{{- if $r.NotContains }}
+			io.envoyproxy.pgv.StringValidation.notContains("{{ $f.FullyQualifiedName }}", {{ accessor . }}, "{{ $r.GetNotContains }}");
+{{- end -}}
 {{- if $r.Suffix }}
 			io.envoyproxy.pgv.StringValidation.suffix("{{ $f.FullyQualifiedName }}", {{ accessor . }}, "{{ $r.GetSuffix }}");
 {{- end -}}
@@ -82,5 +88,11 @@ const stringTpl = `{{ $f := .Field }}{{ $r := .Rules -}}
 {{- end -}}
 {{- if $r.GetUriRef }}
 			io.envoyproxy.pgv.StringValidation.uriRef("{{ $f.FullyQualifiedName }}", {{ accessor . }});
+{{- end -}}
+{{- if $r.GetUuid }}
+			io.envoyproxy.pgv.StringValidation.uuid("{{ $f.FullyQualifiedName }}", {{ accessor . }});
+{{- end -}}
+{{- if $r.GetIgnoreEmpty }}
+			}
 {{- end -}}
 `

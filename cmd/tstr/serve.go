@@ -14,6 +14,7 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
+	grpczerolog "github.com/jwreagor/grpc-zerolog"
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
@@ -21,7 +22,6 @@ import (
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/server"
 	"github.com/nanzhong/tstr/webui"
-	grpczerolog "github.com/philip-bui/grpc-zerolog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
@@ -29,6 +29,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 )
 
 var serveCmd = &cobra.Command{
@@ -40,6 +41,7 @@ var serveCmd = &cobra.Command{
 
 		// TODO Use console writer for now for easy development/debugging, perhaps remove and rely on humanlog in the future.
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "client-grpc").Logger()))
 
 		pool, err := pgxpool.Connect(context.Background(), viper.GetString("serve.pg-dsn"))
 		if err != nil {
@@ -81,7 +83,6 @@ var serveCmd = &cobra.Command{
 		}
 
 		grpcServer := grpc.NewServer(
-			grpczerolog.UnaryInterceptor(),
 			grpc.ChainUnaryInterceptor(
 				grpc_validator.UnaryServerInterceptor(),
 				auth.UnaryServerInterceptor(dbQuerier),

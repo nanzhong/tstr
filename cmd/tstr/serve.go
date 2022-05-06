@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"net"
 	"net/http"
@@ -51,7 +51,7 @@ var serveCmd = &cobra.Command{
 
 		dbQuerier := db.NewQuerier(pool)
 		if viper.GetString("serve.bootstrap-token") != "" {
-			tokenHashBytes := sha256.Sum256([]byte(viper.GetString("serve.bootstrap-token")))
+			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("serve.bootstrap-token")))
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 			var expiresAt pgtype.Timestamptz

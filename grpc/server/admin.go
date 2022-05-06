@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"time"
 
@@ -58,7 +58,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	}
 	token := hex.EncodeToString(tokenData)
 
-	tokenHashBytes := sha256.Sum256([]byte(token))
+	tokenHashBytes := sha512.Sum512([]byte(token))
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{

@@ -17,9 +17,6 @@ var rootCmd = &cobra.Command{
 func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	viper.AutomaticEnv()
-
-	rootCmd.AddCommand(serveCmd)
-	//	rootCmd.AddCommand(runCmd)
 }
 
 func main() {

@@ -73,11 +73,9 @@ CREATE TABLE public.access_tokens (
 CREATE TABLE public.runners (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
-    accept_test_labels jsonb,
-    reject_test_labels jsonb,
+    accept_test_label_selectors jsonb,
+    reject_test_label_selectors jsonb,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    approved_at timestamp with time zone,
-    revoked_at timestamp with time zone,
     last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 

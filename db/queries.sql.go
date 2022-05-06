@@ -65,26 +65,12 @@ type Querier interface {
 	// GetRunnerScan scans the result of an executed GetRunnerBatch query.
 	GetRunnerScan(results pgx.BatchResults) (GetRunnerRow, error)
 
-	ListRunners(ctx context.Context, filterRevoked bool) ([]ListRunnersRow, error)
+	ListRunners(ctx context.Context, heartbeatSince pgtype.Timestamptz) ([]ListRunnersRow, error)
 	// ListRunnersBatch enqueues a ListRunners query into batch to be executed
 	// later by the batch.
-	ListRunnersBatch(batch genericBatch, filterRevoked bool)
+	ListRunnersBatch(batch genericBatch, heartbeatSince pgtype.Timestamptz)
 	// ListRunnersScan scans the result of an executed ListRunnersBatch query.
 	ListRunnersScan(results pgx.BatchResults) ([]ListRunnersRow, error)
-
-	ApproveRunner(ctx context.Context, id string) (pgconn.CommandTag, error)
-	// ApproveRunnerBatch enqueues a ApproveRunner query into batch to be executed
-	// later by the batch.
-	ApproveRunnerBatch(batch genericBatch, id string)
-	// ApproveRunnerScan scans the result of an executed ApproveRunnerBatch query.
-	ApproveRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error)
-
-	RevokeRunner(ctx context.Context, id string) (pgconn.CommandTag, error)
-	// RevokeRunnerBatch enqueues a RevokeRunner query into batch to be executed
-	// later by the batch.
-	RevokeRunnerBatch(batch genericBatch, id string)
-	// RevokeRunnerScan scans the result of an executed RevokeRunnerBatch query.
-	RevokeRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error)
 
 	GetRun(ctx context.Context, id string) (GetRunRow, error)
 	// GetRunBatch enqueues a GetRun query into batch to be executed
@@ -297,12 +283,6 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, listRunnersSQL, listRunnersSQL); err != nil {
 		return fmt.Errorf("prepare query 'ListRunners': %w", err)
-	}
-	if _, err := p.Prepare(ctx, approveRunnerSQL, approveRunnerSQL); err != nil {
-		return fmt.Errorf("prepare query 'ApproveRunner': %w", err)
-	}
-	if _, err := p.Prepare(ctx, revokeRunnerSQL, revokeRunnerSQL); err != nil {
-		return fmt.Errorf("prepare query 'RevokeRunner': %w", err)
 	}
 	if _, err := p.Prepare(ctx, getRunSQL, getRunSQL); err != nil {
 		return fmt.Errorf("prepare query 'GetRun': %w", err)

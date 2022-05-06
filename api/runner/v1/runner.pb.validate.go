@@ -39,6 +39,9 @@ var (
 	_ = common.Run_Result(0)
 )
 
+// define the regex for a UUID once up-front
+var _runner_uuidPattern = regexp.MustCompile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+
 // Validate checks the field values on RegisterRunnerRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
@@ -61,11 +64,20 @@ func (m *RegisterRunnerRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Name
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 200 {
+		err := RegisterRunnerRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for AcceptTestLabels
+	// no validation rules for AcceptTestLabelSelectors
 
-	// no validation rules for RejectTestLabels
+	// no validation rules for RejectTestLabelSelectors
 
 	if len(errors) > 0 {
 		return RegisterRunnerRequestMultiError(errors)
@@ -169,38 +181,33 @@ func (m *RegisterRunnerResponse) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetRunner() {
-		_, _ = idx, item
-
-		if all {
-			switch v := interface{}(item).(type) {
-			case interface{ ValidateAll() error }:
-				if err := v.ValidateAll(); err != nil {
-					errors = append(errors, RegisterRunnerResponseValidationError{
-						field:  fmt.Sprintf("Runner[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			case interface{ Validate() error }:
-				if err := v.Validate(); err != nil {
-					errors = append(errors, RegisterRunnerResponseValidationError{
-						field:  fmt.Sprintf("Runner[%v]", idx),
-						reason: "embedded message failed validation",
-						cause:  err,
-					})
-				}
-			}
-		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
-			if err := v.Validate(); err != nil {
-				return RegisterRunnerResponseValidationError{
-					field:  fmt.Sprintf("Runner[%v]", idx),
+	if all {
+		switch v := interface{}(m.GetRunner()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RegisterRunnerResponseValidationError{
+					field:  "Runner",
 					reason: "embedded message failed validation",
 					cause:  err,
-				}
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RegisterRunnerResponseValidationError{
+					field:  "Runner",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
 		}
-
+	} else if v, ok := interface{}(m.GetRunner()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RegisterRunnerResponseValidationError{
+				field:  "Runner",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	if len(errors) > 0 {
@@ -305,12 +312,28 @@ func (m *NextRunRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for AcceptTestLabels
-
-	// no validation rules for ReqectTestLabels
+	if err := m._validateUuid(m.GetId()); err != nil {
+		err = NextRunRequestValidationError{
+			field:  "Id",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return NextRunRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *NextRunRequest) _validateUuid(uuid string) error {
+	if matched := _runner_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil
@@ -538,6 +561,30 @@ func (m *SubmitRunRequest) validate(all bool) error {
 
 	var errors []error
 
+	if err := m._validateUuid(m.GetId()); err != nil {
+		err = SubmitRunRequestValidationError{
+			field:  "Id",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if err := m._validateUuid(m.GetRunId()); err != nil {
+		err = SubmitRunRequestValidationError{
+			field:  "RunId",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	// no validation rules for Result
 
 	for idx, item := range m.GetLogs() {
@@ -634,6 +681,14 @@ func (m *SubmitRunRequest) validate(all bool) error {
 
 	if len(errors) > 0 {
 		return SubmitRunRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *SubmitRunRequest) _validateUuid(uuid string) error {
+	if matched := _runner_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil

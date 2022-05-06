@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/nanzhong/tstr/api/common/v1"
@@ -37,8 +38,6 @@ var scopeAuthorizations = map[string][]common.AccessToken_Scope{
 	"/tstr.admin.v1.AdminService/GetAccessToken":    {common.AccessToken_ADMIN},
 	"/tstr.admin.v1.AdminService/ListAccessTokens":  {common.AccessToken_ADMIN},
 	"/tstr.admin.v1.AdminService/RevokeAccessToken": {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/ApproveRunner":     {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/DenyRunner":        {common.AccessToken_ADMIN},
 
 	"/tstr.runner.v1.RunnerService/RegisterRunner": {common.AccessToken_RUNNER},
 	"/tstr.runner.v1.RunnerService/NextRun":        {common.AccessToken_RUNNER},
@@ -61,6 +60,7 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
+		fmt.Println(tokenHash)
 		allowed, err := dbQuerier.ValidateAccessToken(ctx, tokenHash, toDBScopes(validScopes))
 		if err != nil {
 			log.Error().Err(err).Msg("failed to validate access token")

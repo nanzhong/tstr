@@ -26,8 +26,6 @@ type AdminServiceClient interface {
 	GetAccessToken(ctx context.Context, in *GetAccessTokenRequest, opts ...grpc.CallOption) (*GetAccessTokenResponse, error)
 	ListAccessTokens(ctx context.Context, in *ListAccessTokensRequest, opts ...grpc.CallOption) (*ListAccessTokensResponse, error)
 	RevokeAccessToken(ctx context.Context, in *RevokeAccessTokenRequest, opts ...grpc.CallOption) (*RevokeAccessTokenResponse, error)
-	ApproveRunner(ctx context.Context, in *ApproveRunnerRequest, opts ...grpc.CallOption) (*ApproveRunnerResponse, error)
-	DenyRunner(ctx context.Context, in *DenyRunnerRequest, opts ...grpc.CallOption) (*DenyRunnerResponse, error)
 }
 
 type adminServiceClient struct {
@@ -74,24 +72,6 @@ func (c *adminServiceClient) RevokeAccessToken(ctx context.Context, in *RevokeAc
 	return out, nil
 }
 
-func (c *adminServiceClient) ApproveRunner(ctx context.Context, in *ApproveRunnerRequest, opts ...grpc.CallOption) (*ApproveRunnerResponse, error) {
-	out := new(ApproveRunnerResponse)
-	err := c.cc.Invoke(ctx, "/tstr.admin.v1.AdminService/ApproveRunner", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *adminServiceClient) DenyRunner(ctx context.Context, in *DenyRunnerRequest, opts ...grpc.CallOption) (*DenyRunnerResponse, error) {
-	out := new(DenyRunnerResponse)
-	err := c.cc.Invoke(ctx, "/tstr.admin.v1.AdminService/DenyRunner", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // AdminServiceServer is the server API for AdminService service.
 // All implementations must embed UnimplementedAdminServiceServer
 // for forward compatibility
@@ -100,8 +80,6 @@ type AdminServiceServer interface {
 	GetAccessToken(context.Context, *GetAccessTokenRequest) (*GetAccessTokenResponse, error)
 	ListAccessTokens(context.Context, *ListAccessTokensRequest) (*ListAccessTokensResponse, error)
 	RevokeAccessToken(context.Context, *RevokeAccessTokenRequest) (*RevokeAccessTokenResponse, error)
-	ApproveRunner(context.Context, *ApproveRunnerRequest) (*ApproveRunnerResponse, error)
-	DenyRunner(context.Context, *DenyRunnerRequest) (*DenyRunnerResponse, error)
 	mustEmbedUnimplementedAdminServiceServer()
 }
 
@@ -120,12 +98,6 @@ func (UnimplementedAdminServiceServer) ListAccessTokens(context.Context, *ListAc
 }
 func (UnimplementedAdminServiceServer) RevokeAccessToken(context.Context, *RevokeAccessTokenRequest) (*RevokeAccessTokenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RevokeAccessToken not implemented")
-}
-func (UnimplementedAdminServiceServer) ApproveRunner(context.Context, *ApproveRunnerRequest) (*ApproveRunnerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ApproveRunner not implemented")
-}
-func (UnimplementedAdminServiceServer) DenyRunner(context.Context, *DenyRunnerRequest) (*DenyRunnerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DenyRunner not implemented")
 }
 func (UnimplementedAdminServiceServer) mustEmbedUnimplementedAdminServiceServer() {}
 
@@ -212,42 +184,6 @@ func _AdminService_RevokeAccessToken_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _AdminService_ApproveRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ApproveRunnerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).ApproveRunner(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.admin.v1.AdminService/ApproveRunner",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).ApproveRunner(ctx, req.(*ApproveRunnerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _AdminService_DenyRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DenyRunnerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AdminServiceServer).DenyRunner(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.admin.v1.AdminService/DenyRunner",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AdminServiceServer).DenyRunner(ctx, req.(*DenyRunnerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // AdminService_ServiceDesc is the grpc.ServiceDesc for AdminService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -270,14 +206,6 @@ var AdminService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RevokeAccessToken",
 			Handler:    _AdminService_RevokeAccessToken_Handler,
-		},
-		{
-			MethodName: "ApproveRunner",
-			Handler:    _AdminService_ApproveRunner_Handler,
-		},
-		{
-			MethodName: "DenyRunner",
-			Handler:    _AdminService_DenyRunner_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

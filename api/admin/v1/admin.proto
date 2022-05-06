@@ -3,9 +3,7 @@ syntax = "proto3";
 package tstr.admin.v1;
 
 import "api/common/v1/common.proto";
-
 import "google/protobuf/duration.proto";
-
 import "validate/validate.proto";
 
 option go_package =  "github.com/nanzhong/tstr/api/admin/v1;admin";
@@ -15,16 +13,13 @@ service AdminService {
   rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse);
   rpc ListAccessTokens(ListAccessTokensRequest) returns (ListAccessTokensResponse);
   rpc RevokeAccessToken(RevokeAccessTokenRequest) returns (RevokeAccessTokenResponse);
-
-  rpc ApproveRunner(ApproveRunnerRequest) returns (ApproveRunnerResponse);
-  rpc DenyRunner(DenyRunnerRequest) returns (DenyRunnerResponse);
 }
 
 message IssueAccessTokenRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
   repeated tstr.common.v1.AccessToken.Scope scopes = 2
-    [(validate.rules).repeated = {min_items: 1, unique: true, items: {enum: {in: [1,2,3]}}}];
+    [(validate.rules).repeated = {min_items: 1, unique: true, items: {enum: {in: [1,2,3,4]}}}];
   google.protobuf.Duration valid_duration = 3;
 }
 
@@ -56,17 +51,3 @@ message RevokeAccessTokenRequest {
 }
 
 message RevokeAccessTokenResponse {}
-
-message ApproveRunnerRequest {
-  string id = 1
-    [(validate.rules).string.len = 36];
-}
-
-message ApproveRunnerResponse {}
-
-message DenyRunnerRequest {
-  string id = 1
-    [(validate.rules).string.len = 36];
-}
-
-message DenyRunnerResponse {}

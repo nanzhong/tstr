@@ -61,11 +61,31 @@ func (m *RegisterTestRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Name
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 200 {
+		err := RegisterTestRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	// no validation rules for Labels
 
 	// no validation rules for CronSchedule
+
+	if m.GetRunConfig() == nil {
+		err := RegisterTestRequestValidationError{
+			field:  "RunConfig",
+			reason: "value is required",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if all {
 		switch v := interface{}(m.GetRunConfig()).(type) {

@@ -730,9 +730,9 @@ func (m *Runner) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for AcceptTestLabels
+	// no validation rules for AcceptTestLabelSelectors
 
-	// no validation rules for RejectTestLabels
+	// no validation rules for RejectTestLabelSelectors
 
 	if all {
 		switch v := interface{}(m.GetRegisteredAt()).(type) {
@@ -757,35 +757,6 @@ func (m *Runner) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return RunnerValidationError{
 				field:  "RegisteredAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetApprovedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RunnerValidationError{
-					field:  "ApprovedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, RunnerValidationError{
-					field:  "ApprovedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetApprovedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return RunnerValidationError{
-				field:  "ApprovedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

@@ -3,8 +3,8 @@ syntax = "proto3";
 package tstr.runner.v1;
 
 import "api/common/v1/common.proto";
-
 import "google/protobuf/timestamp.proto";
+import "validate/validate.proto";
 
 option go_package =  "github.com/nanzhong/tstr/api/runner/v1;runner";
 
@@ -15,18 +15,19 @@ service RunnerService {
 }
 
 message RegisterRunnerRequest {
-  string name = 1; // required
-  map<string, string> accept_test_labels = 2 [json_name="accept_test_labels"];
-  map<string, string> reject_test_labels = 3 [json_name="reject_test_labels"];
+  string name = 1
+    [(validate.rules).string = {min_len: 1, max_len: 200}];
+  map<string, string> accept_test_label_selectors = 2 [json_name="accept_test_label_selectors"];
+  map<string, string> reject_test_label_selectors = 3 [json_name="reject_test_label_selectors"];
 }
 
 message RegisterRunnerResponse {
-  repeated tstr.common.v1.Runner runner = 1; // required
+  tstr.common.v1.Runner runner = 1; // required
 }
 
 message NextRunRequest {
-  map<string, string> accept_test_labels = 1 [json_name="accept_test_labels"];
-  map<string, string> reqect_test_labels = 2 [json_name="reject_test_labels"];
+  string id = 1
+    [(validate.rules).string.uuid = true];
 }
 
 message NextRunResponse {
@@ -34,8 +35,12 @@ message NextRunResponse {
 }
 
 message SubmitRunRequest {
-  tstr.common.v1.Run.Result result = 1;
-  repeated tstr.common.v1.Run.Log logs = 2;
+  string id = 1
+    [(validate.rules).string.uuid = true];
+  string run_id = 2
+    [(validate.rules).string.uuid = true];
+  tstr.common.v1.Run.Result result = 3;
+  repeated tstr.common.v1.Run.Log logs = 4;
 
   google.protobuf.Timestamp started_at = 10 [json_name="started_at"];
   google.protobuf.Timestamp finished_at = 11 [json_name="finished_at"];

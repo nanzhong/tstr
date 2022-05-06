@@ -61,7 +61,58 @@ func (m *IssueAccessTokenRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Name
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 200 {
+		err := IssueAccessTokenRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 200 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(m.GetScopes()) < 1 {
+		err := IssueAccessTokenRequestValidationError{
+			field:  "Scopes",
+			reason: "value must contain at least 1 item(s)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	_IssueAccessTokenRequest_Scopes_Unique := make(map[common.AccessToken_Scope]struct{}, len(m.GetScopes()))
+
+	for idx, item := range m.GetScopes() {
+		_, _ = idx, item
+
+		if _, exists := _IssueAccessTokenRequest_Scopes_Unique[item]; exists {
+			err := IssueAccessTokenRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "repeated value must contain unique items",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		} else {
+			_IssueAccessTokenRequest_Scopes_Unique[item] = struct{}{}
+		}
+
+		if _, ok := _IssueAccessTokenRequest_Scopes_InLookup[item]; !ok {
+			err := IssueAccessTokenRequestValidationError{
+				field:  fmt.Sprintf("Scopes[%v]", idx),
+				reason: "value must be in list [1 2 3 4]",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
 
 	if all {
 		switch v := interface{}(m.GetValidDuration()).(type) {
@@ -171,6 +222,13 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = IssueAccessTokenRequestValidationError{}
+
+var _IssueAccessTokenRequest_Scopes_InLookup = map[common.AccessToken_Scope]struct{}{
+	1: {},
+	2: {},
+	3: {},
+	4: {},
+}
 
 // Validate checks the field values on IssueAccessTokenResponse with the rules
 // defined in the proto definition for this message. If any rules are
@@ -325,7 +383,17 @@ func (m *GetAccessTokenRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if utf8.RuneCountInString(m.GetId()) != 36 {
+		err := GetAccessTokenRequestValidationError{
+			field:  "Id",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
 
 	if len(errors) > 0 {
 		return GetAccessTokenRequestMultiError(errors)
@@ -802,7 +870,17 @@ func (m *RevokeAccessTokenRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if utf8.RuneCountInString(m.GetId()) != 36 {
+		err := RevokeAccessTokenRequestValidationError{
+			field:  "Id",
+			reason: "value length must be 36 runes",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+
+	}
 
 	if len(errors) > 0 {
 		return RevokeAccessTokenRequestMultiError(errors)
@@ -985,415 +1063,3 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RevokeAccessTokenResponseValidationError{}
-
-// Validate checks the field values on ApproveRunnerRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ApproveRunnerRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ApproveRunnerRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ApproveRunnerRequestMultiError, or nil if none found.
-func (m *ApproveRunnerRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ApproveRunnerRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Id
-
-	if len(errors) > 0 {
-		return ApproveRunnerRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// ApproveRunnerRequestMultiError is an error wrapping multiple validation
-// errors returned by ApproveRunnerRequest.ValidateAll() if the designated
-// constraints aren't met.
-type ApproveRunnerRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ApproveRunnerRequestMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ApproveRunnerRequestMultiError) AllErrors() []error { return m }
-
-// ApproveRunnerRequestValidationError is the validation error returned by
-// ApproveRunnerRequest.Validate if the designated constraints aren't met.
-type ApproveRunnerRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ApproveRunnerRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ApproveRunnerRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ApproveRunnerRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ApproveRunnerRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ApproveRunnerRequestValidationError) ErrorName() string {
-	return "ApproveRunnerRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ApproveRunnerRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sApproveRunnerRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ApproveRunnerRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ApproveRunnerRequestValidationError{}
-
-// Validate checks the field values on ApproveRunnerResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ApproveRunnerResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on ApproveRunnerResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// ApproveRunnerResponseMultiError, or nil if none found.
-func (m *ApproveRunnerResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *ApproveRunnerResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return ApproveRunnerResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// ApproveRunnerResponseMultiError is an error wrapping multiple validation
-// errors returned by ApproveRunnerResponse.ValidateAll() if the designated
-// constraints aren't met.
-type ApproveRunnerResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m ApproveRunnerResponseMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m ApproveRunnerResponseMultiError) AllErrors() []error { return m }
-
-// ApproveRunnerResponseValidationError is the validation error returned by
-// ApproveRunnerResponse.Validate if the designated constraints aren't met.
-type ApproveRunnerResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e ApproveRunnerResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e ApproveRunnerResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e ApproveRunnerResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e ApproveRunnerResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e ApproveRunnerResponseValidationError) ErrorName() string {
-	return "ApproveRunnerResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e ApproveRunnerResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sApproveRunnerResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = ApproveRunnerResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = ApproveRunnerResponseValidationError{}
-
-// Validate checks the field values on DenyRunnerRequest with the rules defined
-// in the proto definition for this message. If any rules are violated, the
-// first error encountered is returned, or nil if there are no violations.
-func (m *DenyRunnerRequest) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on DenyRunnerRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DenyRunnerRequestMultiError, or nil if none found.
-func (m *DenyRunnerRequest) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DenyRunnerRequest) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	// no validation rules for Id
-
-	if len(errors) > 0 {
-		return DenyRunnerRequestMultiError(errors)
-	}
-
-	return nil
-}
-
-// DenyRunnerRequestMultiError is an error wrapping multiple validation errors
-// returned by DenyRunnerRequest.ValidateAll() if the designated constraints
-// aren't met.
-type DenyRunnerRequestMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DenyRunnerRequestMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DenyRunnerRequestMultiError) AllErrors() []error { return m }
-
-// DenyRunnerRequestValidationError is the validation error returned by
-// DenyRunnerRequest.Validate if the designated constraints aren't met.
-type DenyRunnerRequestValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DenyRunnerRequestValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DenyRunnerRequestValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DenyRunnerRequestValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DenyRunnerRequestValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DenyRunnerRequestValidationError) ErrorName() string {
-	return "DenyRunnerRequestValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DenyRunnerRequestValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDenyRunnerRequest.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DenyRunnerRequestValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DenyRunnerRequestValidationError{}
-
-// Validate checks the field values on DenyRunnerResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *DenyRunnerResponse) Validate() error {
-	return m.validate(false)
-}
-
-// ValidateAll checks the field values on DenyRunnerResponse with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the result is a list of violation errors wrapped in
-// DenyRunnerResponseMultiError, or nil if none found.
-func (m *DenyRunnerResponse) ValidateAll() error {
-	return m.validate(true)
-}
-
-func (m *DenyRunnerResponse) validate(all bool) error {
-	if m == nil {
-		return nil
-	}
-
-	var errors []error
-
-	if len(errors) > 0 {
-		return DenyRunnerResponseMultiError(errors)
-	}
-
-	return nil
-}
-
-// DenyRunnerResponseMultiError is an error wrapping multiple validation errors
-// returned by DenyRunnerResponse.ValidateAll() if the designated constraints
-// aren't met.
-type DenyRunnerResponseMultiError []error
-
-// Error returns a concatenation of all the error messages it wraps.
-func (m DenyRunnerResponseMultiError) Error() string {
-	var msgs []string
-	for _, err := range m {
-		msgs = append(msgs, err.Error())
-	}
-	return strings.Join(msgs, "; ")
-}
-
-// AllErrors returns a list of validation violation errors.
-func (m DenyRunnerResponseMultiError) AllErrors() []error { return m }
-
-// DenyRunnerResponseValidationError is the validation error returned by
-// DenyRunnerResponse.Validate if the designated constraints aren't met.
-type DenyRunnerResponseValidationError struct {
-	field  string
-	reason string
-	cause  error
-	key    bool
-}
-
-// Field function returns field value.
-func (e DenyRunnerResponseValidationError) Field() string { return e.field }
-
-// Reason function returns reason value.
-func (e DenyRunnerResponseValidationError) Reason() string { return e.reason }
-
-// Cause function returns cause value.
-func (e DenyRunnerResponseValidationError) Cause() error { return e.cause }
-
-// Key function returns key value.
-func (e DenyRunnerResponseValidationError) Key() bool { return e.key }
-
-// ErrorName returns error name.
-func (e DenyRunnerResponseValidationError) ErrorName() string {
-	return "DenyRunnerResponseValidationError"
-}
-
-// Error satisfies the builtin error interface
-func (e DenyRunnerResponseValidationError) Error() string {
-	cause := ""
-	if e.cause != nil {
-		cause = fmt.Sprintf(" | caused by: %v", e.cause)
-	}
-
-	key := ""
-	if e.key {
-		key = "key for "
-	}
-
-	return fmt.Sprintf(
-		"invalid %sDenyRunnerResponse.%s: %s%s",
-		key,
-		e.field,
-		e.reason,
-		cause)
-}
-
-var _ error = DenyRunnerResponseValidationError{}
-
-var _ interface {
-	Field() string
-	Reason() string
-	Key() bool
-	Cause() error
-	ErrorName() string
-} = DenyRunnerResponseValidationError{}

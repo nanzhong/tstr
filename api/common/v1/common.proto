@@ -73,12 +73,11 @@ message Run {
 message Runner {
   string id = 1; // required (generated)
   string name = 2; // required
-  map<string, string> accept_test_labels = 3 [json_name="accept_test_labels"];
-  map<string, string> reject_test_labels = 4 [json_name="reject_test_labels"];
+  map<string, string> accept_test_label_selectors = 3 [json_name="accept_test_label_selectors"];
+  map<string, string> reject_test_label_selectors = 4 [json_name="reject_test_label_selectors"];
 
   google.protobuf.Timestamp registered_at = 10 [json_name="registered_at"]; // required
-  google.protobuf.Timestamp approved_at = 11 [json_name="approved_at"];
-  google.protobuf.Timestamp last_heartbeat_at = 12 [json_name="last_heartbeat_at"];
+  google.protobuf.Timestamp last_heartbeat_at = 11 [json_name="last_heartbeat_at"];
 }
 
 message AccessToken {

@@ -5,38 +5,40 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 )
 
-const registerRunnerSQL = `INSERT INTO runners (name, accept_test_labels, reject_test_labels)
-VALUES ($1, $2, $3)
+const registerRunnerSQL = `INSERT INTO runners (name, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
+VALUES (
+  $1,
+  $2,
+  $3,
+  CURRENT_TIMESTAMP
+)
 RETURNING *;`
 
 type RegisterRunnerParams struct {
-	Name             string
-	AcceptTestLabels pgtype.JSONB
-	RejectTestLabels pgtype.JSONB
+	Name                     string
+	AcceptTestLabelSelectors pgtype.JSONB
+	RejectTestLabelSelectors pgtype.JSONB
 }
 
 type RegisterRunnerRow struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
-	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
-	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
-	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
-	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
+	ID                       string             `json:"id"`
+	Name                     string             `json:"name"`
+	AcceptTestLabelSelectors pgtype.JSONB       `json:"accept_test_label_selectors"`
+	RejectTestLabelSelectors pgtype.JSONB       `json:"reject_test_label_selectors"`
+	RegisteredAt             pgtype.Timestamptz `json:"registered_at"`
+	LastHeartbeatAt          pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // RegisterRunner implements Querier.RegisterRunner.
 func (q *DBQuerier) RegisterRunner(ctx context.Context, params RegisterRunnerParams) (RegisterRunnerRow, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "RegisterRunner")
-	row := q.conn.QueryRow(ctx, registerRunnerSQL, params.Name, params.AcceptTestLabels, params.RejectTestLabels)
+	row := q.conn.QueryRow(ctx, registerRunnerSQL, params.Name, params.AcceptTestLabelSelectors, params.RejectTestLabelSelectors)
 	var item RegisterRunnerRow
-	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 		return item, fmt.Errorf("query RegisterRunner: %w", err)
 	}
 	return item, nil
@@ -44,14 +46,14 @@ func (q *DBQuerier) RegisterRunner(ctx context.Context, params RegisterRunnerPar
 
 // RegisterRunnerBatch implements Querier.RegisterRunnerBatch.
 func (q *DBQuerier) RegisterRunnerBatch(batch genericBatch, params RegisterRunnerParams) {
-	batch.Queue(registerRunnerSQL, params.Name, params.AcceptTestLabels, params.RejectTestLabels)
+	batch.Queue(registerRunnerSQL, params.Name, params.AcceptTestLabelSelectors, params.RejectTestLabelSelectors)
 }
 
 // RegisterRunnerScan implements Querier.RegisterRunnerScan.
 func (q *DBQuerier) RegisterRunnerScan(results pgx.BatchResults) (RegisterRunnerRow, error) {
 	row := results.QueryRow()
 	var item RegisterRunnerRow
-	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 		return item, fmt.Errorf("scan RegisterRunnerBatch row: %w", err)
 	}
 	return item, nil
@@ -62,14 +64,12 @@ FROM runners
 WHERE id = $1;`
 
 type GetRunnerRow struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
-	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
-	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
-	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
-	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
+	ID                       string             `json:"id"`
+	Name                     string             `json:"name"`
+	AcceptTestLabelSelectors pgtype.JSONB       `json:"accept_test_label_selectors"`
+	RejectTestLabelSelectors pgtype.JSONB       `json:"reject_test_label_selectors"`
+	RegisteredAt             pgtype.Timestamptz `json:"registered_at"`
+	LastHeartbeatAt          pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // GetRunner implements Querier.GetRunner.
@@ -77,7 +77,7 @@ func (q *DBQuerier) GetRunner(ctx context.Context, id string) (GetRunnerRow, err
 	ctx = context.WithValue(ctx, "pggen_query_name", "GetRunner")
 	row := q.conn.QueryRow(ctx, getRunnerSQL, id)
 	var item GetRunnerRow
-	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 		return item, fmt.Errorf("query GetRunner: %w", err)
 	}
 	return item, nil
@@ -92,7 +92,7 @@ func (q *DBQuerier) GetRunnerBatch(batch genericBatch, id string) {
 func (q *DBQuerier) GetRunnerScan(results pgx.BatchResults) (GetRunnerRow, error) {
 	row := results.QueryRow()
 	var item GetRunnerRow
-	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 		return item, fmt.Errorf("scan GetRunnerBatch row: %w", err)
 	}
 	return item, nil
@@ -100,27 +100,21 @@ func (q *DBQuerier) GetRunnerScan(results pgx.BatchResults) (GetRunnerRow, error
 
 const listRunnersSQL = `SELECT *
 FROM runners
-WHERE
-  CASE WHEN $1
-    THEN revoked_at IS NOT NULL
-    ELSE TRUE
-  END;`
+WHERE last_heartbeat_at > $1;`
 
 type ListRunnersRow struct {
-	ID               string             `json:"id"`
-	Name             string             `json:"name"`
-	AcceptTestLabels pgtype.JSONB       `json:"accept_test_labels"`
-	RejectTestLabels pgtype.JSONB       `json:"reject_test_labels"`
-	RegisteredAt     pgtype.Timestamptz `json:"registered_at"`
-	ApprovedAt       pgtype.Timestamptz `json:"approved_at"`
-	RevokedAt        pgtype.Timestamptz `json:"revoked_at"`
-	LastHeartbeatAt  pgtype.Timestamptz `json:"last_heartbeat_at"`
+	ID                       string             `json:"id"`
+	Name                     string             `json:"name"`
+	AcceptTestLabelSelectors pgtype.JSONB       `json:"accept_test_label_selectors"`
+	RejectTestLabelSelectors pgtype.JSONB       `json:"reject_test_label_selectors"`
+	RegisteredAt             pgtype.Timestamptz `json:"registered_at"`
+	LastHeartbeatAt          pgtype.Timestamptz `json:"last_heartbeat_at"`
 }
 
 // ListRunners implements Querier.ListRunners.
-func (q *DBQuerier) ListRunners(ctx context.Context, filterRevoked bool) ([]ListRunnersRow, error) {
+func (q *DBQuerier) ListRunners(ctx context.Context, heartbeatSince pgtype.Timestamptz) ([]ListRunnersRow, error) {
 	ctx = context.WithValue(ctx, "pggen_query_name", "ListRunners")
-	rows, err := q.conn.Query(ctx, listRunnersSQL, filterRevoked)
+	rows, err := q.conn.Query(ctx, listRunnersSQL, heartbeatSince)
 	if err != nil {
 		return nil, fmt.Errorf("query ListRunners: %w", err)
 	}
@@ -128,7 +122,7 @@ func (q *DBQuerier) ListRunners(ctx context.Context, filterRevoked bool) ([]List
 	items := []ListRunnersRow{}
 	for rows.Next() {
 		var item ListRunnersRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 			return nil, fmt.Errorf("scan ListRunners row: %w", err)
 		}
 		items = append(items, item)
@@ -140,8 +134,8 @@ func (q *DBQuerier) ListRunners(ctx context.Context, filterRevoked bool) ([]List
 }
 
 // ListRunnersBatch implements Querier.ListRunnersBatch.
-func (q *DBQuerier) ListRunnersBatch(batch genericBatch, filterRevoked bool) {
-	batch.Queue(listRunnersSQL, filterRevoked)
+func (q *DBQuerier) ListRunnersBatch(batch genericBatch, heartbeatSince pgtype.Timestamptz) {
+	batch.Queue(listRunnersSQL, heartbeatSince)
 }
 
 // ListRunnersScan implements Querier.ListRunnersScan.
@@ -154,7 +148,7 @@ func (q *DBQuerier) ListRunnersScan(results pgx.BatchResults) ([]ListRunnersRow,
 	items := []ListRunnersRow{}
 	for rows.Next() {
 		var item ListRunnersRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.AcceptTestLabels, &item.RejectTestLabels, &item.RegisteredAt, &item.ApprovedAt, &item.RevokedAt, &item.LastHeartbeatAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.AcceptTestLabelSelectors, &item.RejectTestLabelSelectors, &item.RegisteredAt, &item.LastHeartbeatAt); err != nil {
 			return nil, fmt.Errorf("scan ListRunnersBatch row: %w", err)
 		}
 		items = append(items, item)
@@ -163,60 +157,4 @@ func (q *DBQuerier) ListRunnersScan(results pgx.BatchResults) ([]ListRunnersRow,
 		return nil, fmt.Errorf("close ListRunnersBatch rows: %w", err)
 	}
 	return items, err
-}
-
-const approveRunnerSQL = `UPDATE runners
-SET approved_at = CURRENT_TIMESTAMP
-WHERE id = $1::uuid;`
-
-// ApproveRunner implements Querier.ApproveRunner.
-func (q *DBQuerier) ApproveRunner(ctx context.Context, id string) (pgconn.CommandTag, error) {
-	ctx = context.WithValue(ctx, "pggen_query_name", "ApproveRunner")
-	cmdTag, err := q.conn.Exec(ctx, approveRunnerSQL, id)
-	if err != nil {
-		return cmdTag, fmt.Errorf("exec query ApproveRunner: %w", err)
-	}
-	return cmdTag, err
-}
-
-// ApproveRunnerBatch implements Querier.ApproveRunnerBatch.
-func (q *DBQuerier) ApproveRunnerBatch(batch genericBatch, id string) {
-	batch.Queue(approveRunnerSQL, id)
-}
-
-// ApproveRunnerScan implements Querier.ApproveRunnerScan.
-func (q *DBQuerier) ApproveRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
-	cmdTag, err := results.Exec()
-	if err != nil {
-		return cmdTag, fmt.Errorf("exec ApproveRunnerBatch: %w", err)
-	}
-	return cmdTag, err
-}
-
-const revokeRunnerSQL = `UPDATE runners
-SET revoked_at = CURRENT_TIMESTAMP
-WHERE id = $1::uuid;`
-
-// RevokeRunner implements Querier.RevokeRunner.
-func (q *DBQuerier) RevokeRunner(ctx context.Context, id string) (pgconn.CommandTag, error) {
-	ctx = context.WithValue(ctx, "pggen_query_name", "RevokeRunner")
-	cmdTag, err := q.conn.Exec(ctx, revokeRunnerSQL, id)
-	if err != nil {
-		return cmdTag, fmt.Errorf("exec query RevokeRunner: %w", err)
-	}
-	return cmdTag, err
-}
-
-// RevokeRunnerBatch implements Querier.RevokeRunnerBatch.
-func (q *DBQuerier) RevokeRunnerBatch(batch genericBatch, id string) {
-	batch.Queue(revokeRunnerSQL, id)
-}
-
-// RevokeRunnerScan implements Querier.RevokeRunnerScan.
-func (q *DBQuerier) RevokeRunnerScan(results pgx.BatchResults) (pgconn.CommandTag, error) {
-	cmdTag, err := results.Exec()
-	if err != nil {
-		return cmdTag, fmt.Errorf("exec RevokeRunnerBatch: %w", err)
-	}
-	return cmdTag, err
 }

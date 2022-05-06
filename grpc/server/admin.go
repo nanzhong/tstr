@@ -14,7 +14,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type AdminServer struct {
@@ -39,6 +38,8 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 			scopes = append(scopes, db.AccessTokenScopeControlR)
 		case common.AccessToken_CONTROL_RW:
 			scopes = append(scopes, db.AccessTokenScopeControlRW)
+		case common.AccessToken_RUNNER:
+			scopes = append(scopes, db.AccessTokenScopeRunner)
 		default:
 			log.Error().Int32("scope", int32(s)).Msg("invalid scope")
 			return nil, status.Error(codes.InvalidArgument, "failed to issue access token")
@@ -57,7 +58,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	}
 	token := hex.EncodeToString(tokenData)
 
-	tokenHashBytes := sha256.Sum256([]byte(tokenData))
+	tokenHashBytes := sha256.Sum256([]byte(token))
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
@@ -134,14 +135,6 @@ func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAc
 	return &admin.RevokeAccessTokenResponse{}, nil
 }
 
-func (s *AdminServer) ApproveRunner(ctx context.Context, req *admin.ApproveRunnerRequest) (*admin.ApproveRunnerResponse, error) {
-	return nil, nil
-}
-
-func (s *AdminServer) DenyRunner(ctx context.Context, req *admin.DenyRunnerRequest) (*admin.DenyRunnerResponse, error) {
-	return nil, nil
-}
-
 func toProtoScopes(scopes []db.AccessTokenScope) []common.AccessToken_Scope {
 	var protoScopes []common.AccessToken_Scope
 	for _, s := range scopes {
@@ -152,22 +145,9 @@ func toProtoScopes(scopes []db.AccessTokenScope) []common.AccessToken_Scope {
 			protoScopes = append(protoScopes, common.AccessToken_CONTROL_R)
 		case db.AccessTokenScopeControlRW:
 			protoScopes = append(protoScopes, common.AccessToken_CONTROL_RW)
+		case db.AccessTokenScopeRunner:
+			protoScopes = append(protoScopes, common.AccessToken_RUNNER)
 		}
 	}
 	return protoScopes
-}
-
-func toProtoTimestamp(ts pgtype.Timestamptz) *timestamppb.Timestamp {
-	if ts.Status == pgtype.Null {
-		return nil
-	}
-
-	var t time.Time
-	if err := ts.AssignTo(&t); err != nil {
-		// This should never fail...
-		log.Error().Err(err).Msg("converting pgtype.timestamptz to time.Time")
-		return nil
-	}
-
-	return timestamppb.New(t)
 }

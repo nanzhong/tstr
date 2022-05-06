@@ -38,11 +38,9 @@ CREATE UNIQUE INDEX test_suites_unique_name ON test_suites(name) WHERE archived_
 CREATE TABLE runners (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
        name varchar NOT NULL,
-       accept_test_labels jsonb,
-       reject_test_labels jsonb,
+       accept_test_label_selectors jsonb,
+       reject_test_label_selectors jsonb,
        registered_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-       approved_at timestamptz,
-       revoked_at timestamptz,
        last_heartbeat_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX ON runners(last_heartbeat_at);

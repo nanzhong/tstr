@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/sha512"
+	"database/sql"
 	"encoding/hex"
 	"net"
 	"net/http"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
 	grpczerolog "github.com/jwreagor/grpc-zerolog"
 	"github.com/nanzhong/tstr/api/admin/v1"
@@ -49,19 +49,17 @@ var serveCmd = &cobra.Command{
 		}
 		defer pool.Close()
 
-		dbQuerier := db.NewQuerier(pool)
+		var dbQuerier db.Querier
+		dbQuerier = db.New(pool)
 		if viper.GetString("serve.bootstrap-token") != "" {
 			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("serve.bootstrap-token")))
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
-
-			var expiresAt pgtype.Timestamptz
-			expiresAt.Set(time.Now().Add(24 * time.Hour))
 
 			dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 				Name:      "bootstrap-token",
 				TokenHash: tokenHash,
 				Scopes:    []db.AccessTokenScope{db.AccessTokenScopeAdmin},
-				ExpiresAt: expiresAt,
+				ExpiresAt: sql.NullTime{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			})
 		}
 

@@ -2,17 +2,16 @@ package server
 
 import (
 	"context"
-	"fmt"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type ControlServer struct {
@@ -65,56 +64,46 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 		return nil, status.Error(codes.Internal, "failed to format env")
 	}
 
-	var (
-		dbRunConfigCreatedAt time.Time
-		dbRegisteredAt       time.Time
-		dbUpdatedAt          time.Time
-	)
-	if err := result.TestRunConfigCreatedAt.AssignTo(&dbRunConfigCreatedAt); err != nil {
-		log.Error().Err(err).Msg("failed to convert run config created at")
-		return nil, status.Error(codes.Internal, "failed to format run config created at time")
-	}
-	if err := result.RegisteredAt.AssignTo(&dbRegisteredAt); err != nil {
-		log.Error().Err(err).Msg("failed to convert registered at")
-		return nil, status.Error(codes.Internal, "failed to format registered at time")
-	}
-	if err := result.UpdatedAt.AssignTo(&dbUpdatedAt); err != nil {
-		log.Error().Err(err).Msg("failed to convert updated at")
-		return nil, status.Error(codes.Internal, "failed to format updated at time")
-	}
-
 	return &control.RegisterTestResponse{
 		Test: &common.Test{
-			Id:           result.ID,
+			Id:           result.ID.String(),
 			Name:         result.Name,
 			Labels:       resultLabels,
-			CronSchedule: result.CronSchedule,
+			CronSchedule: result.CronSchedule.String,
 			RunConfig: &common.Test_RunConfig{
-				Id:             result.TestRunConfigID,
+				Id:             result.TestRunConfigID.String(),
 				ContainerImage: result.ContainerImage,
-				Command:        result.Command,
+				Command:        result.Command.String,
 				Args:           result.Args,
 				Env:            resultEnv,
-				CreatedAt:      timestamppb.New(dbRunConfigCreatedAt),
+				CreatedAt:      types.ToProtoTimestamp(result.TestRunConfigCreatedAt),
 			},
-			RegisteredAt: timestamppb.New(dbRegisteredAt),
-			UpdatedAt:    timestamppb.New(dbUpdatedAt),
+			RegisteredAt: types.ToProtoTimestamp(result.RegisteredAt),
+			UpdatedAt:    types.ToProtoTimestamp(result.UpdatedAt),
 		},
 	}, nil
 }
 
 func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRunRequest) (*control.ScheduleRunResponse, error) {
-	test, err := s.dbQuerier.GetTest(ctx, req.TestId)
+	testID, err := uuid.Parse(req.TestId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid test id")
+	}
+
+	test, err := s.dbQuerier.GetTest(ctx, testID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to lookup test to schedule run for")
 	}
-	fmt.Printf("%#v\n", test)
-	run, err := s.dbQuerier.ScheduleRun(ctx, test.ID, test.TestRunConfigID)
+
+	run, err := s.dbQuerier.ScheduleRun(ctx, db.ScheduleRunParams{
+		TestID:          test.ID,
+		TestRunConfigID: test.TestRunConfigID,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
-			Str("test_id", test.ID).
-			Str("test_urn_config_id", test.TestRunConfigID).
+			Stringer("test_id", test.ID).
+			Stringer("test_urn_config_id", test.TestRunConfigID).
 			Msg("failed to schedule run")
 		return nil, status.Error(codes.Internal, "failed to schedule run")
 	}
@@ -123,24 +112,24 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRu
 	if err := run.Env.AssignTo(&env); err != nil {
 		log.Error().
 			Err(err).
-			Str("run_id", run.ID).
+			Stringer("run_id", run.ID).
 			Msg("failed to parse env")
 		return nil, status.Error(codes.Internal, "failed to format run config env")
 	}
 
 	return &control.ScheduleRunResponse{
 		Run: &common.Run{
-			Id:     run.ID,
-			TestId: run.TestID,
+			Id:     run.ID.String(),
+			TestId: run.TestID.String(),
 			TestRunConfig: &common.Test_RunConfig{
-				Id:             run.TestRunConfigID,
+				Id:             run.TestRunConfigID.String(),
 				ContainerImage: run.ContainerImage,
-				Command:        run.Command,
+				Command:        run.Command.String,
 				Args:           run.Args,
 				Env:            env,
-				CreatedAt:      toProtoTimestamp(run.TestRunConfigCreatedAt),
+				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
 			},
-			ScheduledAt: toProtoTimestamp(run.ScheduledAt),
+			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
 		},
 	}, nil
 }

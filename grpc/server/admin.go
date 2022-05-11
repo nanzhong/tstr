@@ -4,10 +4,11 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha512"
+	"database/sql"
 	"encoding/hex"
 	"time"
 
-	"github.com/jackc/pgtype"
+	"github.com/google/uuid"
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
@@ -30,27 +31,12 @@ func NewAdminServer(dbQuerier db.Querier) admin.AdminServiceServer {
 }
 
 func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAccessTokenRequest) (*admin.IssueAccessTokenResponse, error) {
-	var scopes []db.AccessTokenScope
-	for _, s := range req.Scopes {
-		switch s {
-		case common.AccessToken_ADMIN:
-			scopes = append(scopes, db.AccessTokenScopeAdmin)
-		case common.AccessToken_CONTROL_R:
-			scopes = append(scopes, db.AccessTokenScopeControlR)
-		case common.AccessToken_CONTROL_RW:
-			scopes = append(scopes, db.AccessTokenScopeControlRW)
-		case common.AccessToken_RUNNER:
-			scopes = append(scopes, db.AccessTokenScopeRunner)
-		default:
-			log.Error().Int32("scope", int32(s)).Msg("invalid scope")
-			return nil, status.Error(codes.InvalidArgument, "failed to issue access token")
-		}
+	var expiresAt sql.NullTime
+	if req.ValidDuration != nil {
+		expiresAt.Valid = true
+		expiresAt.Time = time.Now().UTC().Add(req.ValidDuration.AsDuration())
 	}
 
-	var expiresAt pgtype.Timestamptz
-	if req.ValidDuration != nil {
-		expiresAt.Set(time.Now().UTC().Add(req.ValidDuration.AsDuration()))
-	}
 	tokenData := make([]byte, 32)
 	_, err := rand.Read(tokenData)
 	if err != nil {
@@ -65,7 +51,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 		Name:      req.Name,
 		TokenHash: tokenHash,
-		Scopes:    scopes,
+		Scopes:    types.FromAccessTokenScopes(req.Scopes),
 		ExpiresAt: expiresAt,
 	})
 	if err != nil {
@@ -75,18 +61,23 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 
 	return &admin.IssueAccessTokenResponse{
 		AccessToken: &common.AccessToken{
-			Id:        issuedToken.ID,
+			Id:        issuedToken.ID.String(),
 			Name:      issuedToken.Name,
 			Scopes:    types.ToAccessTokenScopes(issuedToken.Scopes),
 			Token:     token,
-			IssuedAt:  toProtoTimestamp(issuedToken.IssuedAt),
-			ExpiresAt: toProtoTimestamp(issuedToken.ExpiresAt),
+			IssuedAt:  types.ToProtoTimestamp(issuedToken.IssuedAt),
+			ExpiresAt: types.ToProtoTimestamp(issuedToken.ExpiresAt),
 		},
 	}, nil
 }
 
 func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTokenRequest) (*admin.GetAccessTokenResponse, error) {
-	token, err := s.dbQuerier.GetAccessToken(ctx, req.Id)
+	tokenID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
+	}
+
+	token, err := s.dbQuerier.GetAccessToken(ctx, tokenID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to query for access token")
 		return nil, status.Error(codes.Internal, "failed to get access token")
@@ -94,18 +85,21 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 
 	return &admin.GetAccessTokenResponse{
 		AccessToken: &common.AccessToken{
-			Id:        token.ID,
+			Id:        token.ID.String(),
 			Name:      token.Name,
 			Scopes:    types.ToAccessTokenScopes(token.Scopes),
-			IssuedAt:  toProtoTimestamp(token.IssuedAt),
-			ExpiresAt: toProtoTimestamp(token.ExpiresAt),
-			RevokedAt: toProtoTimestamp(token.RevokedAt),
+			IssuedAt:  types.ToProtoTimestamp(token.IssuedAt),
+			ExpiresAt: types.ToProtoTimestamp(token.ExpiresAt),
+			RevokedAt: types.ToProtoTimestamp(token.RevokedAt),
 		},
 	}, nil
 }
 
 func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAccessTokensRequest) (*admin.ListAccessTokensResponse, error) {
-	tokens, err := s.dbQuerier.ListAccessTokens(ctx, req.IncludeExpired, req.IncludeRevoked)
+	tokens, err := s.dbQuerier.ListAccessTokens(ctx, db.ListAccessTokensParams{
+		IncludeExpired: req.IncludeExpired,
+		IncludeRevoked: req.IncludeRevoked,
+	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to query for access tokens")
 		return nil, status.Error(codes.Internal, "failed to list access tokens")
@@ -114,12 +108,12 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 	res := &admin.ListAccessTokensResponse{}
 	for _, token := range tokens {
 		res.AccessTokens = append(res.AccessTokens, &common.AccessToken{
-			Id:        token.ID,
+			Id:        token.ID.String(),
 			Name:      token.Name,
 			Scopes:    types.ToAccessTokenScopes(token.Scopes),
-			IssuedAt:  toProtoTimestamp(token.IssuedAt),
-			ExpiresAt: toProtoTimestamp(token.ExpiresAt),
-			RevokedAt: toProtoTimestamp(token.RevokedAt),
+			IssuedAt:  types.ToProtoTimestamp(token.IssuedAt),
+			ExpiresAt: types.ToProtoTimestamp(token.ExpiresAt),
+			RevokedAt: types.ToProtoTimestamp(token.RevokedAt),
 		})
 	}
 
@@ -127,7 +121,12 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 }
 
 func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAccessTokenRequest) (*admin.RevokeAccessTokenResponse, error) {
-	_, err := s.dbQuerier.RevokeAccessToken(ctx, req.Id)
+	tokenID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
+	}
+
+	err = s.dbQuerier.RevokeAccessToken(ctx, tokenID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to revoke access tokens")
 		return nil, status.Error(codes.Internal, "failed to revoke access tokens")

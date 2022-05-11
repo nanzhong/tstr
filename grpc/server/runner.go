@@ -5,11 +5,13 @@ import (
 	"errors"
 	"regexp"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -78,18 +80,23 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runner.RegisterR
 
 	return &runner.RegisterRunnerResponse{
 		Runner: &common.Runner{
-			Id:                       regRunner.ID,
+			Id:                       regRunner.ID.String(),
 			Name:                     regRunner.Name,
 			AcceptTestLabelSelectors: acceptSelectors,
 			RejectTestLabelSelectors: rejectSelectors,
-			RegisteredAt:             toProtoTimestamp(regRunner.RegisteredAt),
-			LastHeartbeatAt:          toProtoTimestamp(regRunner.LastHeartbeatAt),
+			RegisteredAt:             types.ToProtoTimestamp(regRunner.RegisteredAt),
+			LastHeartbeatAt:          types.ToProtoTimestamp(regRunner.LastHeartbeatAt),
 		},
 	}, nil
 }
 
 func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) (*runner.NextRunResponse, error) {
-	dbRunner, err := s.dbQuerier.GetRunner(ctx, req.Id)
+	runnerID, err := uuid.Parse(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
+	}
+
+	dbRunner, err := s.dbQuerier.GetRunner(ctx, runnerID)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -145,7 +152,10 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 	}
 
 	// NOTE we don't care about reject keys here, because unless all reject labels have selectors that match anything (non-trivial to determine), we need to first get the tests that match the accept keys before applying filtering.
-	tests, err := s.dbQuerier.ListTestsIDsMatchingLabelKeys(ctx, acceptKeys, nil)
+	tests, err := s.dbQuerier.ListTestsIDsMatchingLabelKeys(ctx, db.ListTestsIDsMatchingLabelKeysParams{
+		IncludeLabelKeys: acceptKeys,
+		FilterLabelKeys:  nil,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -154,13 +164,13 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 		return nil, status.Error(codes.Internal, "failed to determine matching tests for runner")
 	}
 
-	var matchingTestIDs []string
+	var matchingTestIDs []uuid.UUID
 	for _, test := range tests {
 		var labels map[string]string
 		if err := test.Labels.AssignTo(&labels); err != nil {
 			log.Error().
 				Err(err).
-				Str("test_id", test.ID).
+				Str("test_id", test.ID.String()).
 				Msg("failed to parse test labels")
 			return nil, status.Error(codes.Internal, "failed to determine matching tests for runner")
 		}
@@ -192,16 +202,24 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 		matchingTestIDs = append(matchingTestIDs, test.ID)
 	}
 
-	run, err := s.dbQuerier.AssignRun(ctx, req.Id, matchingTestIDs)
+	run, err := s.dbQuerier.AssignRun(ctx, db.AssignRunParams{
+		RunnerID: runnerID,
+		TestIds:  matchingTestIDs,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, status.Error(codes.NotFound, "no matching runs")
 		}
 
+		// NOTE []uuid.UUID can't be directly used as []fmt.Stringer
+		matchingTestIDStrings := make([]string, len(matchingTestIDs))
+		for i, s := range matchingTestIDs {
+			matchingTestIDStrings[i] = s.String()
+		}
 		log.Error().
 			Err(err).
-			Str("runner_id", req.Id).
-			Strs("test_ids", matchingTestIDs).
+			Stringer("runner_id", runnerID).
+			Strs("test_ids", matchingTestIDStrings).
 			Msg("failed to assign run to runner")
 		return nil, status.Error(codes.Internal, "failed to assign run to runner")
 	}
@@ -210,24 +228,24 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 	if err := run.Env.AssignTo(&env); err != nil {
 		log.Error().
 			Err(err).
-			Str("run_id", run.ID).
+			Stringer("run_id", run.ID).
 			Msg("failed to parse run config env")
 		return nil, status.Error(codes.Internal, "failed to format response")
 	}
 	return &runner.NextRunResponse{
 		Run: &common.Run{
-			Id:     run.ID,
-			TestId: run.TestID,
+			Id:     run.ID.String(),
+			TestId: run.TestID.String(),
 			TestRunConfig: &common.Test_RunConfig{
-				Id:             run.TestRunConfigID,
+				Id:             run.TestRunConfigID.String(),
 				ContainerImage: run.ContainerImage,
-				Command:        run.Command,
+				Command:        run.Command.String,
 				Args:           run.Args,
 				Env:            env,
-				CreatedAt:      toProtoTimestamp(run.TestRunConfigCreatedAt),
+				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
 			},
-			RunnerId:    run.RunnerID,
-			ScheduledAt: toProtoTimestamp(run.ScheduledAt),
+			RunnerId:    run.RunnerID.UUID.String(),
+			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
 		},
 	}, nil
 }

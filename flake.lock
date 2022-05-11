@@ -3,11 +3,11 @@
     "dbmate": {
       "flake": false,
       "locked": {
-        "lastModified": 1649656063,
-        "narHash": "sha256-DEQ/nPDoug4LBFFsG5BxS6uDPf3XCy9pG+VSXJYQIaU=",
+        "lastModified": 1651849929,
+        "narHash": "sha256-QMGW1G5mgqxnrFBXbZXbpjJgw1IKjNhJ6CRvG9Ob/7U=",
         "owner": "amacneil",
         "repo": "dbmate",
-        "rev": "1613f72c4f9456ebe1b72eb1fa8a55c648a7587a",
+        "rev": "d671075f1fbce82dffa3541abc2aacaded4d200d",
         "type": "github"
       },
       "original": {
@@ -33,11 +33,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1650911318,
-        "narHash": "sha256-UvCP5fvt6nsf26Fqr3PSpbpvyC9D1a376BFTg/Z4YH0=",
+        "lastModified": 1652133925,
+        "narHash": "sha256-kfATGChLe9/fQVZkXN9G71JAVMlhePv1qDbaRKklkQs=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "1d395b2c9a82a8bca6f7f67640641c73e833f3d4",
+        "rev": "51d859cdab1ef58755bd342d45352fc607f5e59b",
         "type": "github"
       },
       "original": {
@@ -63,22 +63,6 @@
         "type": "github"
       }
     },
-    "pggen": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1644101690,
-        "narHash": "sha256-EnFWnrCWdfJcplHo5jxf9o/v/4qKYxNIbxnrNSesYHw=",
-        "owner": "jschaf",
-        "repo": "pggen",
-        "rev": "1266d15e85c54237d9b58b1a701acd5274bc2c45",
-        "type": "github"
-      },
-      "original": {
-        "owner": "jschaf",
-        "repo": "pggen",
-        "type": "github"
-      }
-    },
     "quicktemplate": {
       "flake": false,
       "locked": {
@@ -101,8 +85,24 @@
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",
         "overmind": "overmind",
-        "pggen": "pggen",
-        "quicktemplate": "quicktemplate"
+        "quicktemplate": "quicktemplate",
+        "sqlc": "sqlc"
+      }
+    },
+    "sqlc": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1652197265,
+        "narHash": "sha256-Uc1f1FZd46Fashw9+8Vz8Ji0lD12uzTRcWzISxUk9uc=",
+        "owner": "kyleconroy",
+        "repo": "sqlc",
+        "rev": "c893a0dd4a7478761d8cb48e1af6cb89f54a663a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "kyleconroy",
+        "repo": "sqlc",
+        "type": "github"
       }
     }
   },

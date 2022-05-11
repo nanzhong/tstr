@@ -86,8 +86,8 @@ CREATE TABLE public.runners (
 
 CREATE TABLE public.runs (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    test_id uuid,
-    test_run_config_id uuid,
+    test_id uuid NOT NULL,
+    test_run_config_id uuid NOT NULL,
     runner_id uuid,
     result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,

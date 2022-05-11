@@ -1,13 +1,13 @@
 -- name: RegisterTest :one
 WITH data (name, labels, cron_schedule, container_image, command, args, env) AS (
   VALUES (
-    pggen.arg('name')::varchar,
-    pggen.arg('labels')::jsonb,
-    pggen.arg('cron_schedule')::varchar,
-    pggen.arg('container_image')::varchar,
-    pggen.arg('command')::varchar,
-    pggen.arg('args')::varchar[],
-    pggen.arg('env')::jsonb
+    sqlc.arg('name')::varchar,
+    sqlc.arg('labels')::jsonb,
+    sqlc.arg('cron_schedule')::varchar,
+    sqlc.arg('container_image')::varchar,
+    sqlc.arg('command')::varchar,
+    sqlc.arg('args')::varchar[],
+    sqlc.arg('env')::jsonb
   )
 ), test AS (
   INSERT INTO tests (name, labels, cron_schedule)
@@ -27,7 +27,7 @@ SELECT tests.*, test_run_configs.id AS test_run_config_id, container_image, comm
 FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
-WHERE tests.id = pggen.arg('id')::uuid
+WHERE tests.id = sqlc.arg('id')::uuid
 ORDER BY test_run_configs.created_at DESC
 LIMIT 1;
 
@@ -38,36 +38,36 @@ JOIN test_run_configs AS latest_configs
 ON tests.id = latest_configs.test_id
 LEFT JOIN test_run_configs
 ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
-WHERE test_run_configs IS NULL AND tests.labels @> pggen.arg('labels')::jsonb
+WHERE test_run_configs IS NULL AND tests.labels @> sqlc.arg('labels')::jsonb
 ORDER BY tests.name ASC;
 
 -- name: ListTestsIDsMatchingLabelKeys :many
 SELECT tests.id, tests.labels
 FROM tests
 WHERE
-  tests.labels ?& pggen.arg('include_label_keys') AND
-  NOT tests.labels ?& pggen.arg('filter_label_keys');
+  tests.labels ?& sqlc.arg('include_label_keys')::varchar[] AND
+  NOT tests.labels ?& sqlc.arg('filter_label_keys')::varchar[];
 
 -- name: UpdateTest :exec
 UPDATE tests
 SET
-  name = pggen.arg('name')::varchar,
-  labels = pggen.arg('labels')::jsonb,
-  cron_schedule = pggen.arg('cron_schedule')::varchar,
+  name = sqlc.arg('name')::varchar,
+  labels = sqlc.arg('labels')::jsonb,
+  cron_schedule = sqlc.arg('cron_schedule')::varchar,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = pggen.arg('id')::uuid;
+WHERE id = sqlc.arg('id')::uuid;
 
 -- name: CreateTestRunConfig :one
 INSERT INTO test_run_configs (container_image, command, args, env)
 VALUES (
-  pggen.arg('container_image')::varchar,
-  pggen.arg('command')::varchar,
-  pggen.arg('args')::varchar[],
-  pggen.arg('env')::jsonb
+  sqlc.arg('container_image')::varchar,
+  sqlc.arg('command')::varchar,
+  sqlc.arg('args')::varchar[],
+  sqlc.arg('env')::jsonb
 )
 RETURNING *;
 
 -- name: ArchiveTest :exec
 UPDATE tests
 SET archived_at = CURRENT_TIMESTAMP
-WHERE id = pggen.arg('id')::uuid;
+WHERE id = sqlc.arg('id')::uuid;

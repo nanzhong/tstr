@@ -48,8 +48,8 @@ CREATE INDEX ON runners(last_heartbeat_at);
 CREATE TYPE run_result AS ENUM ('unknown', 'pass', 'fail', 'error');
 CREATE TABLE runs (
        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-       test_id uuid REFERENCES tests(id),
-       test_run_config_id uuid REFERENCES test_run_configs(id),
+       test_id uuid REFERENCES tests(id) NOT NULL,
+       test_run_config_id uuid REFERENCES test_run_configs(id) NOT NULL,
        runner_id uuid REFERENCES runners(id),
        result run_result DEFAULT 'unknown'::run_result,
        logs jsonb,

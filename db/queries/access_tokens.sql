@@ -1,6 +1,6 @@
 -- name: IssueAccessToken :one
 INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
-VALUES (pggen.arg('name'), pggen.arg('token_hash'), pggen.arg('scopes'), pggen.arg('expires_at'))
+VALUES (sqlc.arg('name'), sqlc.arg('token_hash'), sqlc.arg('scopes'), sqlc.arg('expires_at'))
 RETURNING id, name, scopes, issued_at, expires_at;
 
 -- name: ValidateAccessToken :one
@@ -8,24 +8,24 @@ SELECT EXISTS(
   SELECT TRUE
   FROM access_tokens
   WHERE
-    token_hash = pggen.arg('token_hash') AND
+    token_hash = sqlc.arg('token_hash') AND
     (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND
-    scopes @> pggen.arg('scopes'));
+    scopes @> sqlc.arg('scopes'));
 
 -- name: GetAccessToken :one
 SELECT id, name, scopes, issued_at, expires_at, revoked_at
 FROM access_tokens
-WHERE id = pggen.arg('id')::uuid;
+WHERE id = sqlc.arg('id');
 
 -- name: ListAccessTokens :many
 SELECT id, name, scopes, issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
-  CASE WHEN pggen.arg('include_expired')
+  CASE WHEN sqlc.arg('include_expired')::bool
    THEN TRUE
    ELSE expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP
   END AND
-  CASE WHEN pggen.arg('include_revoked')
+  CASE WHEN sqlc.arg('include_revoked')::bool
    THEN TRUE
    ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
   END;
@@ -33,4 +33,4 @@ WHERE
 -- name: RevokeAccessToken :exec
 UPDATE access_tokens
 SET revoked_at = CURRENT_TIMESTAMP
-WHERE id = pggen.arg('id')::uuid;
+WHERE id = sqlc.arg('id');

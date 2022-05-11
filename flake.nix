@@ -3,8 +3,8 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
-    pggen = {
-      url = "github:jschaf/pggen";
+    sqlc = {
+      url = "github:kyleconroy/sqlc";
       flake = false;
     };
     dbmate = {
@@ -21,7 +21,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, pggen, dbmate, overmind, quicktemplate }:
+  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -38,12 +38,18 @@
         };
 
         devTools = {
-          pggen = pkgs.buildGoModule {
-            name = "pggen";
-            src = pggen;
-            subPackages = [ "cmd/pggen" ];
+          sqlc = pkgs.buildGoModule {
+            name = "sqlc";
+            src = sqlc;
+            subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-WLoFpwOP97160WfmfbCUUlhqGC0qiEPWDg0qL/DrzIA=";
+            vendorSha256 = "sha256-LX8C7098P940wdg8yig6h6azAsxdai+vEVhjdILIoMQ=";
+            proxyVendor = true;
+            buildInputs = [
+              pkgs.xxHash
+              pkgs.libpg_query
+              pkgs.postgresql_14
+            ];
           };
           dbmate = pkgs.buildGoModule {
             name = "dbmate";
@@ -98,7 +104,7 @@
 
                 postgresql_14
 
-                devTools.pggen
+                devTools.sqlc
                 devTools.dbmate
                 devTools.overmind
                 devTools.quicktemplate

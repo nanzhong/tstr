@@ -59,7 +59,10 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		allowed, err := dbQuerier.ValidateAccessToken(ctx, tokenHash, toDBScopes(validScopes))
+		allowed, err := dbQuerier.ValidateAccessToken(ctx, db.ValidateAccessTokenParams{
+			TokenHash: tokenHash,
+			Scopes:    toDBScopes(validScopes),
+		})
 		if err != nil {
 			log.Error().Err(err).Msg("failed to validate access token")
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
@@ -86,7 +89,10 @@ func StreamServerInterceptor(dbQuerier db.Querier) grpc.StreamServerInterceptor 
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		allowed, err := dbQuerier.ValidateAccessToken(ss.Context(), tokenHash, toDBScopes(validScopes))
+		allowed, err := dbQuerier.ValidateAccessToken(ss.Context(), db.ValidateAccessTokenParams{
+			TokenHash: tokenHash,
+			Scopes:    toDBScopes(validScopes),
+		})
 		if err != nil {
 			log.Error().Err(err).Msg("failed to validate access token")
 			return status.Error(codes.Internal, "failed to authenticate request")
@@ -121,7 +127,7 @@ func toDBScope(scope common.AccessToken_Scope) db.AccessTokenScope {
 	case common.AccessToken_CONTROL_R:
 		return db.AccessTokenScopeControlR
 	case common.AccessToken_CONTROL_RW:
-		return db.AccessTokenScopeControlRW
+		return db.AccessTokenScopeControlRw
 	case common.AccessToken_RUNNER:
 		return db.AccessTokenScopeRunner
 	case common.AccessToken_UNKNOWN:

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/envoyproxy/protoc-gen-validate v0.6.7
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jackc/pgconn v1.12.0
 	github.com/jackc/pgtype v1.11.0

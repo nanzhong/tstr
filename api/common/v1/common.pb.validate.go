@@ -1083,7 +1083,7 @@ func (m *Test_RunConfig) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Version
+	// no validation rules for Id
 
 	// no validation rules for ContainerImage
 

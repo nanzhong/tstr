@@ -2,11 +2,11 @@ package main
 
 import "github.com/spf13/cobra"
 
-var testCmd = &cobra.Command{
+var ctlTestCmd = &cobra.Command{
 	Use:   "test",
 	Short: "test is the subcommand for interacting with test configuration.",
 }
 
 func init() {
-	rootCmd.AddCommand(testCmd)
+	ctlCmd.AddCommand(ctlTestCmd)
 }

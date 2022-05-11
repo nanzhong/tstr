@@ -18,12 +18,12 @@ WITH data (name, labels, cron_schedule, container_image, command, args, env) AS 
   INSERT INTO test_run_configs (test_id, container_image, command, args, env)
   SELECT test.id, container_image, command, args, env
   FROM data, test
-  RETURNING id AS test_run_config_version, container_image, command, args, env, created_at AS test_run_config_created_at
+  RETURNING id AS test_run_config_id, container_image, command, args, env, created_at AS test_run_config_created_at
 )
 SELECT * FROM test, test_run_config;
 
 -- name: GetTest :one
-SELECT tests.*, test_run_configs.id AS test_run_config_version, container_image, command, args, env, created_at
+SELECT tests.*, test_run_configs.id AS test_run_config_id, container_image, command, args, env, created_at
 FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
@@ -32,7 +32,7 @@ ORDER BY test_run_configs.created_at DESC
 LIMIT 1;
 
 -- name: ListTests :many
-SELECT tests.*, latest_configs.id AS test_run_config_version, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+SELECT tests.*, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
 JOIN test_run_configs AS latest_configs
 ON tests.id = latest_configs.test_id
@@ -40,6 +40,13 @@ LEFT JOIN test_run_configs
 ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE test_run_configs IS NULL AND tests.labels @> pggen.arg('labels')::jsonb
 ORDER BY tests.name ASC;
+
+-- name: ListTestsIDsMatchingLabelKeys :many
+SELECT tests.id, tests.labels
+FROM tests
+WHERE
+  tests.labels ?& pggen.arg('include_label_keys') AND
+  NOT tests.labels ?& pggen.arg('filter_label_keys');
 
 -- name: UpdateTest :exec
 UPDATE tests

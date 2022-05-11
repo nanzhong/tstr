@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgtype"
@@ -89,7 +90,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 			Labels:       resultLabels,
 			CronSchedule: result.CronSchedule,
 			RunConfig: &common.Test_RunConfig{
-				Version:        result.TestRunConfigVersion,
+				Id:             result.TestRunConfigID,
 				ContainerImage: result.ContainerImage,
 				Command:        result.Command,
 				Args:           result.Args,
@@ -98,6 +99,48 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 			},
 			RegisteredAt: timestamppb.New(dbRegisteredAt),
 			UpdatedAt:    timestamppb.New(dbUpdatedAt),
+		},
+	}, nil
+}
+
+func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRunRequest) (*control.ScheduleRunResponse, error) {
+	test, err := s.dbQuerier.GetTest(ctx, req.TestId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to lookup test to schedule run for")
+	}
+	fmt.Printf("%#v\n", test)
+	run, err := s.dbQuerier.ScheduleRun(ctx, test.ID, test.TestRunConfigID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("test_id", test.ID).
+			Str("test_urn_config_id", test.TestRunConfigID).
+			Msg("failed to schedule run")
+		return nil, status.Error(codes.Internal, "failed to schedule run")
+	}
+
+	var env map[string]string
+	if err := run.Env.AssignTo(&env); err != nil {
+		log.Error().
+			Err(err).
+			Str("run_id", run.ID).
+			Msg("failed to parse env")
+		return nil, status.Error(codes.Internal, "failed to format run config env")
+	}
+
+	return &control.ScheduleRunResponse{
+		Run: &common.Run{
+			Id:     run.ID,
+			TestId: run.TestID,
+			TestRunConfig: &common.Test_RunConfig{
+				Id:             run.TestRunConfigID,
+				ContainerImage: run.ContainerImage,
+				Command:        run.Command,
+				Args:           run.Args,
+				Env:            env,
+				CreatedAt:      toProtoTimestamp(run.TestRunConfigCreatedAt),
+			},
+			ScheduledAt: toProtoTimestamp(run.ScheduledAt),
 		},
 	}, nil
 }

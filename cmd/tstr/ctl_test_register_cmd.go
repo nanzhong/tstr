@@ -117,5 +117,5 @@ func init() {
 	ctlTestRegisterCmd.Flags().StringArrayVar(&ctlTestRegisterArgs, "args", nil, "Arguments to pass to the command.")
 	ctlTestRegisterCmd.Flags().StringArrayVar(&ctlTestRegisterEnv, "env", nil, "Environment variable to execute the test with in key value pairs (e.g. key=value).")
 
-	testCmd.AddCommand(ctlTestRegisterCmd)
+	ctlTestCmd.AddCommand(ctlTestRegisterCmd)
 }

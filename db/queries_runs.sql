@@ -59,24 +59,28 @@ WHERE
   END;
 
 -- name: ScheduleRun :one
-INSERT INTO runs (test_id, test_run_config_id)
-VALUES (pggen.arg('test_id')::uuid, pggen.arg('test_run_config_id')::uuid)
-RETURNING *;
+WITH scheduled_run AS (
+  INSERT INTO runs (test_id, test_run_config_id)
+  VALUES (pggen.arg('test_id')::uuid, pggen.arg('test_run_config_id')::uuid)
+  RETURNING *
+)
+SELECT scheduled_run.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+FROM scheduled_run
+JOIN test_run_configs
+ON scheduled_run.test_run_config_id = test_run_configs.id;
 
--- name: NextRun :one
+-- name: AssignRun :one
 UPDATE runs
-SET runner_id = pggen.arg('runner_id'), scheduled_at = CURRENT_TIMESTAMP
-WHERE id = (
-  SELECT runs.id
+SET runner_id = pggen.arg('runner_id')
+FROM test_run_configs
+WHERE runs.id = (
+  SELECT id
   FROM runs
-  JOIN tests
-  ON runs.test_id = tests.id
-  WHERE scheduled_at IS NULL AND tests.labels @> pggen.arg('labels')
+  WHERE test_id = ANY(pggen.arg('test_ids')) AND runner_id IS NULL
   ORDER BY scheduled_at ASC
   LIMIT 1
-  FOR UPDATE
-)
-RETURNING *;
+) AND runs.test_run_config_id = test_run_configs.id
+RETURNING runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at;
 
 -- name: UpdateRun :exec
 UPDATE runs

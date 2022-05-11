@@ -4,15 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var errRunnerRevoked = errors.New("runner revoked")
 
 type Runner struct {
-	client runner.RunnerServiceClient
+	runnerClient runner.RunnerServiceClient
+	dockerClient *client.Client
+	retryDelay   time.Duration
 
 	id                   string
 	name                 string
@@ -25,13 +32,20 @@ type Runner struct {
 }
 
 func New(
-	client runner.RunnerServiceClient,
+	runnerClient runner.RunnerServiceClient,
 	name string,
 	allowLabelSelectors map[string]string,
 	rejectLabelSelectors map[string]string,
-) *Runner {
+) (*Runner, error) {
+	dockerClient, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		return nil, fmt.Errorf("failed to configure docker client: %w", err)
+	}
+
 	return &Runner{
-		client: client,
+		runnerClient: runnerClient,
+		dockerClient: dockerClient,
+		retryDelay:   5 * time.Second,
 
 		name:                 name,
 		allowLabelSelectors:  allowLabelSelectors,
@@ -39,7 +53,7 @@ func New(
 
 		doneCh: make(chan struct{}),
 		stopCh: make(chan struct{}),
-	}
+	}, nil
 }
 
 func (r *Runner) Run() error {
@@ -47,7 +61,13 @@ func (r *Runner) Run() error {
 
 	var ctx context.Context
 	ctx, r.stopCancelFn = context.WithCancel(context.Background())
-	regRes, err := r.client.RegisterRunner(ctx, &runner.RegisterRunnerRequest{
+
+	_, err := r.dockerClient.Ping(ctx)
+	if err != nil {
+		return fmt.Errorf("docker not available, unable to ping: %w", err)
+	}
+
+	regRes, err := r.runnerClient.RegisterRunner(ctx, &runner.RegisterRunnerRequest{
 		Name:                     r.name,
 		AcceptTestLabelSelectors: r.allowLabelSelectors,
 		RejectTestLabelSelectors: r.rejectLabelSelectors,
@@ -66,6 +86,19 @@ func (r *Runner) Run() error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
+			runRes, err := r.runnerClient.NextRun(ctx, &runner.NextRunRequest{
+				Id: r.id,
+			})
+			if err != nil {
+				if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+					log.Info().Msg("no pending runs, trying again later")
+				} else {
+					log.Error().Err(err).Msg("failed to get the next run")
+				}
+				time.Sleep(r.retryDelay)
+			}
+
+			fmt.Println(protojson.Format(runRes))
 		}
 	}
 }

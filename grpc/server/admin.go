@@ -11,6 +11,7 @@ import (
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -76,7 +77,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 		AccessToken: &common.AccessToken{
 			Id:        issuedToken.ID,
 			Name:      issuedToken.Name,
-			Scopes:    toProtoScopes(issuedToken.Scopes),
+			Scopes:    types.ToAccessTokenScopes(issuedToken.Scopes),
 			Token:     token,
 			IssuedAt:  toProtoTimestamp(issuedToken.IssuedAt),
 			ExpiresAt: toProtoTimestamp(issuedToken.ExpiresAt),
@@ -95,7 +96,7 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 		AccessToken: &common.AccessToken{
 			Id:        token.ID,
 			Name:      token.Name,
-			Scopes:    toProtoScopes(token.Scopes),
+			Scopes:    types.ToAccessTokenScopes(token.Scopes),
 			IssuedAt:  toProtoTimestamp(token.IssuedAt),
 			ExpiresAt: toProtoTimestamp(token.ExpiresAt),
 			RevokedAt: toProtoTimestamp(token.RevokedAt),
@@ -115,7 +116,7 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 		res.AccessTokens = append(res.AccessTokens, &common.AccessToken{
 			Id:        token.ID,
 			Name:      token.Name,
-			Scopes:    toProtoScopes(token.Scopes),
+			Scopes:    types.ToAccessTokenScopes(token.Scopes),
 			IssuedAt:  toProtoTimestamp(token.IssuedAt),
 			ExpiresAt: toProtoTimestamp(token.ExpiresAt),
 			RevokedAt: toProtoTimestamp(token.RevokedAt),
@@ -133,21 +134,4 @@ func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAc
 	}
 
 	return &admin.RevokeAccessTokenResponse{}, nil
-}
-
-func toProtoScopes(scopes []db.AccessTokenScope) []common.AccessToken_Scope {
-	var protoScopes []common.AccessToken_Scope
-	for _, s := range scopes {
-		switch s {
-		case db.AccessTokenScopeAdmin:
-			protoScopes = append(protoScopes, common.AccessToken_ADMIN)
-		case db.AccessTokenScopeControlR:
-			protoScopes = append(protoScopes, common.AccessToken_CONTROL_R)
-		case db.AccessTokenScopeControlRW:
-			protoScopes = append(protoScopes, common.AccessToken_CONTROL_RW)
-		case db.AccessTokenScopeRunner:
-			protoScopes = append(protoScopes, common.AccessToken_RUNNER)
-		}
-	}
-	return protoScopes
 }

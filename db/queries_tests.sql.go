@@ -29,7 +29,7 @@ const registerTestSQL = `WITH data (name, labels, cron_schedule, container_image
   INSERT INTO test_run_configs (test_id, container_image, command, args, env)
   SELECT test.id, container_image, command, args, env
   FROM data, test
-  RETURNING id AS test_run_config_version, container_image, command, args, env, created_at AS test_run_config_created_at
+  RETURNING id AS test_run_config_id, container_image, command, args, env, created_at AS test_run_config_created_at
 )
 SELECT * FROM test, test_run_config;`
 
@@ -50,7 +50,7 @@ type RegisterTestRow struct {
 	CronSchedule           string             `json:"cron_schedule"`
 	RegisteredAt           pgtype.Timestamptz `json:"registered_at"`
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
-	TestRunConfigVersion   string             `json:"test_run_config_version"`
+	TestRunConfigID        string             `json:"test_run_config_id"`
 	ContainerImage         string             `json:"container_image"`
 	Command                string             `json:"command"`
 	Args                   []string           `json:"args"`
@@ -63,7 +63,7 @@ func (q *DBQuerier) RegisterTest(ctx context.Context, params RegisterTestParams)
 	ctx = context.WithValue(ctx, "pggen_query_name", "RegisterTest")
 	row := q.conn.QueryRow(ctx, registerTestSQL, params.Name, params.Labels, params.CronSchedule, params.ContainerImage, params.Command, params.Args, params.Env)
 	var item RegisterTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
 		return item, fmt.Errorf("query RegisterTest: %w", err)
 	}
 	return item, nil
@@ -78,13 +78,13 @@ func (q *DBQuerier) RegisterTestBatch(batch genericBatch, params RegisterTestPar
 func (q *DBQuerier) RegisterTestScan(results pgx.BatchResults) (RegisterTestRow, error) {
 	row := results.QueryRow()
 	var item RegisterTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
 		return item, fmt.Errorf("scan RegisterTestBatch row: %w", err)
 	}
 	return item, nil
 }
 
-const getTestSQL = `SELECT tests.*, test_run_configs.id AS test_run_config_version, container_image, command, args, env, created_at
+const getTestSQL = `SELECT tests.*, test_run_configs.id AS test_run_config_id, container_image, command, args, env, created_at
 FROM tests
 JOIN test_run_configs
 ON tests.id = test_run_configs.test_id
@@ -93,19 +93,19 @@ ORDER BY test_run_configs.created_at DESC
 LIMIT 1;`
 
 type GetTestRow struct {
-	ID                   string             `json:"id"`
-	Name                 string             `json:"name"`
-	Labels               pgtype.JSONB       `json:"labels"`
-	CronSchedule         string             `json:"cron_schedule"`
-	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
-	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
-	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
-	TestRunConfigVersion string             `json:"test_run_config_version"`
-	ContainerImage       string             `json:"container_image"`
-	Command              string             `json:"command"`
-	Args                 []string           `json:"args"`
-	Env                  pgtype.JSONB       `json:"env"`
-	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	ID              string             `json:"id"`
+	Name            string             `json:"name"`
+	Labels          pgtype.JSONB       `json:"labels"`
+	CronSchedule    string             `json:"cron_schedule"`
+	RegisteredAt    pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt      pgtype.Timestamptz `json:"archived_at"`
+	TestRunConfigID string             `json:"test_run_config_id"`
+	ContainerImage  string             `json:"container_image"`
+	Command         string             `json:"command"`
+	Args            []string           `json:"args"`
+	Env             pgtype.JSONB       `json:"env"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 // GetTest implements Querier.GetTest.
@@ -113,7 +113,7 @@ func (q *DBQuerier) GetTest(ctx context.Context, id string) (GetTestRow, error) 
 	ctx = context.WithValue(ctx, "pggen_query_name", "GetTest")
 	row := q.conn.QueryRow(ctx, getTestSQL, id)
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("query GetTest: %w", err)
 	}
 	return item, nil
@@ -128,13 +128,13 @@ func (q *DBQuerier) GetTestBatch(batch genericBatch, id string) {
 func (q *DBQuerier) GetTestScan(results pgx.BatchResults) (GetTestRow, error) {
 	row := results.QueryRow()
 	var item GetTestRow
-	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 		return item, fmt.Errorf("scan GetTestBatch row: %w", err)
 	}
 	return item, nil
 }
 
-const listTestsSQL = `SELECT tests.*, latest_configs.id AS test_run_config_version, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+const listTestsSQL = `SELECT tests.*, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
 JOIN test_run_configs AS latest_configs
 ON tests.id = latest_configs.test_id
@@ -144,19 +144,19 @@ WHERE test_run_configs IS NULL AND tests.labels @> $1::jsonb
 ORDER BY tests.name ASC;`
 
 type ListTestsRow struct {
-	ID                   string             `json:"id"`
-	Name                 string             `json:"name"`
-	Labels               pgtype.JSONB       `json:"labels"`
-	CronSchedule         string             `json:"cron_schedule"`
-	RegisteredAt         pgtype.Timestamptz `json:"registered_at"`
-	UpdatedAt            pgtype.Timestamptz `json:"updated_at"`
-	ArchivedAt           pgtype.Timestamptz `json:"archived_at"`
-	TestRunConfigVersion string             `json:"test_run_config_version"`
-	ContainerImage       string             `json:"container_image"`
-	Command              string             `json:"command"`
-	Args                 []string           `json:"args"`
-	Env                  pgtype.JSONB       `json:"env"`
-	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+	ID              string             `json:"id"`
+	Name            string             `json:"name"`
+	Labels          pgtype.JSONB       `json:"labels"`
+	CronSchedule    string             `json:"cron_schedule"`
+	RegisteredAt    pgtype.Timestamptz `json:"registered_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+	ArchivedAt      pgtype.Timestamptz `json:"archived_at"`
+	TestRunConfigID string             `json:"test_run_config_id"`
+	ContainerImage  string             `json:"container_image"`
+	Command         string             `json:"command"`
+	Args            []string           `json:"args"`
+	Env             pgtype.JSONB       `json:"env"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
 // ListTests implements Querier.ListTests.
@@ -170,7 +170,7 @@ func (q *DBQuerier) ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListT
 	items := []ListTestsRow{}
 	for rows.Next() {
 		var item ListTestsRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan ListTests row: %w", err)
 		}
 		items = append(items, item)
@@ -196,13 +196,72 @@ func (q *DBQuerier) ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, err
 	items := []ListTestsRow{}
 	for rows.Next() {
 		var item ListTestsRow
-		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigVersion, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Labels, &item.CronSchedule, &item.RegisteredAt, &item.UpdatedAt, &item.ArchivedAt, &item.TestRunConfigID, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan ListTestsBatch row: %w", err)
 		}
 		items = append(items, item)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("close ListTestsBatch rows: %w", err)
+	}
+	return items, err
+}
+
+const listTestsIDsMatchingLabelKeysSQL = `SELECT tests.id, tests.labels
+FROM tests
+WHERE
+  tests.labels ?& $1 AND
+  NOT tests.labels ?& $2;`
+
+type ListTestsIDsMatchingLabelKeysRow struct {
+	ID     string       `json:"id"`
+	Labels pgtype.JSONB `json:"labels"`
+}
+
+// ListTestsIDsMatchingLabelKeys implements Querier.ListTestsIDsMatchingLabelKeys.
+func (q *DBQuerier) ListTestsIDsMatchingLabelKeys(ctx context.Context, includeLabelKeys []string, filterLabelKeys []string) ([]ListTestsIDsMatchingLabelKeysRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "ListTestsIDsMatchingLabelKeys")
+	rows, err := q.conn.Query(ctx, listTestsIDsMatchingLabelKeysSQL, includeLabelKeys, filterLabelKeys)
+	if err != nil {
+		return nil, fmt.Errorf("query ListTestsIDsMatchingLabelKeys: %w", err)
+	}
+	defer rows.Close()
+	items := []ListTestsIDsMatchingLabelKeysRow{}
+	for rows.Next() {
+		var item ListTestsIDsMatchingLabelKeysRow
+		if err := rows.Scan(&item.ID, &item.Labels); err != nil {
+			return nil, fmt.Errorf("scan ListTestsIDsMatchingLabelKeys row: %w", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("close ListTestsIDsMatchingLabelKeys rows: %w", err)
+	}
+	return items, err
+}
+
+// ListTestsIDsMatchingLabelKeysBatch implements Querier.ListTestsIDsMatchingLabelKeysBatch.
+func (q *DBQuerier) ListTestsIDsMatchingLabelKeysBatch(batch genericBatch, includeLabelKeys []string, filterLabelKeys []string) {
+	batch.Queue(listTestsIDsMatchingLabelKeysSQL, includeLabelKeys, filterLabelKeys)
+}
+
+// ListTestsIDsMatchingLabelKeysScan implements Querier.ListTestsIDsMatchingLabelKeysScan.
+func (q *DBQuerier) ListTestsIDsMatchingLabelKeysScan(results pgx.BatchResults) ([]ListTestsIDsMatchingLabelKeysRow, error) {
+	rows, err := results.Query()
+	if err != nil {
+		return nil, fmt.Errorf("query ListTestsIDsMatchingLabelKeysBatch: %w", err)
+	}
+	defer rows.Close()
+	items := []ListTestsIDsMatchingLabelKeysRow{}
+	for rows.Next() {
+		var item ListTestsIDsMatchingLabelKeysRow
+		if err := rows.Scan(&item.ID, &item.Labels); err != nil {
+			return nil, fmt.Errorf("scan ListTestsIDsMatchingLabelKeysBatch row: %w", err)
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("close ListTestsIDsMatchingLabelKeysBatch rows: %w", err)
 	}
 	return items, err
 }

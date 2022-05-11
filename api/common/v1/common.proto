@@ -8,7 +8,7 @@ option go_package =  "github.com/nanzhong/tstr/api/common/v1;common";
 
 message Test {
   message RunConfig {
-    string version = 1; // required (generated)
+    string id = 1; // required (generated)
     string container_image = 2 [json_name="container_image"]; // required
     string command = 3;
     repeated string args = 4;

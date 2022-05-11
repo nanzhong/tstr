@@ -93,12 +93,12 @@ type Querier interface {
 	// ScheduleRunScan scans the result of an executed ScheduleRunBatch query.
 	ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error)
 
-	NextRun(ctx context.Context, runnerID string, labels pgtype.JSONB) (NextRunRow, error)
-	// NextRunBatch enqueues a NextRun query into batch to be executed
+	AssignRun(ctx context.Context, runnerID string, testIds []string) (AssignRunRow, error)
+	// AssignRunBatch enqueues a AssignRun query into batch to be executed
 	// later by the batch.
-	NextRunBatch(batch genericBatch, runnerID string, labels pgtype.JSONB)
-	// NextRunScan scans the result of an executed NextRunBatch query.
-	NextRunScan(results pgx.BatchResults) (NextRunRow, error)
+	AssignRunBatch(batch genericBatch, runnerID string, testIds []string)
+	// AssignRunScan scans the result of an executed AssignRunBatch query.
+	AssignRunScan(results pgx.BatchResults) (AssignRunRow, error)
 
 	UpdateRun(ctx context.Context, params UpdateRunParams) (pgconn.CommandTag, error)
 	// UpdateRunBatch enqueues a UpdateRun query into batch to be executed
@@ -162,6 +162,13 @@ type Querier interface {
 	ListTestsBatch(batch genericBatch, labels pgtype.JSONB)
 	// ListTestsScan scans the result of an executed ListTestsBatch query.
 	ListTestsScan(results pgx.BatchResults) ([]ListTestsRow, error)
+
+	ListTestsIDsMatchingLabelKeys(ctx context.Context, includeLabelKeys []string, filterLabelKeys []string) ([]ListTestsIDsMatchingLabelKeysRow, error)
+	// ListTestsIDsMatchingLabelKeysBatch enqueues a ListTestsIDsMatchingLabelKeys query into batch to be executed
+	// later by the batch.
+	ListTestsIDsMatchingLabelKeysBatch(batch genericBatch, includeLabelKeys []string, filterLabelKeys []string)
+	// ListTestsIDsMatchingLabelKeysScan scans the result of an executed ListTestsIDsMatchingLabelKeysBatch query.
+	ListTestsIDsMatchingLabelKeysScan(results pgx.BatchResults) ([]ListTestsIDsMatchingLabelKeysRow, error)
 
 	UpdateTest(ctx context.Context, params UpdateTestParams) (pgconn.CommandTag, error)
 	// UpdateTestBatch enqueues a UpdateTest query into batch to be executed
@@ -293,8 +300,8 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	if _, err := p.Prepare(ctx, scheduleRunSQL, scheduleRunSQL); err != nil {
 		return fmt.Errorf("prepare query 'ScheduleRun': %w", err)
 	}
-	if _, err := p.Prepare(ctx, nextRunSQL, nextRunSQL); err != nil {
-		return fmt.Errorf("prepare query 'NextRun': %w", err)
+	if _, err := p.Prepare(ctx, assignRunSQL, assignRunSQL); err != nil {
+		return fmt.Errorf("prepare query 'AssignRun': %w", err)
 	}
 	if _, err := p.Prepare(ctx, updateRunSQL, updateRunSQL); err != nil {
 		return fmt.Errorf("prepare query 'UpdateRun': %w", err)
@@ -322,6 +329,9 @@ func PrepareAllQueries(ctx context.Context, p preparer) error {
 	}
 	if _, err := p.Prepare(ctx, listTestsSQL, listTestsSQL); err != nil {
 		return fmt.Errorf("prepare query 'ListTests': %w", err)
+	}
+	if _, err := p.Prepare(ctx, listTestsIDsMatchingLabelKeysSQL, listTestsIDsMatchingLabelKeysSQL); err != nil {
+		return fmt.Errorf("prepare query 'ListTestsIDsMatchingLabelKeys': %w", err)
 	}
 	if _, err := p.Prepare(ctx, updateTestSQL, updateTestSQL); err != nil {
 		return fmt.Errorf("prepare query 'UpdateTest': %w", err)

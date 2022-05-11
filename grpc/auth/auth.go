@@ -2,10 +2,9 @@ package auth
 
 import (
 	"context"
-	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/nanzhong/tstr/api/common/v1"
@@ -60,7 +59,6 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		fmt.Println(tokenHash)
 		allowed, err := dbQuerier.ValidateAccessToken(ctx, tokenHash, toDBScopes(validScopes))
 		if err != nil {
 			log.Error().Err(err).Msg("failed to validate access token")
@@ -156,7 +154,7 @@ func tokenFromMD(md metadata.MD) (string, string, error) {
 	}
 
 	token := parts[1]
-	tokenHashBytes := sha256.Sum256([]byte(token))
+	tokenHashBytes := sha512.Sum512([]byte(token))
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	return token, tokenHash, nil

@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -22,13 +24,35 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+		var (
+			acceptLabelSelectors = make(map[string]string)
+			rejectLabelSelectors = make(map[string]string)
+		)
+		for _, l := range viper.GetStringSlice("run.accept-label-selectors") {
+			parts := strings.Split(l, "=")
+			if len(parts) != 2 {
+				log.Fatal().Msg("invalid accept label selectors")
+			}
+			acceptLabelSelectors[parts[0]] = parts[1]
+		}
+		for _, l := range viper.GetStringSlice("run.reject-label-selectors") {
+			parts := strings.Split(l, "=")
+			if len(parts) != 2 {
+				log.Fatal().Msg("invalid reject label selectors")
+			}
+			rejectLabelSelectors[parts[0]] = parts[1]
+		}
+
 		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerapi.RunnerServiceClient) error {
-			runner := runner.New(
+			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),
-				nil,
-				nil,
+				acceptLabelSelectors,
+				rejectLabelSelectors,
 			)
+			if err != nil {
+				return fmt.Errorf("failed to initialize runner: %w", err)
+			}
 
 			ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 			defer stop()

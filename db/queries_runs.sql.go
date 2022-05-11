@@ -113,11 +113,11 @@ WHERE
 
 type ListRunsParams struct {
 	FilterTestIds         bool
-	TestIds               pgtype.UUIDArray
+	TestIds               []string
 	FilterTestSuiteIds    bool
-	TestSuiteIds          pgtype.UUIDArray
+	TestSuiteIds          []string
 	FilterRunnerIds       bool
-	RunnerIds             pgtype.UUIDArray
+	RunnerIds             []string
 	FilterResults         bool
 	Results               []RunResult
 	FilterScheduledBefore bool
@@ -199,20 +199,31 @@ func (q *DBQuerier) ListRunsScan(results pgx.BatchResults) ([]ListRunsRow, error
 	return items, err
 }
 
-const scheduleRunSQL = `INSERT INTO runs (test_id, test_run_config_id)
-VALUES ($1::uuid, $2::uuid)
-RETURNING *;`
+const scheduleRunSQL = `WITH scheduled_run AS (
+  INSERT INTO runs (test_id, test_run_config_id)
+  VALUES ($1::uuid, $2::uuid)
+  RETURNING *
+)
+SELECT scheduled_run.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+FROM scheduled_run
+JOIN test_run_configs
+ON scheduled_run.test_run_config_id = test_run_configs.id;`
 
 type ScheduleRunRow struct {
-	ID              string             `json:"id"`
-	TestID          string             `json:"test_id"`
-	TestRunConfigID string             `json:"test_run_config_id"`
-	RunnerID        string             `json:"runner_id"`
-	Result          RunResult          `json:"result"`
-	Logs            pgtype.JSONB       `json:"logs"`
-	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
-	StartedAt       pgtype.Timestamptz `json:"started_at"`
-	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
+	ID                     string             `json:"id"`
+	TestID                 string             `json:"test_id"`
+	TestRunConfigID        string             `json:"test_run_config_id"`
+	RunnerID               string             `json:"runner_id"`
+	Result                 RunResult          `json:"result"`
+	Logs                   pgtype.JSONB       `json:"logs"`
+	ScheduledAt            pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt              pgtype.Timestamptz `json:"started_at"`
+	FinishedAt             pgtype.Timestamptz `json:"finished_at"`
+	ContainerImage         string             `json:"container_image"`
+	Command                string             `json:"command"`
+	Args                   []string           `json:"args"`
+	Env                    pgtype.JSONB       `json:"env"`
+	TestRunConfigCreatedAt pgtype.Timestamptz `json:"test_run_config_created_at"`
 }
 
 // ScheduleRun implements Querier.ScheduleRun.
@@ -220,7 +231,7 @@ func (q *DBQuerier) ScheduleRun(ctx context.Context, testID string, testRunConfi
 	ctx = context.WithValue(ctx, "pggen_query_name", "ScheduleRun")
 	row := q.conn.QueryRow(ctx, scheduleRunSQL, testID, testRunConfigID)
 	var item ScheduleRunRow
-	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
 		return item, fmt.Errorf("query ScheduleRun: %w", err)
 	}
 	return item, nil
@@ -235,60 +246,63 @@ func (q *DBQuerier) ScheduleRunBatch(batch genericBatch, testID string, testRunC
 func (q *DBQuerier) ScheduleRunScan(results pgx.BatchResults) (ScheduleRunRow, error) {
 	row := results.QueryRow()
 	var item ScheduleRunRow
-	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
 		return item, fmt.Errorf("scan ScheduleRunBatch row: %w", err)
 	}
 	return item, nil
 }
 
-const nextRunSQL = `UPDATE runs
-SET runner_id = $1, scheduled_at = CURRENT_TIMESTAMP
-WHERE id = (
-  SELECT runs.id
+const assignRunSQL = `UPDATE runs
+SET runner_id = $1
+FROM test_run_configs
+WHERE runs.id = (
+  SELECT id
   FROM runs
-  JOIN tests
-  ON runs.test_id = tests.id
-  WHERE scheduled_at IS NULL AND tests.labels @> $2
+  WHERE test_id = ANY($2) AND runner_id IS NULL
   ORDER BY scheduled_at ASC
   LIMIT 1
-  FOR UPDATE
-)
-RETURNING *;`
+) AND runs.test_run_config_id = test_run_configs.id
+RETURNING runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at;`
 
-type NextRunRow struct {
-	ID              string             `json:"id"`
-	TestID          string             `json:"test_id"`
-	TestRunConfigID string             `json:"test_run_config_id"`
-	RunnerID        string             `json:"runner_id"`
-	Result          RunResult          `json:"result"`
-	Logs            pgtype.JSONB       `json:"logs"`
-	ScheduledAt     pgtype.Timestamptz `json:"scheduled_at"`
-	StartedAt       pgtype.Timestamptz `json:"started_at"`
-	FinishedAt      pgtype.Timestamptz `json:"finished_at"`
+type AssignRunRow struct {
+	ID                     string             `json:"id"`
+	TestID                 string             `json:"test_id"`
+	TestRunConfigID        string             `json:"test_run_config_id"`
+	RunnerID               string             `json:"runner_id"`
+	Result                 RunResult          `json:"result"`
+	Logs                   pgtype.JSONB       `json:"logs"`
+	ScheduledAt            pgtype.Timestamptz `json:"scheduled_at"`
+	StartedAt              pgtype.Timestamptz `json:"started_at"`
+	FinishedAt             pgtype.Timestamptz `json:"finished_at"`
+	ContainerImage         string             `json:"container_image"`
+	Command                string             `json:"command"`
+	Args                   []string           `json:"args"`
+	Env                    pgtype.JSONB       `json:"env"`
+	TestRunConfigCreatedAt pgtype.Timestamptz `json:"test_run_config_created_at"`
 }
 
-// NextRun implements Querier.NextRun.
-func (q *DBQuerier) NextRun(ctx context.Context, runnerID string, labels pgtype.JSONB) (NextRunRow, error) {
-	ctx = context.WithValue(ctx, "pggen_query_name", "NextRun")
-	row := q.conn.QueryRow(ctx, nextRunSQL, runnerID, labels)
-	var item NextRunRow
-	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
-		return item, fmt.Errorf("query NextRun: %w", err)
+// AssignRun implements Querier.AssignRun.
+func (q *DBQuerier) AssignRun(ctx context.Context, runnerID string, testIds []string) (AssignRunRow, error) {
+	ctx = context.WithValue(ctx, "pggen_query_name", "AssignRun")
+	row := q.conn.QueryRow(ctx, assignRunSQL, runnerID, testIds)
+	var item AssignRunRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
+		return item, fmt.Errorf("query AssignRun: %w", err)
 	}
 	return item, nil
 }
 
-// NextRunBatch implements Querier.NextRunBatch.
-func (q *DBQuerier) NextRunBatch(batch genericBatch, runnerID string, labels pgtype.JSONB) {
-	batch.Queue(nextRunSQL, runnerID, labels)
+// AssignRunBatch implements Querier.AssignRunBatch.
+func (q *DBQuerier) AssignRunBatch(batch genericBatch, runnerID string, testIds []string) {
+	batch.Queue(assignRunSQL, runnerID, testIds)
 }
 
-// NextRunScan implements Querier.NextRunScan.
-func (q *DBQuerier) NextRunScan(results pgx.BatchResults) (NextRunRow, error) {
+// AssignRunScan implements Querier.AssignRunScan.
+func (q *DBQuerier) AssignRunScan(results pgx.BatchResults) (AssignRunRow, error) {
 	row := results.QueryRow()
-	var item NextRunRow
-	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt); err != nil {
-		return item, fmt.Errorf("scan NextRunBatch row: %w", err)
+	var item AssignRunRow
+	if err := row.Scan(&item.ID, &item.TestID, &item.TestRunConfigID, &item.RunnerID, &item.Result, &item.Logs, &item.ScheduledAt, &item.StartedAt, &item.FinishedAt, &item.ContainerImage, &item.Command, &item.Args, &item.Env, &item.TestRunConfigCreatedAt); err != nil {
+		return item, fmt.Errorf("scan AssignRunBatch row: %w", err)
 	}
 	return item, nil
 }

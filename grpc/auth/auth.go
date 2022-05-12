@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/rs/zerolog/log"
@@ -59,20 +60,24 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		allowed, err := dbQuerier.ValidateAccessToken(ctx, db.ValidateAccessTokenParams{
-			TokenHash: tokenHash,
-			Scopes:    toDBScopes(validScopes),
-		})
+		auth, err := dbQuerier.AuthAccessToken(ctx, tokenHash)
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
+			}
+
 			log.Error().Err(err).Msg("failed to validate access token")
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		if !allowed {
-			return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
+		for _, vs := range toDBScopes(validScopes) {
+			for _, s := range auth.Scopes {
+				if string(vs) == s {
+					return handler(ctx, req)
+				}
+			}
 		}
-
-		return handler(ctx, req)
+		return nil, status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
 	}
 }
 
@@ -89,20 +94,24 @@ func StreamServerInterceptor(dbQuerier db.Querier) grpc.StreamServerInterceptor 
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		allowed, err := dbQuerier.ValidateAccessToken(ss.Context(), db.ValidateAccessTokenParams{
-			TokenHash: tokenHash,
-			Scopes:    toDBScopes(validScopes),
-		})
+		auth, err := dbQuerier.AuthAccessToken(ss.Context(), tokenHash)
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
+			}
+
 			log.Error().Err(err).Msg("failed to validate access token")
 			return status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		if !allowed {
-			return status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
+		for _, vs := range toDBScopes(validScopes) {
+			for _, s := range auth.Scopes {
+				if string(vs) == s {
+					return handler(srv, ss)
+				}
+			}
 		}
-
-		return handler(srv, ss)
+		return status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
 	}
 }
 

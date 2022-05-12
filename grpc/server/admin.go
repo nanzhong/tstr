@@ -48,10 +48,14 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	tokenHashBytes := sha512.Sum512([]byte(token))
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
+	textScopes := make([]string, len(req.Scopes))
+	for i, s := range types.FromAccessTokenScopes(req.Scopes) {
+		textScopes[i] = string(s)
+	}
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 		Name:      req.Name,
 		TokenHash: tokenHash,
-		Scopes:    types.FromAccessTokenScopes(req.Scopes),
+		Scopes:    textScopes,
 		ExpiresAt: expiresAt,
 	})
 	if err != nil {
@@ -61,9 +65,11 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 
 	return &admin.IssueAccessTokenResponse{
 		AccessToken: &common.AccessToken{
-			Id:        issuedToken.ID.String(),
-			Name:      issuedToken.Name,
-			Scopes:    types.ToAccessTokenScopes(issuedToken.Scopes),
+			Id:   issuedToken.ID.String(),
+			Name: issuedToken.Name,
+			// TODO return actual scopes inserted, pending sqlc bug fix re enum arrays
+			// Scopes:    types.ToAccessTokenScopes(issuedToken.Scopes),
+			Scopes:    req.Scopes,
 			Token:     token,
 			IssuedAt:  types.ToProtoTimestamp(issuedToken.IssuedAt),
 			ExpiresAt: types.ToProtoTimestamp(issuedToken.ExpiresAt),

@@ -1,16 +1,15 @@
 -- name: IssueAccessToken :one
+-- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
-VALUES (sqlc.arg('name'), sqlc.arg('token_hash'), sqlc.arg('scopes'), sqlc.arg('expires_at'))
-RETURNING id, name, scopes, issued_at, expires_at;
+VALUES (sqlc.arg('name'), sqlc.arg('token_hash'), sqlc.arg('scopes')::text[]::access_token_scope[], sqlc.arg('expires_at'))
+RETURNING id, name, scopes::text[], issued_at, expires_at;
 
--- name: ValidateAccessToken :one
-SELECT EXISTS(
-  SELECT TRUE
-  FROM access_tokens
-  WHERE
-    token_hash = sqlc.arg('token_hash') AND
-    (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND
-    scopes @> sqlc.arg('scopes'));
+-- name: AuthAccessToken :one
+SELECT scopes::text[], expires_at
+FROM access_tokens
+WHERE
+  token_hash = sqlc.arg('token_hash') AND
+  (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);
 
 -- name: GetAccessToken :one
 SELECT id, name, scopes, issued_at, expires_at, revoked_at

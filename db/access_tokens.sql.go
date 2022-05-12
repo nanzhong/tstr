@@ -12,6 +12,26 @@ import (
 	"github.com/google/uuid"
 )
 
+const authAccessToken = `-- name: AuthAccessToken :one
+SELECT scopes::text[], expires_at
+FROM access_tokens
+WHERE
+  token_hash = $1 AND
+  (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+`
+
+type AuthAccessTokenRow struct {
+	Scopes    []string
+	ExpiresAt sql.NullTime
+}
+
+func (q *Queries) AuthAccessToken(ctx context.Context, tokenHash string) (AuthAccessTokenRow, error) {
+	row := q.db.QueryRow(ctx, authAccessToken, tokenHash)
+	var i AuthAccessTokenRow
+	err := row.Scan(&i.Scopes, &i.ExpiresAt)
+	return i, err
+}
+
 const getAccessToken = `-- name: GetAccessToken :one
 SELECT id, name, scopes, issued_at, expires_at, revoked_at
 FROM access_tokens
@@ -43,25 +63,26 @@ func (q *Queries) GetAccessToken(ctx context.Context, id uuid.UUID) (GetAccessTo
 
 const issueAccessToken = `-- name: IssueAccessToken :one
 INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
-VALUES ($1, $2, $3, $4)
-RETURNING id, name, scopes, issued_at, expires_at
+VALUES ($1, $2, $3::text[]::access_token_scope[], $4)
+RETURNING id, name, scopes::text[], issued_at, expires_at
 `
 
 type IssueAccessTokenParams struct {
 	Name      string
 	TokenHash string
-	Scopes    []AccessTokenScope
+	Scopes    []string
 	ExpiresAt sql.NullTime
 }
 
 type IssueAccessTokenRow struct {
 	ID        uuid.UUID
 	Name      string
-	Scopes    []AccessTokenScope
+	Scopes    []string
 	IssuedAt  sql.NullTime
 	ExpiresAt sql.NullTime
 }
 
+// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 func (q *Queries) IssueAccessToken(ctx context.Context, arg IssueAccessTokenParams) (IssueAccessTokenRow, error) {
 	row := q.db.QueryRow(ctx, issueAccessToken,
 		arg.Name,
@@ -144,26 +165,4 @@ WHERE id = $1
 func (q *Queries) RevokeAccessToken(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, revokeAccessToken, id)
 	return err
-}
-
-const validateAccessToken = `-- name: ValidateAccessToken :one
-SELECT EXISTS(
-  SELECT TRUE
-  FROM access_tokens
-  WHERE
-    token_hash = $1 AND
-    (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP) AND
-    scopes @> $2)
-`
-
-type ValidateAccessTokenParams struct {
-	TokenHash string
-	Scopes    []AccessTokenScope
-}
-
-func (q *Queries) ValidateAccessToken(ctx context.Context, arg ValidateAccessTokenParams) (bool, error) {
-	row := q.db.QueryRow(ctx, validateAccessToken, arg.TokenHash, arg.Scopes)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
 }

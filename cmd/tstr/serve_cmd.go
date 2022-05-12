@@ -55,12 +55,21 @@ var serveCmd = &cobra.Command{
 			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("serve.bootstrap-token")))
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
-			dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
+			var textScopes []string
+			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner} {
+				textScopes = append(textScopes, string(s))
+			}
+			_, err := dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 				Name:      "bootstrap-token",
 				TokenHash: tokenHash,
-				Scopes:    []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner},
+				Scopes:    textScopes,
 				ExpiresAt: sql.NullTime{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			})
+			if err != nil {
+				log.Fatal().
+					Err(err).
+					Msg("failed to issue bootstrap token")
+			}
 		}
 
 		// TODO: consider using cmux to serve http and grpc on the same port?
@@ -105,9 +114,6 @@ var serveCmd = &cobra.Command{
 		httpServer := http.Server{
 			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),
 		}
-
-		// TODO setup startup/shutdown for grpc server, scheduler, etc.
-
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
 
@@ -136,6 +142,7 @@ var serveCmd = &cobra.Command{
 			}
 		}()
 
+		log.Info().Msg("tstr starting")
 		var eg errgroup.Group
 		eg.Go(func() error {
 			log.Info().

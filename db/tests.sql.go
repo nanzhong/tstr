@@ -175,7 +175,7 @@ SELECT tests.id, tests.labels
 FROM tests
 WHERE
   tests.labels ?& $1::varchar[] AND
-  NOT tests.labels ?& $2::varchar[]
+  NOT tests.labels ?| COALESCE($2::varchar[], '{}')::varchar[]
 `
 
 type ListTestsIDsMatchingLabelKeysParams struct {

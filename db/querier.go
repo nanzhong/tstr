@@ -16,6 +16,7 @@ type Querier interface {
 	ArchiveTest(ctx context.Context, id uuid.UUID) error
 	ArchiveTestSuite(ctx context.Context, id uuid.UUID) error
 	AssignRun(ctx context.Context, arg AssignRunParams) (AssignRunRow, error)
+	AuthAccessToken(ctx context.Context, tokenHash string) (AuthAccessTokenRow, error)
 	CreateTestRunConfig(ctx context.Context, arg CreateTestRunConfigParams) (TestRunConfig, error)
 	DefineTestSuite(ctx context.Context, arg DefineTestSuiteParams) (TestSuite, error)
 	GetAccessToken(ctx context.Context, id uuid.UUID) (GetAccessTokenRow, error)
@@ -23,6 +24,7 @@ type Querier interface {
 	GetRunner(ctx context.Context, id uuid.UUID) (Runner, error)
 	GetTest(ctx context.Context, id uuid.UUID) (GetTestRow, error)
 	GetTestSuite(ctx context.Context, id uuid.UUID) (TestSuite, error)
+	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	IssueAccessToken(ctx context.Context, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
 	ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListRunners(ctx context.Context, heartbeatSince sql.NullTime) ([]Runner, error)
@@ -36,7 +38,6 @@ type Querier interface {
 	UpdateRun(ctx context.Context, arg UpdateRunParams) error
 	UpdateTest(ctx context.Context, arg UpdateTestParams) error
 	UpdateTestSuite(ctx context.Context, arg UpdateTestSuiteParams) error
-	ValidateAccessToken(ctx context.Context, arg ValidateAccessTokenParams) (bool, error)
 	listTestSuites(ctx context.Context, labels pgtype.JSONB) ([]TestSuite, error)
 }
 

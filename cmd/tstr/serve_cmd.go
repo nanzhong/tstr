@@ -58,7 +58,7 @@ var serveCmd = &cobra.Command{
 			dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
 				Name:      "bootstrap-token",
 				TokenHash: tokenHash,
-				Scopes:    []db.AccessTokenScope{db.AccessTokenScopeAdmin},
+				Scopes:    []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner},
 				ExpiresAt: sql.NullTime{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			})
 		}

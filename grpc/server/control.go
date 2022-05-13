@@ -7,6 +7,7 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/db"
@@ -19,14 +20,16 @@ import (
 
 type ControlServer struct {
 	control.UnimplementedControlServiceServer
+	pgxPool    *pgxpool.Pool
 	dbQuerier  db.Querier
 	cronParser cron.Parser
 	clock      clock.Clock
 }
 
-func NewControlServer(dbQuerier db.Querier) control.ControlServiceServer {
+func NewControlServer(pgxPool *pgxpool.Pool) control.ControlServiceServer {
 	return &ControlServer{
-		dbQuerier:  dbQuerier,
+		pgxPool:    pgxPool,
+		dbQuerier:  db.New(),
 		cronParser: cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
 		clock:      clock.New(),
 	}
@@ -55,7 +58,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 		nextRunAt.Time = schedule.Next(s.clock.Now())
 	}
 
-	result, err := s.dbQuerier.RegisterTest(ctx, db.RegisterTestParams{
+	result, err := s.dbQuerier.RegisterTest(ctx, s.pgxPool, db.RegisterTestParams{
 		Name:           r.Name,
 		Labels:         labels,
 		CronSchedule:   r.CronSchedule,
@@ -108,12 +111,12 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRu
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
 	}
 
-	test, err := s.dbQuerier.GetTest(ctx, testID)
+	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, testID)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to lookup test to schedule run for")
 	}
 
-	run, err := s.dbQuerier.ScheduleRun(ctx, db.ScheduleRunParams{
+	run, err := s.dbQuerier.ScheduleRun(ctx, s.pgxPool, db.ScheduleRunParams{
 		TestID:          test.ID,
 		TestRunConfigID: test.TestRunConfigID,
 	})

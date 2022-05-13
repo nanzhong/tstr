@@ -19,8 +19,8 @@ SET archived_at = CURRENT_TIMESTAMP
 WHERE id = $1::uuid
 `
 
-func (q *Queries) ArchiveTest(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, archiveTest, id)
+func (q *Queries) ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.Exec(ctx, archiveTest, id)
 	return err
 }
 
@@ -42,8 +42,8 @@ type CreateTestRunConfigParams struct {
 	Env            pgtype.JSONB
 }
 
-func (q *Queries) CreateTestRunConfig(ctx context.Context, arg CreateTestRunConfigParams) (TestRunConfig, error) {
-	row := q.db.QueryRow(ctx, createTestRunConfig,
+func (q *Queries) CreateTestRunConfig(ctx context.Context, db DBTX, arg CreateTestRunConfigParams) (TestRunConfig, error) {
+	row := db.QueryRow(ctx, createTestRunConfig,
 		arg.ContainerImage,
 		arg.Command,
 		arg.Args,
@@ -89,8 +89,8 @@ type GetTestRow struct {
 	CreatedAt       sql.NullTime
 }
 
-func (q *Queries) GetTest(ctx context.Context, id uuid.UUID) (GetTestRow, error) {
-	row := q.db.QueryRow(ctx, getTest, id)
+func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (GetTestRow, error) {
+	row := db.QueryRow(ctx, getTest, id)
 	var i GetTestRow
 	err := row.Scan(
 		&i.ID,
@@ -139,8 +139,8 @@ type ListTestsRow struct {
 	CreatedAt       sql.NullTime
 }
 
-func (q *Queries) ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListTestsRow, error) {
-	rows, err := q.db.Query(ctx, listTests, labels)
+func (q *Queries) ListTests(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]ListTestsRow, error) {
+	rows, err := db.Query(ctx, listTests, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +192,8 @@ type ListTestsIDsMatchingLabelKeysRow struct {
 	Labels pgtype.JSONB
 }
 
-func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, arg ListTestsIDsMatchingLabelKeysParams) ([]ListTestsIDsMatchingLabelKeysRow, error) {
-	rows, err := q.db.Query(ctx, listTestsIDsMatchingLabelKeys, arg.IncludeLabelKeys, arg.FilterLabelKeys)
+func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, arg ListTestsIDsMatchingLabelKeysParams) ([]ListTestsIDsMatchingLabelKeysRow, error) {
+	rows, err := db.Query(ctx, listTestsIDsMatchingLabelKeys, arg.IncludeLabelKeys, arg.FilterLabelKeys)
 	if err != nil {
 		return nil, err
 	}
@@ -241,8 +241,8 @@ type ListTestsToScheduleRow struct {
 	FinishedAt      sql.NullTime
 }
 
-func (q *Queries) ListTestsToSchedule(ctx context.Context) ([]ListTestsToScheduleRow, error) {
-	rows, err := q.db.Query(ctx, listTestsToSchedule)
+func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error) {
+	rows, err := db.Query(ctx, listTestsToSchedule)
 	if err != nil {
 		return nil, err
 	}
@@ -332,8 +332,8 @@ type RegisterTestRow struct {
 	TestRunConfigCreatedAt sql.NullTime
 }
 
-func (q *Queries) RegisterTest(ctx context.Context, arg RegisterTestParams) (RegisterTestRow, error) {
-	row := q.db.QueryRow(ctx, registerTest,
+func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (RegisterTestRow, error) {
+	row := db.QueryRow(ctx, registerTest,
 		arg.Name,
 		arg.Labels,
 		arg.CronSchedule,
@@ -381,8 +381,8 @@ type UpdateTestParams struct {
 	ID           uuid.UUID
 }
 
-func (q *Queries) UpdateTest(ctx context.Context, arg UpdateTestParams) error {
-	_, err := q.db.Exec(ctx, updateTest,
+func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error {
+	_, err := db.Exec(ctx, updateTest,
 		arg.Name,
 		arg.Labels,
 		arg.CronSchedule,

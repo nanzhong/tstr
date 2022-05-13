@@ -43,14 +43,12 @@ var serveCmd = &cobra.Command{
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "client-grpc").Logger()))
 
-		pool, err := pgxpool.Connect(context.Background(), viper.GetString("serve.pg-dsn"))
+		pgxPool, err := pgxpool.Connect(context.Background(), viper.GetString("serve.pg-dsn"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to connect to pg")
 		}
-		defer pool.Close()
+		defer pgxPool.Close()
 
-		var dbQuerier db.Querier
-		dbQuerier = db.New(pool)
 		if viper.GetString("serve.bootstrap-token") != "" {
 			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("serve.bootstrap-token")))
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
@@ -59,7 +57,7 @@ var serveCmd = &cobra.Command{
 			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner} {
 				textScopes = append(textScopes, string(s))
 			}
-			_, err := dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
+			_, err := db.New().IssueAccessToken(ctx, pgxPool, db.IssueAccessTokenParams{
 				Name:      "bootstrap-token",
 				TokenHash: tokenHash,
 				Scopes:    textScopes,
@@ -92,21 +90,21 @@ var serveCmd = &cobra.Command{
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
 				grpc_validator.UnaryServerInterceptor(),
-				auth.UnaryServerInterceptor(dbQuerier),
+				auth.UnaryServerInterceptor(pgxPool),
 			),
 			grpc.ChainStreamInterceptor(
 				grpc_validator.StreamServerInterceptor(),
-				auth.StreamServerInterceptor(dbQuerier),
+				auth.StreamServerInterceptor(pgxPool),
 			),
 		)
 
-		controlServer := server.NewControlServer(dbQuerier)
+		controlServer := server.NewControlServer(pgxPool)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
-		adminServer := server.NewAdminServer(dbQuerier)
+		adminServer := server.NewAdminServer(pgxPool)
 		admin.RegisterAdminServiceServer(grpcServer, adminServer)
 
-		runnerServer := server.NewRunnerServer(dbQuerier)
+		runnerServer := server.NewRunnerServer(pgxPool)
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 		webui := webui.NewWebUI()

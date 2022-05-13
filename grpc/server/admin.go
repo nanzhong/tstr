@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
@@ -21,12 +22,14 @@ import (
 type AdminServer struct {
 	admin.UnimplementedAdminServiceServer
 
+	pgxPool   *pgxpool.Pool
 	dbQuerier db.Querier
 }
 
-func NewAdminServer(dbQuerier db.Querier) admin.AdminServiceServer {
+func NewAdminServer(pgxPool *pgxpool.Pool) admin.AdminServiceServer {
 	return &AdminServer{
-		dbQuerier: dbQuerier,
+		pgxPool:   pgxPool,
+		dbQuerier: db.New(),
 	}
 }
 
@@ -52,7 +55,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	for i, s := range types.FromAccessTokenScopes(req.Scopes) {
 		textScopes[i] = string(s)
 	}
-	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, db.IssueAccessTokenParams{
+	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, s.pgxPool, db.IssueAccessTokenParams{
 		Name:      req.Name,
 		TokenHash: tokenHash,
 		Scopes:    textScopes,
@@ -83,7 +86,7 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
 	}
 
-	token, err := s.dbQuerier.GetAccessToken(ctx, tokenID)
+	token, err := s.dbQuerier.GetAccessToken(ctx, s.pgxPool, tokenID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to query for access token")
 		return nil, status.Error(codes.Internal, "failed to get access token")
@@ -102,7 +105,7 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 }
 
 func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAccessTokensRequest) (*admin.ListAccessTokensResponse, error) {
-	tokens, err := s.dbQuerier.ListAccessTokens(ctx, db.ListAccessTokensParams{
+	tokens, err := s.dbQuerier.ListAccessTokens(ctx, s.pgxPool, db.ListAccessTokensParams{
 		IncludeExpired: req.IncludeExpired,
 		IncludeRevoked: req.IncludeRevoked,
 	})
@@ -132,7 +135,7 @@ func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAc
 		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
 	}
 
-	err = s.dbQuerier.RevokeAccessToken(ctx, tokenID)
+	err = s.dbQuerier.RevokeAccessToken(ctx, s.pgxPool, tokenID)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to revoke access tokens")
 		return nil, status.Error(codes.Internal, "failed to revoke access tokens")

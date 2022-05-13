@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
@@ -18,14 +19,16 @@ import (
 )
 
 type RunnerServer struct {
+	pgxPool   *pgxpool.Pool
 	dbQuerier db.Querier
 
 	runner.UnimplementedRunnerServiceServer
 }
 
-func NewRunnerServer(dbQuerier db.Querier) runner.RunnerServiceServer {
+func NewRunnerServer(pgxPool *pgxpool.Pool) runner.RunnerServiceServer {
 	return &RunnerServer{
-		dbQuerier: dbQuerier,
+		pgxPool:   pgxPool,
+		dbQuerier: db.New(),
 	}
 }
 
@@ -54,7 +57,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runner.RegisterR
 		return nil, status.Error(codes.InvalidArgument, "invalid reject test label selectors")
 	}
 
-	regRunner, err := s.dbQuerier.RegisterRunner(ctx, db.RegisterRunnerParams{
+	regRunner, err := s.dbQuerier.RegisterRunner(ctx, s.pgxPool, db.RegisterRunnerParams{
 		Name:                     req.Name,
 		AcceptTestLabelSelectors: accept,
 		RejectTestLabelSelectors: reject,
@@ -96,7 +99,7 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
 	}
 
-	dbRunner, err := s.dbQuerier.GetRunner(ctx, runnerID)
+	dbRunner, err := s.dbQuerier.GetRunner(ctx, s.pgxPool, runnerID)
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -152,7 +155,7 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 	}
 
 	// NOTE we don't care about reject keys here, because unless all reject labels have selectors that match anything (non-trivial to determine), we need to first get the tests that match the accept keys before applying filtering.
-	tests, err := s.dbQuerier.ListTestsIDsMatchingLabelKeys(ctx, db.ListTestsIDsMatchingLabelKeysParams{
+	tests, err := s.dbQuerier.ListTestsIDsMatchingLabelKeys(ctx, s.pgxPool, db.ListTestsIDsMatchingLabelKeysParams{
 		IncludeLabelKeys: acceptKeys,
 		FilterLabelKeys:  nil,
 	})
@@ -202,7 +205,7 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 		matchingTestIDs = append(matchingTestIDs, test.ID)
 	}
 
-	run, err := s.dbQuerier.AssignRun(ctx, db.AssignRunParams{
+	run, err := s.dbQuerier.AssignRun(ctx, s.pgxPool, db.AssignRunParams{
 		RunnerID: runnerID,
 		TestIds:  matchingTestIDs,
 	})

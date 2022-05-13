@@ -19,8 +19,8 @@ FROM runners
 WHERE id = $1
 `
 
-func (q *Queries) GetRunner(ctx context.Context, id uuid.UUID) (Runner, error) {
-	row := q.db.QueryRow(ctx, getRunner, id)
+func (q *Queries) GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner, error) {
+	row := db.QueryRow(ctx, getRunner, id)
 	var i Runner
 	err := row.Scan(
 		&i.ID,
@@ -39,8 +39,8 @@ FROM runners
 WHERE last_heartbeat_at > $1
 `
 
-func (q *Queries) ListRunners(ctx context.Context, heartbeatSince sql.NullTime) ([]Runner, error) {
-	rows, err := q.db.Query(ctx, listRunners, heartbeatSince)
+func (q *Queries) ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.NullTime) ([]Runner, error) {
+	rows, err := db.Query(ctx, listRunners, heartbeatSince)
 	if err != nil {
 		return nil, err
 	}
@@ -83,8 +83,8 @@ type RegisterRunnerParams struct {
 	RejectTestLabelSelectors pgtype.JSONB
 }
 
-func (q *Queries) RegisterRunner(ctx context.Context, arg RegisterRunnerParams) (Runner, error) {
-	row := q.db.QueryRow(ctx, registerRunner, arg.Name, arg.AcceptTestLabelSelectors, arg.RejectTestLabelSelectors)
+func (q *Queries) RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunnerParams) (Runner, error) {
+	row := db.QueryRow(ctx, registerRunner, arg.Name, arg.AcceptTestLabelSelectors, arg.RejectTestLabelSelectors)
 	var i Runner
 	err := row.Scan(
 		&i.ID,

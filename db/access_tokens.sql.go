@@ -25,8 +25,8 @@ type AuthAccessTokenRow struct {
 	ExpiresAt sql.NullTime
 }
 
-func (q *Queries) AuthAccessToken(ctx context.Context, tokenHash string) (AuthAccessTokenRow, error) {
-	row := q.db.QueryRow(ctx, authAccessToken, tokenHash)
+func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error) {
+	row := db.QueryRow(ctx, authAccessToken, tokenHash)
 	var i AuthAccessTokenRow
 	err := row.Scan(&i.Scopes, &i.ExpiresAt)
 	return i, err
@@ -47,8 +47,8 @@ type GetAccessTokenRow struct {
 	RevokedAt sql.NullTime
 }
 
-func (q *Queries) GetAccessToken(ctx context.Context, id uuid.UUID) (GetAccessTokenRow, error) {
-	row := q.db.QueryRow(ctx, getAccessToken, id)
+func (q *Queries) GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error) {
+	row := db.QueryRow(ctx, getAccessToken, id)
 	var i GetAccessTokenRow
 	err := row.Scan(
 		&i.ID,
@@ -83,8 +83,8 @@ type IssueAccessTokenRow struct {
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-func (q *Queries) IssueAccessToken(ctx context.Context, arg IssueAccessTokenParams) (IssueAccessTokenRow, error) {
-	row := q.db.QueryRow(ctx, issueAccessToken,
+func (q *Queries) IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error) {
+	row := db.QueryRow(ctx, issueAccessToken,
 		arg.Name,
 		arg.TokenHash,
 		arg.Scopes,
@@ -129,8 +129,8 @@ type ListAccessTokensRow struct {
 	RevokedAt sql.NullTime
 }
 
-func (q *Queries) ListAccessTokens(ctx context.Context, arg ListAccessTokensParams) ([]ListAccessTokensRow, error) {
-	rows, err := q.db.Query(ctx, listAccessTokens, arg.IncludeExpired, arg.IncludeRevoked)
+func (q *Queries) ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error) {
+	rows, err := db.Query(ctx, listAccessTokens, arg.IncludeExpired, arg.IncludeRevoked)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ SET revoked_at = CURRENT_TIMESTAMP
 WHERE id = $1
 `
 
-func (q *Queries) RevokeAccessToken(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, revokeAccessToken, id)
+func (q *Queries) RevokeAccessToken(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.Exec(ctx, revokeAccessToken, id)
 	return err
 }

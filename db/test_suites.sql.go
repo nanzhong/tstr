@@ -18,8 +18,8 @@ SET archived_at = CURRENT_TIMESTAMP
 WHERE id = $1
 `
 
-func (q *Queries) ArchiveTestSuite(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, archiveTestSuite, id)
+func (q *Queries) ArchiveTestSuite(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.Exec(ctx, archiveTestSuite, id)
 	return err
 }
 
@@ -34,8 +34,8 @@ type DefineTestSuiteParams struct {
 	Labels pgtype.JSONB
 }
 
-func (q *Queries) DefineTestSuite(ctx context.Context, arg DefineTestSuiteParams) (TestSuite, error) {
-	row := q.db.QueryRow(ctx, defineTestSuite, arg.Name, arg.Labels)
+func (q *Queries) DefineTestSuite(ctx context.Context, db DBTX, arg DefineTestSuiteParams) (TestSuite, error) {
+	row := db.QueryRow(ctx, defineTestSuite, arg.Name, arg.Labels)
 	var i TestSuite
 	err := row.Scan(
 		&i.ID,
@@ -54,8 +54,8 @@ FROM test_suites
 WHERE id = $1::uuid
 `
 
-func (q *Queries) GetTestSuite(ctx context.Context, id uuid.UUID) (TestSuite, error) {
-	row := q.db.QueryRow(ctx, getTestSuite, id)
+func (q *Queries) GetTestSuite(ctx context.Context, db DBTX, id uuid.UUID) (TestSuite, error) {
+	row := db.QueryRow(ctx, getTestSuite, id)
 	var i TestSuite
 	err := row.Scan(
 		&i.ID,
@@ -68,35 +68,15 @@ func (q *Queries) GetTestSuite(ctx context.Context, id uuid.UUID) (TestSuite, er
 	return i, err
 }
 
-const updateTestSuite = `-- name: UpdateTestSuite :exec
-UPDATE test_suites
-SET
-  name = $1::varchar,
-  labels = $2,
-  updated_at = CURRENT_TIMESTAMP
-WHERE id = $3
-`
-
-type UpdateTestSuiteParams struct {
-	Name   string
-	Labels pgtype.JSONB
-	ID     uuid.UUID
-}
-
-func (q *Queries) UpdateTestSuite(ctx context.Context, arg UpdateTestSuiteParams) error {
-	_, err := q.db.Exec(ctx, updateTestSuite, arg.Name, arg.Labels, arg.ID)
-	return err
-}
-
-const listTestSuites = `-- name: listTestSuites :many
+const listTestSuites = `-- name: ListTestSuites :many
 SELECT id, name, labels, created_at, updated_at, archived_at
 FROM test_suites
 WHERE labels @> $1
 ORDER BY name ASC
 `
 
-func (q *Queries) listTestSuites(ctx context.Context, labels pgtype.JSONB) ([]TestSuite, error) {
-	rows, err := q.db.Query(ctx, listTestSuites, labels)
+func (q *Queries) ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]TestSuite, error) {
+	rows, err := db.Query(ctx, listTestSuites, labels)
 	if err != nil {
 		return nil, err
 	}
@@ -120,4 +100,24 @@ func (q *Queries) listTestSuites(ctx context.Context, labels pgtype.JSONB) ([]Te
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTestSuite = `-- name: UpdateTestSuite :exec
+UPDATE test_suites
+SET
+  name = $1::varchar,
+  labels = $2,
+  updated_at = CURRENT_TIMESTAMP
+WHERE id = $3
+`
+
+type UpdateTestSuiteParams struct {
+	Name   string
+	Labels pgtype.JSONB
+	ID     uuid.UUID
+}
+
+func (q *Queries) UpdateTestSuite(ctx context.Context, db DBTX, arg UpdateTestSuiteParams) error {
+	_, err := db.Exec(ctx, updateTestSuite, arg.Name, arg.Labels, arg.ID)
+	return err
 }

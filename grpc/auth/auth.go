@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/rs/zerolog/log"
@@ -47,7 +48,7 @@ var scopeAuthorizations = map[string][]common.AccessToken_Scope{
 // TODO We shouldn't reach out to the db each time to auth, especially when
 // these results are easy to cache/invalidate.
 
-func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
+func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		md, exists := metadata.FromIncomingContext(ctx)
 		if !exists {
@@ -60,7 +61,7 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		auth, err := dbQuerier.AuthAccessToken(ctx, tokenHash)
+		auth, err := db.New().AuthAccessToken(ctx, pgxPool, tokenHash)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
@@ -81,7 +82,7 @@ func UnaryServerInterceptor(dbQuerier db.Querier) grpc.UnaryServerInterceptor {
 	}
 }
 
-func StreamServerInterceptor(dbQuerier db.Querier) grpc.StreamServerInterceptor {
+func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		md, exists := metadata.FromIncomingContext(ss.Context())
 		if !exists {
@@ -94,7 +95,7 @@ func StreamServerInterceptor(dbQuerier db.Querier) grpc.StreamServerInterceptor 
 		}
 
 		validScopes := scopeAuthorizations[info.FullMethod]
-		auth, err := dbQuerier.AuthAccessToken(ss.Context(), tokenHash)
+		auth, err := db.New().AuthAccessToken(ss.Context(), pgxPool, tokenHash)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")

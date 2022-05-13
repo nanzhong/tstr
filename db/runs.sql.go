@@ -50,8 +50,8 @@ type AssignRunRow struct {
 	TestRunConfigCreatedAt sql.NullTime
 }
 
-func (q *Queries) AssignRun(ctx context.Context, arg AssignRunParams) (AssignRunRow, error) {
-	row := q.db.QueryRow(ctx, assignRun, arg.RunnerID, arg.TestIds)
+func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (AssignRunRow, error) {
+	row := db.QueryRow(ctx, assignRun, arg.RunnerID, arg.TestIds)
 	var i AssignRunRow
 	err := row.Scan(
 		&i.ID,
@@ -97,8 +97,8 @@ type GetRunRow struct {
 	CreatedAt       sql.NullTime
 }
 
-func (q *Queries) GetRun(ctx context.Context, id uuid.UUID) (GetRunRow, error) {
-	row := q.db.QueryRow(ctx, getRun, id)
+func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow, error) {
+	row := db.QueryRow(ctx, getRun, id)
 	var i GetRunRow
 	err := row.Scan(
 		&i.ID,
@@ -173,8 +173,8 @@ type ListRunsRow struct {
 	CreatedAt       sql.NullTime
 }
 
-func (q *Queries) ListRuns(ctx context.Context, arg ListRunsParams) ([]ListRunsRow, error) {
-	rows, err := q.db.Query(ctx, listRuns,
+func (q *Queries) ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]ListRunsRow, error) {
+	rows, err := db.Query(ctx, listRuns,
 		arg.TestIds,
 		arg.TestSuiteIds,
 		arg.RunnerIds,
@@ -253,8 +253,8 @@ type ScheduleRunRow struct {
 	TestRunConfigCreatedAt sql.NullTime
 }
 
-func (q *Queries) ScheduleRun(ctx context.Context, arg ScheduleRunParams) (ScheduleRunRow, error) {
-	row := q.db.QueryRow(ctx, scheduleRun, arg.TestID, arg.TestRunConfigID)
+func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (ScheduleRunRow, error) {
+	row := db.QueryRow(ctx, scheduleRun, arg.TestID, arg.TestRunConfigID)
 	var i ScheduleRunRow
 	err := row.Scan(
 		&i.ID,
@@ -293,8 +293,8 @@ type UpdateRunParams struct {
 	ID         uuid.UUID
 }
 
-func (q *Queries) UpdateRun(ctx context.Context, arg UpdateRunParams) error {
-	_, err := q.db.Exec(ctx, updateRun,
+func (q *Queries) UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error {
+	_, err := db.Exec(ctx, updateRun,
 		arg.Result,
 		arg.Logs,
 		arg.StartedAt,

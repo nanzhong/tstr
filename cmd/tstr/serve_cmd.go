@@ -21,6 +21,7 @@ import (
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/server"
+	"github.com/nanzhong/tstr/scheduler"
 	"github.com/nanzhong/tstr/webui"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
@@ -98,6 +99,8 @@ var serveCmd = &cobra.Command{
 			),
 		)
 
+		scheduler := scheduler.New(pgxPool)
+
 		controlServer := server.NewControlServer(pgxPool)
 		control.RegisterControlServiceServer(grpcServer, controlServer)
 
@@ -126,6 +129,11 @@ var serveCmd = &cobra.Command{
 
 			var eg errgroup.Group
 			eg.Go(func() error {
+				log.Info().Msg("attempting to shutdown scheduler")
+				scheduler.Stop(shutdownCtx)
+				return nil
+			})
+			eg.Go(func() error {
 				log.Info().Msg("attempting to shutdown grpc server")
 				grpcServer.GracefulStop()
 				return nil
@@ -142,6 +150,11 @@ var serveCmd = &cobra.Command{
 
 		log.Info().Msg("tstr starting")
 		var eg errgroup.Group
+		eg.Go(func() error {
+			log.Info().
+				Msg("starting scheduler")
+			return scheduler.Start()
+		})
 		eg.Go(func() error {
 			log.Info().
 				Str("api-addr", viper.GetString("serve.api-addr")).

@@ -63,10 +63,12 @@ func (q *Queries) CreateTestRunConfig(ctx context.Context, db DBTX, arg CreateTe
 }
 
 const getTest = `-- name: GetTest :one
-SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, test_run_configs.id AS test_run_config_id, container_image, command, args, env, created_at
+SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
-JOIN test_run_configs
-ON tests.id = test_run_configs.test_id
+JOIN test_run_configs AS latest_configs
+ON tests.id = latest_configs.test_id
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE tests.id = $1::uuid
 ORDER BY test_run_configs.created_at DESC
 LIMIT 1
@@ -81,8 +83,8 @@ type GetTestRow struct {
 	RegisteredAt    sql.NullTime
 	UpdatedAt       sql.NullTime
 	ArchivedAt      sql.NullTime
-	TestRunConfigID uuid.UUID
-	ContainerImage  string
+	TestRunConfigID uuid.NullUUID
+	ContainerImage  sql.NullString
 	Command         sql.NullString
 	Args            []string
 	Env             pgtype.JSONB
@@ -213,12 +215,16 @@ func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, ar
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, name, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at, runs.id, test_id, test_run_config_id, runner_id, result, logs, scheduled_at, started_at, finished_at
+SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
+JOIN test_run_configs AS latest_configs
+ON tests.id = latest_configs.test_id
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.started_at IS NULL
-WHERE next_schedule_at < CURRENT_TIMESTAMP AND runs.id IS NULL
-FOR UPDATE
+WHERE next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+FOR UPDATE OF tests
 `
 
 type ListTestsToScheduleRow struct {
@@ -230,15 +236,12 @@ type ListTestsToScheduleRow struct {
 	RegisteredAt    sql.NullTime
 	UpdatedAt       sql.NullTime
 	ArchivedAt      sql.NullTime
-	ID_2            uuid.NullUUID
-	TestID          uuid.NullUUID
 	TestRunConfigID uuid.NullUUID
-	RunnerID        uuid.NullUUID
-	Result          RunResult
-	Logs            pgtype.JSONB
-	ScheduledAt     sql.NullTime
-	StartedAt       sql.NullTime
-	FinishedAt      sql.NullTime
+	ContainerImage  sql.NullString
+	Command         sql.NullString
+	Args            []string
+	Env             pgtype.JSONB
+	CreatedAt       sql.NullTime
 }
 
 func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error) {
@@ -259,15 +262,12 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 			&i.RegisteredAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
-			&i.ID_2,
-			&i.TestID,
 			&i.TestRunConfigID,
-			&i.RunnerID,
-			&i.Result,
-			&i.Logs,
-			&i.ScheduledAt,
-			&i.StartedAt,
-			&i.FinishedAt,
+			&i.ContainerImage,
+			&i.Command,
+			&i.Args,
+			&i.Env,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}

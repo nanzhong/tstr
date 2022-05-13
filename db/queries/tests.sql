@@ -24,10 +24,12 @@ WITH data (name, labels, cron_schedule, next_run_at, container_image, command, a
 SELECT * FROM test, test_run_config;
 
 -- name: GetTest :one
-SELECT tests.*, test_run_configs.id AS test_run_config_id, container_image, command, args, env, created_at
+SELECT tests.*, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
-JOIN test_run_configs
-ON tests.id = test_run_configs.test_id
+JOIN test_run_configs AS latest_configs
+ON tests.id = latest_configs.test_id
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE tests.id = sqlc.arg('id')::uuid
 ORDER BY test_run_configs.created_at DESC
 LIMIT 1;
@@ -75,9 +77,13 @@ SET archived_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid;
 
 -- name: ListTestsToSchedule :many
-SELECT *
+SELECT tests.*, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
 FROM tests
+JOIN test_run_configs AS latest_configs
+ON tests.id = latest_configs.test_id
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.started_at IS NULL
-WHERE next_schedule_at < CURRENT_TIMESTAMP AND runs.id IS NULL
-FOR UPDATE;
+WHERE next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+FOR UPDATE OF tests;

@@ -118,13 +118,13 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRu
 
 	run, err := s.dbQuerier.ScheduleRun(ctx, s.pgxPool, db.ScheduleRunParams{
 		TestID:          test.ID,
-		TestRunConfigID: test.TestRunConfigID,
+		TestRunConfigID: test.TestRunConfigID.UUID,
 	})
 	if err != nil {
 		log.Error().
 			Err(err).
 			Stringer("test_id", test.ID).
-			Stringer("test_urn_config_id", test.TestRunConfigID).
+			Stringer("test_urn_config_id", test.TestRunConfigID.UUID).
 			Msg("failed to schedule run")
 		return nil, status.Error(codes.Internal, "failed to schedule run")
 	}

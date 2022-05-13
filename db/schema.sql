@@ -144,6 +144,7 @@ CREATE TABLE public.tests (
     name character varying NOT NULL,
     labels jsonb,
     cron_schedule character varying,
+    next_run_at timestamp with time zone,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     archived_at timestamp with time zone

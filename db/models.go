@@ -94,6 +94,7 @@ type Test struct {
 	Name         string
 	Labels       pgtype.JSONB
 	CronSchedule sql.NullString
+	NextRunAt    sql.NullTime
 	RegisteredAt sql.NullTime
 	UpdatedAt    sql.NullTime
 	ArchivedAt   sql.NullTime

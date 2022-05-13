@@ -6,6 +6,7 @@ CREATE TABLE tests (
        name varchar NOT NULL UNIQUE,
        labels jsonb,
        cron_schedule varchar,
+       next_run_at timestamptz,
        registered_at timestamptz DEFAULT CURRENT_TIMESTAMP,
        updated_at timestamptz DEFAULT CURRENT_TIMESTAMP,
        archived_at timestamptz

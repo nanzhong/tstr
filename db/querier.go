@@ -31,6 +31,7 @@ type Querier interface {
 	ListRuns(ctx context.Context, arg ListRunsParams) ([]ListRunsRow, error)
 	ListTests(ctx context.Context, labels pgtype.JSONB) ([]ListTestsRow, error)
 	ListTestsIDsMatchingLabelKeys(ctx context.Context, arg ListTestsIDsMatchingLabelKeysParams) ([]ListTestsIDsMatchingLabelKeysRow, error)
+	ListTestsToSchedule(ctx context.Context) ([]ListTestsToScheduleRow, error)
 	RegisterRunner(ctx context.Context, arg RegisterRunnerParams) (Runner, error)
 	RegisterTest(ctx context.Context, arg RegisterTestParams) (RegisterTestRow, error)
 	RevokeAccessToken(ctx context.Context, id uuid.UUID) error

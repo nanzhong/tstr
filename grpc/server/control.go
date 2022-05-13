@@ -2,13 +2,16 @@ package server
 
 import (
 	"context"
+	"database/sql"
 
+	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/types"
+	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,13 +19,16 @@ import (
 
 type ControlServer struct {
 	control.UnimplementedControlServiceServer
-
-	dbQuerier db.Querier
+	dbQuerier  db.Querier
+	cronParser cron.Parser
+	clock      clock.Clock
 }
 
 func NewControlServer(dbQuerier db.Querier) control.ControlServiceServer {
 	return &ControlServer{
-		dbQuerier: dbQuerier,
+		dbQuerier:  dbQuerier,
+		cronParser: cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor),
+		clock:      clock.New(),
 	}
 }
 
@@ -39,10 +45,21 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 		return nil, status.Error(codes.InvalidArgument, "failed to parse env")
 	}
 
+	var nextRunAt sql.NullTime
+	if r.CronSchedule != "" {
+		schedule, err := s.cronParser.Parse(r.CronSchedule)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid cron schedule")
+		}
+		nextRunAt.Valid = true
+		nextRunAt.Time = schedule.Next(s.clock.Now())
+	}
+
 	result, err := s.dbQuerier.RegisterTest(ctx, db.RegisterTestParams{
 		Name:           r.Name,
 		Labels:         labels,
 		CronSchedule:   r.CronSchedule,
+		NextRunAt:      nextRunAt,
 		ContainerImage: r.RunConfig.ContainerImage,
 		Command:        r.RunConfig.Command,
 		Args:           r.RunConfig.Args,
@@ -70,6 +87,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 			Name:         result.Name,
 			Labels:       resultLabels,
 			CronSchedule: result.CronSchedule.String,
+			NextRunAt:    types.ToProtoTimestamp(result.NextRunAt),
 			RunConfig: &common.Test_RunConfig{
 				Id:             result.TestRunConfigID.String(),
 				ContainerImage: result.ContainerImage,

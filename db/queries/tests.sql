@@ -1,19 +1,20 @@
 -- name: RegisterTest :one
-WITH data (name, labels, cron_schedule, container_image, command, args, env) AS (
+WITH data (name, labels, cron_schedule, next_run_at, container_image, command, args, env) AS (
   VALUES (
     sqlc.arg('name')::varchar,
     sqlc.arg('labels')::jsonb,
     sqlc.arg('cron_schedule')::varchar,
+    sqlc.narg('next_run_at')::timestamptz,
     sqlc.arg('container_image')::varchar,
     sqlc.arg('command')::varchar,
     sqlc.arg('args')::varchar[],
     sqlc.arg('env')::jsonb
   )
 ), test AS (
-  INSERT INTO tests (name, labels, cron_schedule)
-  SELECT name, labels, cron_schedule
+  INSERT INTO tests (name, labels, cron_schedule, next_run_at)
+  SELECT name, labels, cron_schedule, next_run_at
   FROM data
-  RETURNING id, name, labels, cron_schedule, registered_at, updated_at
+  RETURNING id, name, labels, cron_schedule, next_run_at, registered_at, updated_at
 ), test_run_config AS (
   INSERT INTO test_run_configs (test_id, container_image, command, args, env)
   SELECT test.id, container_image, command, args, env
@@ -54,6 +55,7 @@ SET
   name = sqlc.arg('name')::varchar,
   labels = sqlc.arg('labels')::jsonb,
   cron_schedule = sqlc.arg('cron_schedule')::varchar,
+  next_run_at = sqlc.narg('next_run_at')::timestamptz,
   updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid;
 
@@ -71,3 +73,11 @@ RETURNING *;
 UPDATE tests
 SET archived_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid;
+
+-- name: ListTestsToSchedule :many
+SELECT *
+FROM tests
+LEFT JOIN runs
+ON runs.test_id = tests.id AND runs.started_at IS NULL
+WHERE next_schedule_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+FOR UPDATE;

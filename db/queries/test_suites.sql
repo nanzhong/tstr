@@ -16,7 +16,7 @@ SELECT *
 FROM test_suites
 WHERE id = sqlc.arg('id')::uuid;
 
--- name: listTestSuites :many
+-- name: ListTestSuites :many
 SELECT *
 FROM test_suites
 WHERE labels @> sqlc.arg('labels')

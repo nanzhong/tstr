@@ -21,7 +21,8 @@ message Test {
   string name = 2; // required
   map<string, string> labels = 3;
   string cron_schedule = 4 [json_name="cron_schedule"];
-  RunConfig run_config = 5 [json_name="run_config"]; // required
+  google.protobuf.Timestamp next_run_at = 5 [json_name="next_run_at"];
+  RunConfig run_config = 6 [json_name="run_config"]; // required
 
   google.protobuf.Timestamp registered_at = 10 [json_name="registered_at"]; // required
   google.protobuf.Timestamp updated_at = 11 [json_name="updated_at"]; // required

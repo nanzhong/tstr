@@ -561,28 +561,36 @@ func (m *SubmitRunRequest) validate(all bool) error {
 
 	var errors []error
 
-	if err := m._validateUuid(m.GetId()); err != nil {
-		err = SubmitRunRequestValidationError{
-			field:  "Id",
-			reason: "value must be a valid UUID",
-			cause:  err,
+	if m.GetId() != "" {
+
+		if err := m._validateUuid(m.GetId()); err != nil {
+			err = SubmitRunRequestValidationError{
+				field:  "Id",
+				reason: "value must be a valid UUID",
+				cause:  err,
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
-	if err := m._validateUuid(m.GetRunId()); err != nil {
-		err = SubmitRunRequestValidationError{
-			field:  "RunId",
-			reason: "value must be a valid UUID",
-			cause:  err,
+	if m.GetRunId() != "" {
+
+		if err := m._validateUuid(m.GetRunId()); err != nil {
+			err = SubmitRunRequestValidationError{
+				field:  "RunId",
+				reason: "value must be a valid UUID",
+				cause:  err,
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
 		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
+
 	}
 
 	// no validation rules for Result

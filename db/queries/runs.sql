@@ -56,7 +56,19 @@ RETURNING runs.*, test_run_configs.container_image, test_run_configs.command, te
 UPDATE runs
 SET
   result = sqlc.arg('result'),
-  logs = sqlc.arg('logs'),
-  started_at = sqlc.arg('started_at')::timestamptz,
-  finished_at = sqlc.arg('finished_at')::timestamptz
-WHERE id = sqlc.arg('id')::uuid;
+  started_at = sqlc.narg('started_at')::timestamptz,
+  finished_at = sqlc.narg('finished_at')::timestamptz
+WHERE id = sqlc.arg('id');
+
+-- name: AppendLogsToRun :exec
+UPDATE runs
+SET logs = COALESCE(logs, '[]'::jsonb) || sqlc.arg('logs')
+WHERE id = sqlc.arg('id');
+
+-- name: ResetOrphanedRuns :exec
+UPDATE runs
+SET runner_id = NULL
+WHERE
+  result = 'unknown' AND
+  started_at IS NULL AND
+  scheduled_at < sqlc.arg('before')::timestamptz;

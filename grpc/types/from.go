@@ -27,3 +27,16 @@ func FromAccessTokenScopes(scopes []common.AccessToken_Scope) []db.AccessTokenSc
 	}
 	return dbScopes
 }
+
+func FromRunResult(result common.Run_Result) db.RunResult {
+	switch result {
+	case common.Run_ERROR:
+		return db.RunResultError
+	case common.Run_FAIL:
+		return db.RunResultFail
+	case common.Run_PASS:
+		return db.RunResultPass
+	default:
+		return db.RunResultUnknown
+	}
+}

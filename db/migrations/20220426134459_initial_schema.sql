@@ -60,7 +60,7 @@ CREATE TABLE runs (
 );
 CREATE INDEX ON runs(test_id, test_run_config_id);
 CREATE INDEX ON runs(runner_id);
-CREATE INDEX ON runs(result);
+CREATE INDEX ON runs(result, started_at, finished_at);
 CREATE INDEX ON runs(scheduled_at, started_at, finished_at);
 
 CREATE TYPE access_token_scope AS ENUM ('admin', 'control_r', 'control_rw', 'runner');

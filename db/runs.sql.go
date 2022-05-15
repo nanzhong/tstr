@@ -14,6 +14,22 @@ import (
 	"github.com/jackc/pgtype"
 )
 
+const appendLogsToRun = `-- name: AppendLogsToRun :exec
+UPDATE runs
+SET logs = COALESCE(logs, '[]'::jsonb) || $1
+WHERE id = $2
+`
+
+type AppendLogsToRunParams struct {
+	Logs pgtype.JSONB
+	ID   uuid.UUID
+}
+
+func (q *Queries) AppendLogsToRun(ctx context.Context, db DBTX, arg AppendLogsToRunParams) error {
+	_, err := db.Exec(ctx, appendLogsToRun, arg.Logs, arg.ID)
+	return err
+}
+
 const assignRun = `-- name: AssignRun :one
 UPDATE runs
 SET runner_id = $1::uuid
@@ -219,6 +235,20 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]
 	return items, nil
 }
 
+const resetOrphanedRuns = `-- name: ResetOrphanedRuns :exec
+UPDATE runs
+SET runner_id = NULL
+WHERE
+  result = 'unknown' AND
+  started_at IS NULL AND
+  scheduled_at < $1::timestamptz
+`
+
+func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Time) error {
+	_, err := db.Exec(ctx, resetOrphanedRuns, before)
+	return err
+}
+
 const scheduleRun = `-- name: ScheduleRun :one
 WITH scheduled_run AS (
   INSERT INTO runs (test_id, test_run_config_id)
@@ -279,24 +309,21 @@ const updateRun = `-- name: UpdateRun :exec
 UPDATE runs
 SET
   result = $1,
-  logs = $2,
-  started_at = $3::timestamptz,
-  finished_at = $4::timestamptz
-WHERE id = $5::uuid
+  started_at = $2::timestamptz,
+  finished_at = $3::timestamptz
+WHERE id = $4
 `
 
 type UpdateRunParams struct {
 	Result     RunResult
-	Logs       pgtype.JSONB
-	StartedAt  time.Time
-	FinishedAt time.Time
+	StartedAt  sql.NullTime
+	FinishedAt sql.NullTime
 	ID         uuid.UUID
 }
 
 func (q *Queries) UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error {
 	_, err := db.Exec(ctx, updateRun,
 		arg.Result,
-		arg.Logs,
 		arg.StartedAt,
 		arg.FinishedAt,
 		arg.ID,

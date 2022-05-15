@@ -7,12 +7,14 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 )
 
 type Querier interface {
+	AppendLogsToRun(ctx context.Context, db DBTX, arg AppendLogsToRunParams) error
 	ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error
 	ArchiveTestSuite(ctx context.Context, db DBTX, id uuid.UUID) error
 	AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (AssignRunRow, error)
@@ -35,6 +37,7 @@ type Querier interface {
 	ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error)
 	RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunnerParams) (Runner, error)
 	RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (RegisterTestRow, error)
+	ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Time) error
 	RevokeAccessToken(ctx context.Context, db DBTX, id uuid.UUID) error
 	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (ScheduleRunRow, error)
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error

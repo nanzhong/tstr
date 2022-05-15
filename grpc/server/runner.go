@@ -2,9 +2,14 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
+	"io"
 	"regexp"
+	"time"
 
+	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
@@ -21,6 +26,7 @@ import (
 type RunnerServer struct {
 	pgxPool   *pgxpool.Pool
 	dbQuerier db.Querier
+	clock     clock.Clock
 
 	runner.UnimplementedRunnerServiceServer
 }
@@ -29,6 +35,7 @@ func NewRunnerServer(pgxPool *pgxpool.Pool) runner.RunnerServiceServer {
 	return &RunnerServer{
 		pgxPool:   pgxPool,
 		dbQuerier: db.New(),
+		clock:     clock.New(),
 	}
 }
 
@@ -253,6 +260,183 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 	}, nil
 }
 
-func (s *RunnerServer) SubmitRun(server runner.RunnerService_SubmitRunServer) error {
-	return nil
+func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) error {
+	var (
+		runnerID   uuid.UUID
+		runID      uuid.UUID
+		result     db.RunResult
+		startedAt  sql.NullTime
+		finishedAt sql.NullTime
+	)
+
+	defer func() {
+		if runnerID == uuid.Nil || runID == uuid.Nil {
+			return
+		}
+
+		now := s.clock.Now()
+
+		// This means the test run was not even successfully started.
+		if !startedAt.Valid {
+			if err := s.dbQuerier.UpdateRun(context.Background(), s.pgxPool, db.UpdateRunParams{
+				ID:         runID,
+				Result:     db.RunResultError,
+				StartedAt:  sql.NullTime{},
+				FinishedAt: sql.NullTime{},
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to mark unstarted test run as error")
+			}
+
+			var pgLogs pgtype.JSONB
+			if err := pgLogs.Set(db.RunLog{
+				Type: common.Run_Log_TSTR.String(),
+				Time: now.Format(time.RFC3339Nano),
+				Data: []byte("failed to start test run"),
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to format start failure log for run")
+				return
+			}
+			if err := s.dbQuerier.AppendLogsToRun(context.Background(), s.pgxPool, db.AppendLogsToRunParams{
+				Logs: pgLogs,
+				ID:   runID,
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to append start failure log to run")
+			}
+			return
+		}
+
+		// This means the test run was not able to submit completion state.
+		if !finishedAt.Valid {
+			if err := s.dbQuerier.UpdateRun(context.Background(), s.pgxPool, db.UpdateRunParams{
+				ID:         runID,
+				Result:     db.RunResultError,
+				StartedAt:  startedAt,
+				FinishedAt: sql.NullTime{Valid: true, Time: now},
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to mark unfinished test run as error")
+			}
+
+			var pgLogs pgtype.JSONB
+			if err := pgLogs.Set(db.RunLog{
+				Type: common.Run_Log_TSTR.String(),
+				Time: now.Format(time.RFC3339Nano),
+				Data: []byte("failed to finish test run"),
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to format finish failure log for run")
+				return
+			}
+			if err := s.dbQuerier.AppendLogsToRun(context.Background(), s.pgxPool, db.AppendLogsToRunParams{
+				Logs: pgLogs,
+				ID:   runID,
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Stringer("run_id", runID).
+					Msg("failed to append finish failure log to run")
+			}
+		}
+	}()
+
+	for {
+		req, err := stream.Recv()
+		if err != nil {
+			if err == io.EOF {
+				return stream.SendAndClose(&runner.SubmitRunResponse{})
+			}
+			return err
+		}
+
+		if req.Id != "" {
+			runnerID, err = uuid.Parse(req.Id)
+			if err != nil {
+				return status.Error(codes.InvalidArgument, "invalid id")
+			}
+		}
+
+		if req.RunId != "" {
+			runID, err = uuid.Parse(req.RunId)
+			if err != nil {
+				return status.Error(codes.InvalidArgument, "invalid run id")
+			}
+		}
+
+		result = types.FromRunResult(req.Result)
+
+		if req.StartedAt != nil {
+			startedAt.Valid = true
+			startedAt.Time = req.StartedAt.AsTime()
+		}
+
+		if req.FinishedAt != nil {
+			finishedAt.Valid = true
+			finishedAt.Time = req.FinishedAt.AsTime()
+		}
+
+		// We expect runner and run ids to be populated after the first received message
+		if runnerID == uuid.Nil {
+			return status.Error(codes.InvalidArgument, "missing id")
+		}
+
+		if runID == uuid.Nil {
+			return status.Error(codes.InvalidArgument, "missing run id")
+		}
+
+		log.Debug().
+			Stringer("run_id", runID).
+			Stringer("runner_id", runnerID).
+			Str("result", string(result)).
+			Str("started_at", startedAt.Time.String()).
+			Str("finished_at", finishedAt.Time.String()).
+			Msg("received request")
+
+		if err := s.dbQuerier.UpdateRun(stream.Context(), s.pgxPool, db.UpdateRunParams{
+			ID:         runID,
+			Result:     result,
+			StartedAt:  startedAt,
+			FinishedAt: finishedAt,
+		}); err != nil {
+			log.Error().Err(err).Msg("failed to save updated run")
+			return status.Error(codes.Internal, "failed to update run")
+		}
+
+		if len(req.Logs) > 0 {
+			var logs []db.RunLog
+			for _, l := range req.Logs {
+				logs = append(logs, db.RunLog{
+					Type: l.OutputType.String(),
+					Time: l.Time,
+					Data: l.Data,
+				})
+			}
+			fmt.Printf("%#v\n", logs)
+
+			var pgLogs pgtype.JSONB
+			if err := pgLogs.Set(logs); err != nil {
+				log.Error().Err(err).Msg("failed to format run logs")
+				return status.Error(codes.Internal, "failed to format run logs")
+			}
+			if err := s.dbQuerier.AppendLogsToRun(stream.Context(), s.pgxPool, db.AppendLogsToRunParams{
+				ID:   runID,
+				Logs: pgLogs,
+			}); err != nil {
+				log.Error().Err(err).Msg("failed to save run logs")
+				return status.Error(codes.Internal, "failed to save run logs")
+			}
+		}
+	}
 }

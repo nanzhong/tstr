@@ -52,6 +52,7 @@ message Run {
       UNKNOWN = 0;
       STDOUT = 1;
       STDERR = 2;
+      TSTR = 3;
     }
 
     string time = 1; // required

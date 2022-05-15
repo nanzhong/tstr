@@ -238,10 +238,10 @@ CREATE INDEX runners_last_heartbeat_at_idx ON public.runners USING btree (last_h
 
 
 --
--- Name: runs_result_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: runs_result_started_at_finished_at_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX runs_result_idx ON public.runs USING btree (result);
+CREATE INDEX runs_result_started_at_finished_at_idx ON public.runs USING btree (result, started_at, finished_at);
 
 
 --

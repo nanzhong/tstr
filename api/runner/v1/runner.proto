@@ -36,9 +36,9 @@ message NextRunResponse {
 
 message SubmitRunRequest {
   string id = 1
-    [(validate.rules).string.uuid = true];
+    [(validate.rules).string = {ignore_empty: true, uuid: true}];
   string run_id = 2
-    [(validate.rules).string.uuid = true];
+    [(validate.rules).string = {ignore_empty: true, uuid: true}];
   tstr.common.v1.Run.Result result = 3;
   repeated tstr.common.v1.Run.Log logs = 4;
 

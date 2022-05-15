@@ -53,6 +53,14 @@ func (s *Scheduler) Start() error {
 		case <-s.clock.After(s.clock.Until(s.nextSchedule)):
 			log.Info().Msg("starting schedule pass")
 
+			// First, reset orphaned runs.
+			orphanThreshold := s.clock.Now().Add(-5 * time.Second)
+			if err := s.dbQuerier.ResetOrphanedRuns(ctx, s.pgxPool, orphanThreshold); err != nil {
+				log.Error().Err(err).Msg("failed to reset orphaned runs")
+			}
+
+			// Next, schedule new runs.
+
 			minNextRunAt := s.clock.Now().Add(time.Minute)
 			err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 				tests, err := s.dbQuerier.ListTestsToSchedule(ctx, tx)

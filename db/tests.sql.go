@@ -222,9 +222,9 @@ ON tests.id = latest_configs.test_id
 LEFT JOIN test_run_configs
 ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 LEFT JOIN runs
-ON runs.test_id = tests.id AND runs.started_at IS NULL
+ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
 WHERE next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
-FOR UPDATE OF tests
+FOR UPDATE OF tests SKIP LOCKED
 `
 
 type ListTestsToScheduleRow struct {

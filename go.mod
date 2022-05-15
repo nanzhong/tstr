@@ -3,7 +3,8 @@ module github.com/nanzhong/tstr
 go 1.18
 
 require (
-	github.com/docker/docker v20.10.15+incompatible
+	github.com/benbjohnson/clock v1.3.0
+	github.com/docker/docker v20.10.16+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.6.7
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -23,7 +24,6 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect
-	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect

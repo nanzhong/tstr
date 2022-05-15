@@ -9,7 +9,7 @@ github.com/benbjohnson/clock
 ## explicit
 github.com/docker/distribution/digestset
 github.com/docker/distribution/reference
-# github.com/docker/docker v20.10.15+incompatible
+# github.com/docker/docker v20.10.16+incompatible
 ## explicit
 github.com/docker/docker/api
 github.com/docker/docker/api/types
@@ -29,6 +29,7 @@ github.com/docker/docker/api/types/versions
 github.com/docker/docker/api/types/volume
 github.com/docker/docker/client
 github.com/docker/docker/errdefs
+github.com/docker/docker/pkg/stdcopy
 # github.com/docker/go-connections v0.4.0
 ## explicit
 github.com/docker/go-connections/nat

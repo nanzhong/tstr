@@ -40,6 +40,10 @@ type Querier interface {
 	ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Time) error
 	RevokeAccessToken(ctx context.Context, db DBTX, id uuid.UUID) error
 	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (ScheduleRunRow, error)
+	UIListRecentRuns(ctx context.Context, db DBTX, limit int32) ([]UIListRecentRunsRow, error)
+	UIListTests(ctx context.Context, db DBTX) ([]Test, error)
+	UITestResults(ctx context.Context, db DBTX) ([]UITestResultsRow, error)
+	UITestsByLabels(ctx context.Context, db DBTX) ([]UITestsByLabelsRow, error)
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error
 	UpdateTestSuite(ctx context.Context, db DBTX, arg UpdateTestSuiteParams) error

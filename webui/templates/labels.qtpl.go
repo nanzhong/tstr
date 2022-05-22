@@ -5,443 +5,168 @@
 package templates
 
 //line templates/labels.qtpl:2
-import "time"
-
-//line templates/labels.qtpl:3
 import "fmt"
 
-//line templates/labels.qtpl:5
+//line templates/labels.qtpl:3
+import "strings"
+
+//line templates/labels.qtpl:4
+import "github.com/nanzhong/tstr/db"
+
+//line templates/labels.qtpl:6
 import (
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
-//line templates/labels.qtpl:5
+//line templates/labels.qtpl:6
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line templates/labels.qtpl:8
-const height = 100
-const heightDiff = 20
-
-type DayReport struct {
-	Timestamp time.Time
-
-	Runs      int
-	ErredRuns int
-
-	// Tests
-	Total   int
-	Passed  int
-	Skipped int
-	Failed  int
-	Unknown int
-}
-
-type LabelSummary struct {
-	Label       string
-	MonthReport []DayReport
-}
-
+//line templates/labels.qtpl:7
 type LabelsPage struct {
-	MonthSummary []LabelSummary
+	TestsByLabel  []db.UITestsByLabelsRow
+	ResultsByTest map[string][]db.RunResult
 }
 
-//line templates/labels.qtpl:35
+//line templates/labels.qtpl:13
 func (p *LabelsPage) StreamTitle(qw422016 *qt422016.Writer) {
-//line templates/labels.qtpl:35
+//line templates/labels.qtpl:13
 	qw422016.N().S(`
 Tester - Labels
 `)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 }
 
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 func (p *LabelsPage) WriteTitle(qq422016 qtio422016.Writer) {
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	p.StreamTitle(qw422016)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 }
 
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 func (p *LabelsPage) Title() string {
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	p.WriteTitle(qb422016)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 	return qs422016
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:15
 }
 
-//line templates/labels.qtpl:40
+//line templates/labels.qtpl:18
 func (p *LabelsPage) StreamBody(qw422016 *qt422016.Writer) {
-//line templates/labels.qtpl:40
+//line templates/labels.qtpl:18
 	qw422016.N().S(`
 
 <div class="packages">
 `)
-//line templates/labels.qtpl:43
-	for _, summary := range p.MonthSummary {
-//line templates/labels.qtpl:43
+//line templates/labels.qtpl:21
+	for _, byLabel := range p.TestsByLabel {
+//line templates/labels.qtpl:21
 		qw422016.N().S(`
-
 `)
-//line templates/labels.qtpl:45
-		if len(summary.MonthReport) > 0 {
-//line templates/labels.qtpl:45
-			qw422016.N().S(`
+//line templates/labels.qtpl:24
+		labelsAsString := strings.Join(labelsAsSlice(byLabel.Labels, ": "), " ")
+
+//line templates/labels.qtpl:25
+		qw422016.N().S(`
   <div class="row mb-2">
     <div class="col">
       <h2 class="h4"><a href="/labels/`)
-//line templates/labels.qtpl:48
-			qw422016.E().S(summary.Label)
-//line templates/labels.qtpl:48
-			qw422016.N().S(`">`)
-//line templates/labels.qtpl:48
-			qw422016.E().S(summary.Label)
-//line templates/labels.qtpl:48
-			qw422016.N().S(`</a></h2>
+//line templates/labels.qtpl:28
+		qw422016.E().S(fmt.Sprintf("TODO"))
+//line templates/labels.qtpl:28
+		qw422016.N().S(`">`)
+//line templates/labels.qtpl:28
+		qw422016.E().S(labelsAsString)
+//line templates/labels.qtpl:28
+		qw422016.N().S(`</a></h2>
       `)
-//line templates/labels.qtpl:49
-			StreamGenerateMonthReport(qw422016, summary.MonthReport)
-//line templates/labels.qtpl:49
+//line templates/labels.qtpl:29
+		for _, test := range byLabel.Tests.([]string) {
+//line templates/labels.qtpl:29
 			qw422016.N().S(`
-    </div>
-  </div>
-  `)
-//line templates/labels.qtpl:52
-		} else {
-//line templates/labels.qtpl:52
+        `)
+//line templates/labels.qtpl:30
+			for _, result := range p.ResultsByTest[test] {
+//line templates/labels.qtpl:30
+				qw422016.N().S(`
+
+            `)
+//line templates/labels.qtpl:32
+				if result == db.RunResultPass {
+//line templates/labels.qtpl:32
+					qw422016.N().S(`
+            <span class="badge bg-success">&nbsp;</span>
+            `)
+//line templates/labels.qtpl:34
+				} else {
+//line templates/labels.qtpl:34
+					qw422016.N().S(`
+            <span class="badge bg-danger">&nbsp;</span>
+            `)
+//line templates/labels.qtpl:36
+				}
+//line templates/labels.qtpl:36
+				qw422016.N().S(`
+        `)
+//line templates/labels.qtpl:37
+			}
+//line templates/labels.qtpl:37
 			qw422016.N().S(`
-  <div class="row">
-    <div class="col">
-      <h5>No results yet</h5>
-      <p>Kick off a test run and publish the results...</p>
-    </div>
-  </div>
-  `)
-//line templates/labels.qtpl:59
+      `)
+//line templates/labels.qtpl:38
 		}
-//line templates/labels.qtpl:59
+//line templates/labels.qtpl:38
 		qw422016.N().S(`
+    </div>
+  </div>
 `)
-//line templates/labels.qtpl:60
+//line templates/labels.qtpl:41
 	}
-//line templates/labels.qtpl:60
+//line templates/labels.qtpl:41
 	qw422016.N().S(`
 </div>
 `)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 }
 
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 func (p *LabelsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	p.StreamBody(qw422016)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 }
 
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 func (p *LabelsPage) Body() string {
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	p.WriteBody(qb422016)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:62
+//line templates/labels.qtpl:43
 	return qs422016
-//line templates/labels.qtpl:62
-}
-
-//line templates/labels.qtpl:66
-func percent(a int, b int) string {
-	return fmt.Sprintf("%.1f", float64(a)/float64(b)*100)
-}
-
-//line templates/labels.qtpl:72
-func StreamSummaryTooltip(qw422016 *qt422016.Writer, dayReport DayReport) {
-//line templates/labels.qtpl:72
-	qw422016.N().S(`
-<div>
-  <div class='row'>
-    <div class='col'><strong>Runs</strong></div>
-  </div>
-  <div class='row'>
-    <div class='col'>Total: `)
-//line templates/labels.qtpl:78
-	qw422016.N().D(dayReport.Runs)
-//line templates/labels.qtpl:78
-	qw422016.N().S(` `)
-//line templates/labels.qtpl:78
-	if dayReport.ErredRuns > 0 {
-//line templates/labels.qtpl:78
-		qw422016.N().S(` <small>(`)
-//line templates/labels.qtpl:78
-		qw422016.N().D(dayReport.ErredRuns)
-//line templates/labels.qtpl:78
-		qw422016.N().S(` erred) `)
-//line templates/labels.qtpl:78
-	}
-//line templates/labels.qtpl:78
-	qw422016.N().S(` </div>
-  </div>
-  <hr>
-  <div class='row'>
-    <div class='col'><strong>Tests</strong></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Passed</div>
-    <div class='col-7'>`)
-//line templates/labels.qtpl:86
-	qw422016.N().D(dayReport.Passed)
-//line templates/labels.qtpl:86
-	qw422016.N().S(` <small>( `)
-//line templates/labels.qtpl:86
-	qw422016.E().S(percent(dayReport.Passed, dayReport.Total))
-//line templates/labels.qtpl:86
-	qw422016.N().S(` %)</small></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Skipped</div>
-    <div class='col-7'>`)
-//line templates/labels.qtpl:90
-	qw422016.N().D(dayReport.Skipped)
-//line templates/labels.qtpl:90
-	qw422016.N().S(` <small>( `)
-//line templates/labels.qtpl:90
-	qw422016.E().S(percent(dayReport.Skipped, dayReport.Total))
-//line templates/labels.qtpl:90
-	qw422016.N().S(` %)</small></div>
-  </div>
-  <div class='row'>
-    <div class='col-5'>Failed</div>
-    <div class='col-7'>`)
-//line templates/labels.qtpl:94
-	qw422016.N().D(dayReport.Failed)
-//line templates/labels.qtpl:94
-	qw422016.N().S(` <small>( `)
-//line templates/labels.qtpl:94
-	qw422016.E().S(percent(dayReport.Failed, dayReport.Total))
-//line templates/labels.qtpl:94
-	qw422016.N().S(` %)</small></div>
-  </div>
-</div>
-`)
-//line templates/labels.qtpl:97
-}
-
-//line templates/labels.qtpl:97
-func WriteSummaryTooltip(qq422016 qtio422016.Writer, dayReport DayReport) {
-//line templates/labels.qtpl:97
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:97
-	StreamSummaryTooltip(qw422016, dayReport)
-//line templates/labels.qtpl:97
-	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:97
-}
-
-//line templates/labels.qtpl:97
-func SummaryTooltip(dayReport DayReport) string {
-//line templates/labels.qtpl:97
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:97
-	WriteSummaryTooltip(qb422016, dayReport)
-//line templates/labels.qtpl:97
-	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:97
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:97
-	return qs422016
-//line templates/labels.qtpl:97
-}
-
-//line templates/labels.qtpl:99
-func StreamPackageRunSummaryBar(qw422016 *qt422016.Writer, dayReport DayReport) {
-//line templates/labels.qtpl:99
-	qw422016.N().S(`
-`)
-//line templates/labels.qtpl:101
-	pctFailed := float64(dayReport.Failed) / float64(dayReport.Total)
-	pctSkipped := float64(dayReport.Skipped) / float64(dayReport.Total)
-	pctPassed := float64(dayReport.Passed) / float64(dayReport.Total)
-
-//line templates/labels.qtpl:104
-	qw422016.N().S(`
-<div class="bg-danger bg-gradient" style="min-height: calc(100% * `)
-//line templates/labels.qtpl:105
-	qw422016.N().F(pctFailed)
-//line templates/labels.qtpl:105
-	qw422016.N().S(`);"></div>
-<div class="bg-warning bg-gradient" style="min-height: calc(100% * `)
-//line templates/labels.qtpl:106
-	qw422016.N().F(pctSkipped)
-//line templates/labels.qtpl:106
-	qw422016.N().S(`);"></div>
-<div class="bg-success bg-gradient" style="min-height: calc(100% * `)
-//line templates/labels.qtpl:107
-	qw422016.N().F(pctPassed)
-//line templates/labels.qtpl:107
-	qw422016.N().S(`);"></div>
-`)
-//line templates/labels.qtpl:108
-}
-
-//line templates/labels.qtpl:108
-func WritePackageRunSummaryBar(qq422016 qtio422016.Writer, dayReport DayReport) {
-//line templates/labels.qtpl:108
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:108
-	StreamPackageRunSummaryBar(qw422016, dayReport)
-//line templates/labels.qtpl:108
-	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:108
-}
-
-//line templates/labels.qtpl:108
-func PackageRunSummaryBar(dayReport DayReport) string {
-//line templates/labels.qtpl:108
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:108
-	WritePackageRunSummaryBar(qb422016, dayReport)
-//line templates/labels.qtpl:108
-	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:108
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:108
-	return qs422016
-//line templates/labels.qtpl:108
-}
-
-//line templates/labels.qtpl:110
-func StreamGenerateMonthReport(qw422016 *qt422016.Writer, month []DayReport) {
-//line templates/labels.qtpl:110
-	qw422016.N().S(`
-<div class="border p-1">
-  <div class="d-flex">
-  `)
-//line templates/labels.qtpl:113
-	for _, dayReport := range month {
-//line templates/labels.qtpl:113
-		qw422016.N().S(`
-
-  `)
-//line templates/labels.qtpl:117
-		qw422016.N().S(`
-    <a class="flex-grow-1" style="margin: 1px; min-width: 2px; min-height: `)
-//line templates/labels.qtpl:118
-		qw422016.N().D(height)
-//line templates/labels.qtpl:118
-		qw422016.N().S(`px; max-height: `)
-//line templates/labels.qtpl:118
-		qw422016.N().D(height)
-//line templates/labels.qtpl:118
-		qw422016.N().S(`px;"
-       href="/run_summary?package={{ $.Name }}&begin={{ .Time.Unix }}&window={{ .Duration.Seconds }}"
-       {{if $pkgSummary}}
-       data-toggle="popover"
-       data-trigger="hover"
-       data-placement="bottom"
-       data-html="true"
-       data-title="<small>`)
-//line templates/labels.qtpl:125
-		qw422016.E().S(dayReport.Timestamp.Format(time.UnixDate))
-//line templates/labels.qtpl:125
-		qw422016.N().S(`  </small>"
-       data-content="`)
-//line templates/labels.qtpl:126
-		StreamSummaryTooltip(qw422016, dayReport)
-//line templates/labels.qtpl:126
-		qw422016.N().S(`"
-       {{end}}
-       >
-
-  `)
-//line templates/labels.qtpl:134
-		qw422016.N().S(`
-      <div style="min-height: calc(2 * `)
-//line templates/labels.qtpl:135
-		qw422016.N().D(heightDiff)
-//line templates/labels.qtpl:135
-		qw422016.N().S(`px);"></div>
-      <div style="height: calc(`)
-//line templates/labels.qtpl:136
-		qw422016.N().D(height)
-//line templates/labels.qtpl:136
-		qw422016.N().S(`px - 2 * `)
-//line templates/labels.qtpl:136
-		qw422016.N().D(heightDiff)
-//line templates/labels.qtpl:136
-		qw422016.N().S(`px);">
-        `)
-//line templates/labels.qtpl:139
-		qw422016.N().S(`
-        `)
-//line templates/labels.qtpl:140
-		StreamPackageRunSummaryBar(qw422016, dayReport)
-//line templates/labels.qtpl:140
-		qw422016.N().S(`
-      </div>
-    </a>
-    `)
-//line templates/labels.qtpl:143
-	}
-//line templates/labels.qtpl:143
-	qw422016.N().S(`
-    <div class="d-flex justify-content-between">
-        <div style="width: calc(100% * 58 / (58 + 23 + 12));"><small class="text-muted">30d</small></div>
-        <div style="width: calc(100% * 23 / (58 + 23 + 12));"><small class="text-muted">24h</small></div>
-        <div class="flex-grow-1"><small class="text-muted">1h</small></div>
-    <div><small class="text-muted">now</small></div>
-  </div>
-</div>
-
-
-`)
-//line templates/labels.qtpl:153
-}
-
-//line templates/labels.qtpl:153
-func WriteGenerateMonthReport(qq422016 qtio422016.Writer, month []DayReport) {
-//line templates/labels.qtpl:153
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:153
-	StreamGenerateMonthReport(qw422016, month)
-//line templates/labels.qtpl:153
-	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:153
-}
-
-//line templates/labels.qtpl:153
-func GenerateMonthReport(month []DayReport) string {
-//line templates/labels.qtpl:153
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:153
-	WriteGenerateMonthReport(qb422016, month)
-//line templates/labels.qtpl:153
-	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:153
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:153
-	return qs422016
-//line templates/labels.qtpl:153
+//line templates/labels.qtpl:43
 }

@@ -110,7 +110,7 @@ var serveCmd = &cobra.Command{
 		runnerServer := server.NewRunnerServer(pgxPool)
 		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
-		webui := webui.NewWebUI()
+		webui := webui.New(pgxPool)
 
 		httpServer := http.Server{
 			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),

@@ -5,196 +5,66 @@
 package templates
 
 //line templates/runspage.qtpl:1
-import "time"
-
-//line templates/runspage.qtpl:2
-import "fmt"
+import "github.com/nanzhong/tstr/db"
 
 //line templates/runspage.qtpl:3
-import "github.com/nanzhong/tstr/api/common/v1"
-
-//line templates/runspage.qtpl:4
-import timestamppb "google.golang.org/protobuf/types/known/timestamppb"
-
-//line templates/runspage.qtpl:6
 import (
 	qtio422016 "io"
 
 	qt422016 "github.com/valyala/quicktemplate"
 )
 
-//line templates/runspage.qtpl:6
+//line templates/runspage.qtpl:3
 var (
 	_ = qtio422016.Copy
 	_ = qt422016.AcquireByteBuffer
 )
 
-//line templates/runspage.qtpl:7
+//line templates/runspage.qtpl:4
 type RunsPage struct {
-	Runs            []common.Run
+	Runs            []db.UIListRecentRunsRow
 	HasPendingRuns  bool
 	HasFinishedRuns bool
 }
 
-//line templates/runspage.qtpl:14
+//line templates/runspage.qtpl:11
 func (p *RunsPage) StreamTitle(qw422016 *qt422016.Writer) {
-//line templates/runspage.qtpl:14
+//line templates/runspage.qtpl:11
 	qw422016.N().S(`
 Tester
 `)
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 }
 
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 func (p *RunsPage) WriteTitle(qq422016 qtio422016.Writer) {
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	p.StreamTitle(qw422016)
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	qt422016.ReleaseWriter(qw422016)
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 }
 
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 func (p *RunsPage) Title() string {
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	p.WriteTitle(qb422016)
-//line templates/runspage.qtpl:16
+//line templates/runspage.qtpl:13
 	qs422016 := string(qb422016.B)
+//line templates/runspage.qtpl:13
+	qt422016.ReleaseByteBuffer(qb422016)
+//line templates/runspage.qtpl:13
+	return qs422016
+//line templates/runspage.qtpl:13
+}
+
 //line templates/runspage.qtpl:16
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/runspage.qtpl:16
-	return qs422016
-//line templates/runspage.qtpl:16
-}
-
-//line templates/runspage.qtpl:18
-func streamfmtAbsTime(qw422016 *qt422016.Writer, t time.Time) {
-//line templates/runspage.qtpl:18
-	qw422016.N().S(`
-    `)
-//line templates/runspage.qtpl:19
-	qw422016.E().S(t.Format("2006-01-02 15:04:05"))
-//line templates/runspage.qtpl:19
-	qw422016.N().S(`
-`)
-//line templates/runspage.qtpl:20
-}
-
-//line templates/runspage.qtpl:20
-func writefmtAbsTime(qq422016 qtio422016.Writer, t time.Time) {
-//line templates/runspage.qtpl:20
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/runspage.qtpl:20
-	streamfmtAbsTime(qw422016, t)
-//line templates/runspage.qtpl:20
-	qt422016.ReleaseWriter(qw422016)
-//line templates/runspage.qtpl:20
-}
-
-//line templates/runspage.qtpl:20
-func fmtAbsTime(t time.Time) string {
-//line templates/runspage.qtpl:20
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/runspage.qtpl:20
-	writefmtAbsTime(qb422016, t)
-//line templates/runspage.qtpl:20
-	qs422016 := string(qb422016.B)
-//line templates/runspage.qtpl:20
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/runspage.qtpl:20
-	return qs422016
-//line templates/runspage.qtpl:20
-}
-
-//line templates/runspage.qtpl:22
-func streamfmtRelativeTime(qw422016 *qt422016.Writer, t time.Time) {
-//line templates/runspage.qtpl:22
-	qw422016.N().S(`
-    `)
-//line templates/runspage.qtpl:23
-	qw422016.E().S(fmt.Sprintf("%s ago", time.Since(t).Round(time.Second).String()))
-//line templates/runspage.qtpl:23
-	qw422016.N().S(`
-`)
-//line templates/runspage.qtpl:24
-}
-
-//line templates/runspage.qtpl:24
-func writefmtRelativeTime(qq422016 qtio422016.Writer, t time.Time) {
-//line templates/runspage.qtpl:24
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/runspage.qtpl:24
-	streamfmtRelativeTime(qw422016, t)
-//line templates/runspage.qtpl:24
-	qt422016.ReleaseWriter(qw422016)
-//line templates/runspage.qtpl:24
-}
-
-//line templates/runspage.qtpl:24
-func fmtRelativeTime(t time.Time) string {
-//line templates/runspage.qtpl:24
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/runspage.qtpl:24
-	writefmtRelativeTime(qb422016, t)
-//line templates/runspage.qtpl:24
-	qs422016 := string(qb422016.B)
-//line templates/runspage.qtpl:24
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/runspage.qtpl:24
-	return qs422016
-//line templates/runspage.qtpl:24
-}
-
-//line templates/runspage.qtpl:26
-func streamtimeCell(qw422016 *qt422016.Writer, timestamp *timestamppb.Timestamp) {
-//line templates/runspage.qtpl:26
-	qw422016.N().S(`
-    <span data-toggle="tooltip" data-placement="top" title="`)
-//line templates/runspage.qtpl:27
-	qw422016.E().S(fmtAbsTime(timestamp.AsTime()))
-//line templates/runspage.qtpl:27
-	qw422016.N().S(`">`)
-//line templates/runspage.qtpl:27
-	qw422016.E().S(fmtRelativeTime(timestamp.AsTime()))
-//line templates/runspage.qtpl:27
-	qw422016.N().S(`</span>
-`)
-//line templates/runspage.qtpl:28
-}
-
-//line templates/runspage.qtpl:28
-func writetimeCell(qq422016 qtio422016.Writer, timestamp *timestamppb.Timestamp) {
-//line templates/runspage.qtpl:28
-	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/runspage.qtpl:28
-	streamtimeCell(qw422016, timestamp)
-//line templates/runspage.qtpl:28
-	qt422016.ReleaseWriter(qw422016)
-//line templates/runspage.qtpl:28
-}
-
-//line templates/runspage.qtpl:28
-func timeCell(timestamp *timestamppb.Timestamp) string {
-//line templates/runspage.qtpl:28
-	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/runspage.qtpl:28
-	writetimeCell(qb422016, timestamp)
-//line templates/runspage.qtpl:28
-	qs422016 := string(qb422016.B)
-//line templates/runspage.qtpl:28
-	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/runspage.qtpl:28
-	return qs422016
-//line templates/runspage.qtpl:28
-}
-
-//line templates/runspage.qtpl:30
 func (p *RunsPage) StreamBody(qw422016 *qt422016.Writer) {
-//line templates/runspage.qtpl:30
+//line templates/runspage.qtpl:16
 	qw422016.N().S(`
 <div class="runs">
   
@@ -202,103 +72,119 @@ func (p *RunsPage) StreamBody(qw422016 *qt422016.Writer) {
     <div class="col">
       <h1 class="h5">Pending Runs</h1>
       `)
-//line templates/runspage.qtpl:36
+//line templates/runspage.qtpl:22
 	if p.HasPendingRuns {
-//line templates/runspage.qtpl:36
+//line templates/runspage.qtpl:22
 		qw422016.N().S(`
       <table class="table table-sm">
         <thead>
           <tr>
-            <th scope="col">ID</th>
+            <th scope="col">Test</th>
             <th scope="col">Labels</th>
             <th scope="col">Args</th>
-            <th scope="col">Enqueued At</th>
-            <th scope="col">Started At</th>
+            <th scope="col">Enqueued</th>
+            <th scope="col">Started</th>
             <th scope="col">Runner</th>
           </tr>
         </thead>
         <tbody>
 
         `)
-//line templates/runspage.qtpl:50
+//line templates/runspage.qtpl:36
 		for _, run := range p.Runs {
-//line templates/runspage.qtpl:50
+//line templates/runspage.qtpl:36
 			qw422016.N().S(`
         `)
-//line templates/runspage.qtpl:51
-			if run.FinishedAt == nil {
-//line templates/runspage.qtpl:51
+//line templates/runspage.qtpl:37
+			if !run.FinishedAt.Valid {
+//line templates/runspage.qtpl:37
 				qw422016.N().S(`
           <tr>
             <td scope="row"><a href="/runs/`)
-//line templates/runspage.qtpl:53
-				qw422016.E().S(run.Id)
-//line templates/runspage.qtpl:53
+//line templates/runspage.qtpl:39
+				qw422016.E().S(run.ID.String())
+//line templates/runspage.qtpl:39
 				qw422016.N().S(`">`)
-//line templates/runspage.qtpl:53
-				qw422016.E().S(run.Id)
-//line templates/runspage.qtpl:53
+//line templates/runspage.qtpl:39
+				qw422016.E().S(run.TestName)
+//line templates/runspage.qtpl:39
 				qw422016.N().S(`<i class="fas fa-link"></i></a></td>
-            <td scope="row"> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
-            <td scope="row"> `)
-//line templates/runspage.qtpl:55
-				for _, arg := range run.TestRunConfig.Args {
-//line templates/runspage.qtpl:55
-					qw422016.N().S(` <span class="badge bg-secondary">`)
-//line templates/runspage.qtpl:55
-					qw422016.E().S(arg)
-//line templates/runspage.qtpl:55
-					qw422016.N().S(`</span> `)
-//line templates/runspage.qtpl:55
+            <td scope="row">
+            `)
+//line templates/runspage.qtpl:41
+				for _, label := range labelsAsSlice(run.Labels, ": ") {
+//line templates/runspage.qtpl:41
+					qw422016.N().S(`
+            <span class="badge bg-secondary">`)
+//line templates/runspage.qtpl:42
+					qw422016.E().S(label)
+//line templates/runspage.qtpl:42
+					qw422016.N().S(`</span>
+            `)
+//line templates/runspage.qtpl:43
 				}
-//line templates/runspage.qtpl:55
+//line templates/runspage.qtpl:43
+				qw422016.N().S(`
+            </td>
+            <td scope="row"> `)
+//line templates/runspage.qtpl:45
+				for _, arg := range run.Args {
+//line templates/runspage.qtpl:45
+					qw422016.N().S(` <span class="badge bg-secondary">`)
+//line templates/runspage.qtpl:45
+					qw422016.E().S(arg)
+//line templates/runspage.qtpl:45
+					qw422016.N().S(`</span> `)
+//line templates/runspage.qtpl:45
+				}
+//line templates/runspage.qtpl:45
 				qw422016.N().S(` </td>
             <td>`)
-//line templates/runspage.qtpl:56
+//line templates/runspage.qtpl:46
 				streamtimeCell(qw422016, run.ScheduledAt)
-//line templates/runspage.qtpl:56
+//line templates/runspage.qtpl:46
 				qw422016.N().S(`</td>
             <td>`)
-//line templates/runspage.qtpl:57
-				if run.StartedAt != nil {
-//line templates/runspage.qtpl:57
+//line templates/runspage.qtpl:47
+				if run.StartedAt.Valid {
+//line templates/runspage.qtpl:47
 					qw422016.N().S(` `)
-//line templates/runspage.qtpl:57
+//line templates/runspage.qtpl:47
 					streamtimeCell(qw422016, run.StartedAt)
-//line templates/runspage.qtpl:57
+//line templates/runspage.qtpl:47
 					qw422016.N().S(` `)
-//line templates/runspage.qtpl:57
+//line templates/runspage.qtpl:47
 				}
-//line templates/runspage.qtpl:57
+//line templates/runspage.qtpl:47
 				qw422016.N().S(`</td>
             <td>`)
-//line templates/runspage.qtpl:58
-				qw422016.E().S(run.RunnerId)
-//line templates/runspage.qtpl:58
+//line templates/runspage.qtpl:48
+				qw422016.E().S(run.RunnerName)
+//line templates/runspage.qtpl:48
 				qw422016.N().S(` </td>
           </tr>
           `)
-//line templates/runspage.qtpl:60
+//line templates/runspage.qtpl:50
 			}
-//line templates/runspage.qtpl:60
+//line templates/runspage.qtpl:50
 			qw422016.N().S(`
           `)
-//line templates/runspage.qtpl:61
+//line templates/runspage.qtpl:51
 		}
-//line templates/runspage.qtpl:61
+//line templates/runspage.qtpl:51
 		qw422016.N().S(`
         </tbody>
       </table>
       `)
-//line templates/runspage.qtpl:64
+//line templates/runspage.qtpl:54
 	} else {
-//line templates/runspage.qtpl:64
+//line templates/runspage.qtpl:54
 		qw422016.N().S(`
       <p>No pending runs...</p>
       `)
-//line templates/runspage.qtpl:66
+//line templates/runspage.qtpl:56
 	}
-//line templates/runspage.qtpl:66
+//line templates/runspage.qtpl:56
 	qw422016.N().S(`
     </div>
   </div>
@@ -308,130 +194,180 @@ func (p *RunsPage) StreamBody(qw422016 *qt422016.Writer) {
     <div class="col">
       <h1 class="h5">Recently Finished Runs (Last 50)</h1>
       `)
-//line templates/runspage.qtpl:74
+//line templates/runspage.qtpl:64
 	if p.HasFinishedRuns {
-//line templates/runspage.qtpl:74
+//line templates/runspage.qtpl:64
 		qw422016.N().S(`
       <table class="table table-sm">
         <thead>
           <tr>
-            <th scope="col">ID</th>
+            <th scope="col">Test</th>
             <th scope="col">Labels</th>
             <th scope="col">Args</th>
-            <th scope="col">Enqueued At</th>
-            <th scope="col">Started At</th>
-            <th scope="col">Finished At</th>
+            <th scope="col">Enqueued</th>
+            <th scope="col">Started</th>
+            <th scope="col">Duration</th>
+            <th scope="col">Result</th>
             <th scope="col">Runner</th>
           </tr>
         </thead>
         <tbody>
         `)
-//line templates/runspage.qtpl:88
-		for _, run := range p.Runs[:50] {
-//line templates/runspage.qtpl:88
+//line templates/runspage.qtpl:79
+		for _, run := range p.Runs {
+//line templates/runspage.qtpl:79
 			qw422016.N().S(`
         `)
-//line templates/runspage.qtpl:89
-			if run.FinishedAt != nil {
-//line templates/runspage.qtpl:89
+//line templates/runspage.qtpl:80
+			if run.FinishedAt.Valid {
+//line templates/runspage.qtpl:80
 				qw422016.N().S(`
           <tr>
-            <td><a href="/runs/`)
-//line templates/runspage.qtpl:91
-				qw422016.E().S(run.Id)
-//line templates/runspage.qtpl:91
+            <td><a href="/tests/`)
+//line templates/runspage.qtpl:82
+				qw422016.E().S(run.TestID.String())
+//line templates/runspage.qtpl:82
 				qw422016.N().S(`">`)
-//line templates/runspage.qtpl:91
-				qw422016.E().S(run.Id)
-//line templates/runspage.qtpl:91
-				qw422016.N().S(`<i class="fas fa-link"></i></a></td>
-            <td> <span class="badge bg-secondary">subsystem: core</span> <span class="badge bg-secondary">kind: integration</span>
-            <td> `)
-//line templates/runspage.qtpl:93
-				for _, arg := range run.TestRunConfig.Args {
-//line templates/runspage.qtpl:93
-					qw422016.N().S(` <span class="badge bg-secondary">`)
-//line templates/runspage.qtpl:93
-					qw422016.E().S(arg)
-//line templates/runspage.qtpl:93
-					qw422016.N().S(`</span> `)
-//line templates/runspage.qtpl:93
+//line templates/runspage.qtpl:82
+				qw422016.E().S(run.TestName)
+//line templates/runspage.qtpl:82
+				qw422016.N().S(`<i class=""></i></a>&nbsp;  &nbsp; &nbsp;
+<a href="/runs/`)
+//line templates/runspage.qtpl:83
+				qw422016.E().S(run.ID.String())
+//line templates/runspage.qtpl:83
+				qw422016.N().S(`"><i class="fas fa-search-plus"></i></a>
+            </td>
+            <td>
+            `)
+//line templates/runspage.qtpl:86
+				for _, label := range labelsAsSlice(run.Labels, ": ") {
+//line templates/runspage.qtpl:86
+					qw422016.N().S(`
+            <span class="badge bg-secondary">`)
+//line templates/runspage.qtpl:87
+					qw422016.E().S(label)
+//line templates/runspage.qtpl:87
+					qw422016.N().S(`</span>
+            `)
+//line templates/runspage.qtpl:88
 				}
+//line templates/runspage.qtpl:88
+				qw422016.N().S(`
+            </td>
+            <td>`)
+//line templates/runspage.qtpl:90
+				for _, arg := range run.Args {
+//line templates/runspage.qtpl:90
+					qw422016.N().S(` <span class="">`)
+//line templates/runspage.qtpl:90
+					qw422016.E().S(arg)
+//line templates/runspage.qtpl:90
+					qw422016.N().S(`</span> `)
+//line templates/runspage.qtpl:90
+				}
+//line templates/runspage.qtpl:90
+				qw422016.N().S(`</td>
+            <td>`)
+//line templates/runspage.qtpl:91
+				streamtimeCell(qw422016, run.ScheduledAt)
+//line templates/runspage.qtpl:91
+				qw422016.N().S(`</td>
+            <td>`)
+//line templates/runspage.qtpl:92
+				streamtimeCell(qw422016, run.StartedAt)
+//line templates/runspage.qtpl:92
+				qw422016.N().S(`</td>
+            <td>`)
+//line templates/runspage.qtpl:93
+				qw422016.E().S(run.FinishedAt.Time.Sub(run.StartedAt.Time).String())
 //line templates/runspage.qtpl:93
 				qw422016.N().S(` </td>
-            <td>`)
-//line templates/runspage.qtpl:94
-				streamtimeCell(qw422016, run.ScheduledAt)
-//line templates/runspage.qtpl:94
-				qw422016.N().S(`</td>
-            <td>`)
+            <td>
+            `)
 //line templates/runspage.qtpl:95
-				streamtimeCell(qw422016, run.StartedAt)
+				if run.Result == db.RunResultPass {
 //line templates/runspage.qtpl:95
-				qw422016.N().S(`</td>
-            <td> `)
+					qw422016.N().S(`
+            <span class="badge bg-success">`)
 //line templates/runspage.qtpl:96
-				streamtimeCell(qw422016, run.FinishedAt)
+					qw422016.E().S(string(run.Result))
 //line templates/runspage.qtpl:96
-				qw422016.N().S(`</td>
+					qw422016.N().S(`</span>
+            `)
+//line templates/runspage.qtpl:97
+				} else {
+//line templates/runspage.qtpl:97
+					qw422016.N().S(`
+            <span class="badge bg-danger">`)
+//line templates/runspage.qtpl:98
+					qw422016.E().S(string(run.Result))
+//line templates/runspage.qtpl:98
+					qw422016.N().S(`</span>
+            `)
+//line templates/runspage.qtpl:99
+				}
+//line templates/runspage.qtpl:99
+				qw422016.N().S(`
+            </td>
             <td>`)
-//line templates/runspage.qtpl:97
-				qw422016.E().S(run.RunnerId)
-//line templates/runspage.qtpl:97
+//line templates/runspage.qtpl:101
+				qw422016.E().S(run.RunnerName)
+//line templates/runspage.qtpl:101
 				qw422016.N().S(` </td>
           </tr>
           `)
-//line templates/runspage.qtpl:99
+//line templates/runspage.qtpl:103
 			}
-//line templates/runspage.qtpl:99
+//line templates/runspage.qtpl:103
 			qw422016.N().S(`
           `)
-//line templates/runspage.qtpl:100
+//line templates/runspage.qtpl:104
 		}
-//line templates/runspage.qtpl:100
+//line templates/runspage.qtpl:104
 		qw422016.N().S(`
         </tbody>
       </table>
       `)
-//line templates/runspage.qtpl:103
+//line templates/runspage.qtpl:107
 	} else {
-//line templates/runspage.qtpl:103
+//line templates/runspage.qtpl:107
 		qw422016.N().S(`
       <p>No finished runs...</p>
       `)
-//line templates/runspage.qtpl:105
+//line templates/runspage.qtpl:109
 	}
-//line templates/runspage.qtpl:105
+//line templates/runspage.qtpl:109
 	qw422016.N().S(`
     </div>
   </div>
 </div>
 `)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 }
 
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 func (p *RunsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	p.StreamBody(qw422016)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	qt422016.ReleaseWriter(qw422016)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 }
 
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 func (p *RunsPage) Body() string {
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	p.WriteBody(qb422016)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	qs422016 := string(qb422016.B)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 	return qs422016
-//line templates/runspage.qtpl:109
+//line templates/runspage.qtpl:113
 }

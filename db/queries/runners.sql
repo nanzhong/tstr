@@ -16,4 +16,10 @@ WHERE id = sqlc.arg('id');
 -- name: ListRunners :many
 SELECT *
 FROM runners
-WHERE last_heartbeat_at > sqlc.arg('heartbeat_since');
+WHERE last_heartbeat_at > sqlc.arg('heartbeat_since')
+ORDER by last_heartbeat_at DESC, registered_at;
+
+-- name: UpdateRunnerHeartbeat :exec
+UPDATE runners
+SET last_heartbeat_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg('id');

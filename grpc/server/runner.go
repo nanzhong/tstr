@@ -115,6 +115,15 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 		return nil, status.Error(codes.Internal, "failed to find runner info")
 	}
 
+	err = s.dbQuerier.UpdateRunnerHeartbeat(ctx, s.pgxPool, runnerID)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("runner_id", req.Id).
+			Msg("failed to update runner last_heartbeat")
+		return nil, status.Error(codes.Internal, "failed to update runner heartbeat")
+	}
+
 	var (
 		acceptSelectors   map[string]string
 		acceptSelectorsRE = make(map[string]*regexp.Regexp)

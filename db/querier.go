@@ -45,6 +45,7 @@ type Querier interface {
 	UITestResults(ctx context.Context, db DBTX) ([]UITestResultsRow, error)
 	UITestsByLabels(ctx context.Context, db DBTX) ([]UITestsByLabelsRow, error)
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
+	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error
 	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error
 	UpdateTestSuite(ctx context.Context, db DBTX, arg UpdateTestSuiteParams) error
 }

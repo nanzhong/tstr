@@ -37,6 +37,7 @@ const listRunners = `-- name: ListRunners :many
 SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
 FROM runners
 WHERE last_heartbeat_at > $1
+ORDER by last_heartbeat_at DESC, registered_at
 `
 
 func (q *Queries) ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.NullTime) ([]Runner, error) {
@@ -95,4 +96,15 @@ func (q *Queries) RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunne
 		&i.LastHeartbeatAt,
 	)
 	return i, err
+}
+
+const updateRunnerHeartbeat = `-- name: UpdateRunnerHeartbeat :exec
+UPDATE runners
+SET last_heartbeat_at = CURRENT_TIMESTAMP
+WHERE id = $1
+`
+
+func (q *Queries) UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.Exec(ctx, updateRunnerHeartbeat, id)
+	return err
 }

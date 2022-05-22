@@ -1,0 +1,59 @@
+{% import "github.com/nanzhong/tstr/db" %}
+
+{% code
+type RunnersPage struct {
+    Runners []db.Runner
+}
+%}
+
+{% func (p *RunnersPage) Title() %}
+Tester
+{% endfunc %}
+
+
+{% func (p *RunnersPage) Body() %}
+<div class="runners">
+  
+  <div class="row">
+    <div class="col">
+      <h1 class="h5">Runners</h1>
+      {% if len(p.Runners) > 0 %}
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Accept Selectors</th>
+            <th scope="col">Reject Selectors </th>
+            <th scope="col">Registered</th>
+            <th scope="col">Last Heartbeat</th>
+          </tr>
+        </thead>
+        <tbody>
+
+        {% for _, runner := range p.Runners %}
+        <tr>
+            <td scope="row"><a href="/runnerss/{%s runner.ID.String() %}">{%s runner.Name %}<i class="fas fa-link"></i></a></td>
+            <td scope="row">
+                {% for _, label := range labelsAsSlice(runner.AcceptTestLabelSelectors,": ") %}
+                <span class="badge bg-secondary">{%s label %}</span>
+                {% endfor %}
+            </td>
+            <td scope="row">
+                {% for _, label := range labelsAsSlice(runner.RejectTestLabelSelectors,": ") %}
+                <span class="badge bg-secondary">{%s label %}</span>
+                {% endfor %}
+            </td>
+            <td>{% if runner.RegisteredAt.Valid  %} {%= timeCell(runner.RegisteredAt) %} {% endif %}</td>
+            <td>{% if runner.LastHeartbeatAt.Valid  %} {%= timeCell(runner.LastHeartbeatAt) %} {% endif %}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p>No registered runners</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endfunc %}
+

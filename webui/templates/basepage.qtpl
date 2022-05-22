@@ -1,4 +1,3 @@
-This is a base page template. All the other template pages implement this interface.
 
 {% interface
 Page {
@@ -7,7 +6,6 @@ Page {
 }
 %}
 
-Page prints a page implementing Page interface.
 {% func PageTemplate(p Page) %}
 <!doctype html>
 <html>
@@ -44,17 +42,20 @@ Page prints a page implementing Page interface.
   <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-3">
       <div class="container-fluid">
-        <a class="navbar-brand mb-0 h1" href="/">Tester</a>
+        <a class="navbar-brand mb-0 h1" href="/">tstr</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav">
             <li class="nav-item">
-              <a class="nav-link" href="/labels">Labels</a>
+              <a class="nav-link" href="/tests">Tests</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/runs">Runs</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/runners">Runners</a>
             </li>
           </ul>
         </div>

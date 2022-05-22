@@ -1,7 +1,4 @@
-{% import "time" %}
-{% import "fmt" %}
 {% import "github.com/nanzhong/tstr/db" %}
-{% import  "github.com/jackc/pgtype" %}
 
 {% code
 type RunsPage struct {
@@ -15,17 +12,6 @@ type RunsPage struct {
 Tester
 {% endfunc %}
 
-{% func fmtAbsTime(t time.Time) %}
-    {%s t.Format("2006-01-02 15:04:05") %}
-{% endfunc %}
-
-{% func fmtRelativeTime(t time.Time) %}
-    {%s fmt.Sprintf("%s ago", time.Since(t).Round(time.Second).String()) %}
-{% endfunc %}
-
-{% func timeCell(timestamp pgtype.Timestamptz) %}
-    <span data-toggle="tooltip" data-placement="top" title="{%s fmtAbsTime(timestamp.Time) %}">{%s fmtRelativeTime(timestamp.Time) %}</span>
-{% endfunc %}
 
 {% func (p *RunsPage) Body() %}
 <div class="runs">
@@ -37,20 +23,20 @@ Tester
       <table class="table table-sm">
         <thead>
           <tr>
-            <th scope="col">ID</th>
+            <th scope="col">Test</th>
             <th scope="col">Labels</th>
             <th scope="col">Args</th>
-            <th scope="col">Enqueued At</th>
-            <th scope="col">Started At</th>
+            <th scope="col">Enqueued</th>
+            <th scope="col">Started</th>
             <th scope="col">Runner</th>
           </tr>
         </thead>
         <tbody>
 
         {% for _, run := range p.Runs %}
-        {% if run.FinishedAt.Status == pgtype.Null %}
+        {% if !run.FinishedAt.Valid  %}
           <tr>
-            <td scope="row"><a href="/runs/{%s run.ID %}">{%s run.ID %}<i class="fas fa-link"></i></a></td>
+            <td scope="row"><a href="/runs/{%s run.ID.String() %}">{%s run.TestName %}<i class="fas fa-link"></i></a></td>
             <td scope="row">
             {% for _, label := range labelsAsSlice(run.Labels,": ") %}
             <span class="badge bg-secondary">{%s label %}</span>
@@ -58,7 +44,7 @@ Tester
             </td>
             <td scope="row"> {% for _, arg := range run.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %} </td>
             <td>{%= timeCell(run.ScheduledAt) %}</td>
-            <td>{% if run.StartedAt.Status == pgtype.Present  %} {%= timeCell(run.StartedAt) %} {% endif %}</td>
+            <td>{% if run.StartedAt.Valid  %} {%= timeCell(run.StartedAt) %} {% endif %}</td>
             <td>{%s run.RunnerName %} </td>
           </tr>
           {% endif %}
@@ -79,30 +65,32 @@ Tester
       <table class="table table-sm">
         <thead>
           <tr>
-            <th scope="col">ID</th>
+            <th scope="col">Test</th>
             <th scope="col">Labels</th>
             <th scope="col">Args</th>
-            <th scope="col">Enqueued At</th>
-            <th scope="col">Started At</th>
-            <th scope="col">Finished At</th>
+            <th scope="col">Enqueued</th>
+            <th scope="col">Started</th>
+            <th scope="col">Duration</th>
             <th scope="col">Result</th>
             <th scope="col">Runner</th>
           </tr>
         </thead>
         <tbody>
-        {% for _, run := range p.Runs[:50]  %}
-        {% if run.FinishedAt.Status == pgtype.Present %}
+        {% for _, run := range p.Runs  %}
+        {% if run.FinishedAt.Valid %}
           <tr>
-            <td><a href="/runs/{%s run.ID %}">{%s run.ID %}<i class="fas fa-link"></i></a></td>
+            <td><a href="/tests/{%s run.TestID.String() %}">{%s run.TestName %}<i class=""></i></a>&nbsp;  &nbsp; &nbsp;
+<a href="/runs/{%s run.ID.String() %}"><i class="fas fa-search-plus"></i></a>
+            </td>
             <td>
             {% for _, label := range labelsAsSlice(run.Labels,": ") %}
             <span class="badge bg-secondary">{%s label %}</span>
             {% endfor %}
             </td>
-            <td>{% for _, arg := range run.Args %} <span class="badge bg-secondary">{%s arg %}</span> {% endfor %}</td>
+            <td>{% for _, arg := range run.Args %} <span class="">{%s arg %}</span> {% endfor %}</td>
             <td>{%= timeCell(run.ScheduledAt) %}</td>
             <td>{%= timeCell(run.StartedAt) %}</td>
-            <td>{%= timeCell(run.FinishedAt) %}</td>
+            <td>{%s run.FinishedAt.Time.Sub(run.StartedAt.Time).String() %} </td>
             <td>
             {% if run.Result == db.RunResultPass %}
             <span class="badge bg-success">{%s string(run.Result) %}</span>

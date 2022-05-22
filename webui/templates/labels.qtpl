@@ -26,9 +26,8 @@ Tester - Labels
   <div class="row mb-2">
     <div class="col">
       <h2 class="h4"><a href="/labels/{%s fmt.Sprintf("TODO") %}">{%s labelsAsString %}</a></h2>
-      {% for _, test := range byLabel.Tests  %}
-     <!-- <h4>{%s test.Name %}</h4> -->
-        {% for _, result := range p.ResultsByTest[test.ID] %}
+      {% for _, test := range byLabel.Tests.([]string)  %}
+        {% for _, result := range p.ResultsByTest[test] %}
 
             {% if result == db.RunResultPass %}
             <span class="badge bg-success">&nbsp;</span>

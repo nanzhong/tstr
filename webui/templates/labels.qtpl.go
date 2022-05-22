@@ -97,81 +97,76 @@ func (p *LabelsPage) StreamBody(qw422016 *qt422016.Writer) {
 		qw422016.N().S(`</a></h2>
       `)
 //line templates/labels.qtpl:29
-		for _, test := range byLabel.Tests {
+		for _, test := range byLabel.Tests.([]string) {
 //line templates/labels.qtpl:29
 			qw422016.N().S(`
-     <!-- <h4>`)
-//line templates/labels.qtpl:30
-			qw422016.E().S(test.Name)
-//line templates/labels.qtpl:30
-			qw422016.N().S(`</h4> -->
         `)
-//line templates/labels.qtpl:31
-			for _, result := range p.ResultsByTest[test.ID] {
-//line templates/labels.qtpl:31
+//line templates/labels.qtpl:30
+			for _, result := range p.ResultsByTest[test] {
+//line templates/labels.qtpl:30
 				qw422016.N().S(`
 
             `)
-//line templates/labels.qtpl:33
+//line templates/labels.qtpl:32
 				if result == db.RunResultPass {
-//line templates/labels.qtpl:33
+//line templates/labels.qtpl:32
 					qw422016.N().S(`
             <span class="badge bg-success">&nbsp;</span>
             `)
-//line templates/labels.qtpl:35
+//line templates/labels.qtpl:34
 				} else {
-//line templates/labels.qtpl:35
+//line templates/labels.qtpl:34
 					qw422016.N().S(`
             <span class="badge bg-danger">&nbsp;</span>
             `)
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:36
 				}
-//line templates/labels.qtpl:37
+//line templates/labels.qtpl:36
 				qw422016.N().S(`
         `)
-//line templates/labels.qtpl:38
+//line templates/labels.qtpl:37
 			}
-//line templates/labels.qtpl:38
+//line templates/labels.qtpl:37
 			qw422016.N().S(`
       `)
-//line templates/labels.qtpl:39
+//line templates/labels.qtpl:38
 		}
-//line templates/labels.qtpl:39
+//line templates/labels.qtpl:38
 		qw422016.N().S(`
     </div>
   </div>
 `)
-//line templates/labels.qtpl:42
+//line templates/labels.qtpl:41
 	}
-//line templates/labels.qtpl:42
+//line templates/labels.qtpl:41
 	qw422016.N().S(`
 </div>
 `)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 }
 
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 func (p *LabelsPage) WriteBody(qq422016 qtio422016.Writer) {
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	qw422016 := qt422016.AcquireWriter(qq422016)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	p.StreamBody(qw422016)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	qt422016.ReleaseWriter(qw422016)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 }
 
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 func (p *LabelsPage) Body() string {
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	qb422016 := qt422016.AcquireByteBuffer()
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	p.WriteBody(qb422016)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	qs422016 := string(qb422016.B)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	qt422016.ReleaseByteBuffer(qb422016)
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 	return qs422016
-//line templates/labels.qtpl:44
+//line templates/labels.qtpl:43
 }

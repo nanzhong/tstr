@@ -116,6 +116,106 @@ func (q *Queries) UIListTests(ctx context.Context, db DBTX) ([]Test, error) {
 	return items, nil
 }
 
+const uIRunnerSummary = `-- name: UIRunnerSummary :many
+SELECT T.name AS test_name, T.id as test_id, R.id as run_id, R.result, R.finished_at , R.started_at from runs R 
+INNER JOIN tests T on T.id = R.test_id 
+WHERE runner_id = $1::uuid
+ORDER BY R.started_at DESC
+LIMIT $2
+`
+
+type UIRunnerSummaryParams struct {
+	RunnerID uuid.NullUUID
+	Limit    int32
+}
+
+type UIRunnerSummaryRow struct {
+	TestName   string
+	TestID     uuid.UUID
+	RunID      uuid.UUID
+	Result     RunResult
+	FinishedAt sql.NullTime
+	StartedAt  sql.NullTime
+}
+
+func (q *Queries) UIRunnerSummary(ctx context.Context, db DBTX, arg UIRunnerSummaryParams) ([]UIRunnerSummaryRow, error) {
+	rows, err := db.Query(ctx, uIRunnerSummary, arg.RunnerID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UIRunnerSummaryRow
+	for rows.Next() {
+		var i UIRunnerSummaryRow
+		if err := rows.Scan(
+			&i.TestName,
+			&i.TestID,
+			&i.RunID,
+			&i.Result,
+			&i.FinishedAt,
+			&i.StartedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const uIRunsSummary = `-- name: UIRunsSummary :many
+SELECT id, test_run_config_id, runner_id, result, scheduled_at, started_at,finished_at
+FROM runs
+WHERE runs.test_id = $1::uuid 
+ORDER by runs.started_at desc
+LIMIT $2
+`
+
+type UIRunsSummaryParams struct {
+	TestID uuid.NullUUID
+	Limit  int32
+}
+
+type UIRunsSummaryRow struct {
+	ID              uuid.UUID
+	TestRunConfigID uuid.UUID
+	RunnerID        uuid.NullUUID
+	Result          RunResult
+	ScheduledAt     sql.NullTime
+	StartedAt       sql.NullTime
+	FinishedAt      sql.NullTime
+}
+
+func (q *Queries) UIRunsSummary(ctx context.Context, db DBTX, arg UIRunsSummaryParams) ([]UIRunsSummaryRow, error) {
+	rows, err := db.Query(ctx, uIRunsSummary, arg.TestID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UIRunsSummaryRow
+	for rows.Next() {
+		var i UIRunsSummaryRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TestRunConfigID,
+			&i.RunnerID,
+			&i.Result,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const uITestResults = `-- name: UITestResults :many
 SELECT test_id,array_agg(result) AS results FROM runs where test_id is not null GROUP BY test_id
 `

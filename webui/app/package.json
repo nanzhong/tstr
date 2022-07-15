@@ -1,0 +1,27 @@
+{
+  "name": "app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@quasar/extras": "^1.14.3",
+    "apexcharts": "^3.35.3",
+    "luxon": "^3.0.1",
+    "moment": "^2.29.4",
+    "quasar": "^2.7.5",
+    "vue": "^3.2.37",
+    "vue-router": "4",
+    "vue3-apexcharts": "^1.4.1"
+  },
+  "devDependencies": {
+    "@quasar/vite-plugin": "^1.0.10",
+    "@vitejs/plugin-vue": "^3.0.0",
+    "sass": "1.32.12",
+    "vite": "^3.0.0"
+  }
+}

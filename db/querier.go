@@ -42,6 +42,8 @@ type Querier interface {
 	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (ScheduleRunRow, error)
 	UIListRecentRuns(ctx context.Context, db DBTX, limit int32) ([]UIListRecentRunsRow, error)
 	UIListTests(ctx context.Context, db DBTX) ([]Test, error)
+	UIRunnerSummary(ctx context.Context, db DBTX, arg UIRunnerSummaryParams) ([]UIRunnerSummaryRow, error)
+	UIRunsSummary(ctx context.Context, db DBTX, arg UIRunsSummaryParams) ([]UIRunsSummaryRow, error)
 	UITestResults(ctx context.Context, db DBTX) ([]UITestResultsRow, error)
 	UITestsByLabels(ctx context.Context, db DBTX) ([]UITestsByLabelsRow, error)
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error

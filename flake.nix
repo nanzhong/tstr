@@ -108,7 +108,8 @@
                 devTools.sqlc
                 devTools.dbmate
                 devTools.overmind
-                devTools.quicktemplate
+
+                yarn
               ];
             };
         }

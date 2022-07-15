@@ -1,6 +1,8 @@
 package webui
 
 import (
+	"embed"
+	"io/fs"
 	"net/http"
 
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -42,8 +44,15 @@ func (w *WebUI) Handler() http.Handler {
 		})
 	})
 
-	fs := http.FileServer(http.Dir("webui/app/dist"))
-	r.Handle("/*", fs)
+	rootFs, err := fs.Sub(staticFiles, "app/dist")
+	if err != nil {
+		log.Panic().Err(err)
+	}
+
+	r.Handle("/*", http.FileServer(http.FS(rootFs)))
 
 	return r
 }
+
+//go:embed app/dist/*
+var staticFiles embed.FS

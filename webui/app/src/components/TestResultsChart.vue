@@ -47,6 +47,7 @@ export default {
                 unknown: '#000000',
             }
 
+
             return ['pass', 'fail', 'unknown', 'error'].map(result => {
                 return {
                     name: result,
@@ -60,9 +61,6 @@ export default {
                     })
                 }
             })
-
-
-            return []
         }
     },
     props: ['runs'],

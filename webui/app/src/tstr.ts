@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import axios from 'axios';
 
 const APINullableToJs = function (obj: any, root: boolean = true) {
   if (obj == null) {
@@ -34,24 +35,22 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
 export default {
   fetchTests: async function () {
     const url = "/api/tests";
-    return (await fetch(url)).json();
+    return await axios.get(url).then(r => r.data)
   },
 
   fetchRunners: async function () {
     const url = "/api/runners";
-    return (await fetch(url)).json();
+    return await axios.get(url).then(r => r.data)
   },
 
   fetchRunDetails: async function (runId: String) {
     const url = `/api/runs/${runId}`;
-    const runDetails = await (await fetch(url)).json();
-    return APINullableToJs(runDetails);
+    return await axios.get(url).then (r => APINullableToJs(r.data))
   },
 
   fetchRuns: async function () {
     const url = `/api/runs`;
-    const runDetails = await (await fetch(url)).json();
-    return APINullableToJs(runDetails);
+    return await axios.get(url).then (r => APINullableToJs(r.data))
   },
 
   fetchTestDetails: async function (
@@ -59,7 +58,8 @@ export default {
     includeRuns: boolean = true
   ) {
     const url = `/api/tests/${testId}?runs=${includeRuns ? 100 : 0}`;
-    var testDetails = await (await fetch(url)).json();
+
+    var testDetails = await axios.get(url).then(r => r.data)
 
     testDetails = APINullableToJs(testDetails);
     testDetails.RunsSummary = APINullableToJs(testDetails.RunsSummary);
@@ -72,7 +72,7 @@ export default {
     includeRuns: boolean = true
   ) {
     const url = `/api/runners/${runnerId}?runs=${includeRuns ? 100 : 0}`;
-    var data = await (await fetch(url)).json();
+    var data = await axios.get(url).then(r => r.data)
 
     var runner = data.Runner;
 

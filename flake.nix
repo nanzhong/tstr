@@ -38,12 +38,12 @@
         };
 
         devTools = {
-          sqlc = pkgs.buildGoModule {
+          sqlc = pkgs.buildGo118Module {
             name = "sqlc";
             src = sqlc;
             subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-LX8C7098P940wdg8yig6h6azAsxdai+vEVhjdILIoMQ=";
+            vendorSha256 = "sha256-mxDrO23FuoEi06Q0xvwKXVPpXDfB4HQzYPL2e6CtFIM=";
             proxyVendor = true;
             buildInputs = [
               pkgs.xxHash

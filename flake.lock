@@ -31,6 +31,23 @@
         "type": "github"
       }
     },
+    "grpc-gateway": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1654091095,
+        "narHash": "sha256-4/iE+sK+ZbG6194i8E1ZHla/7C9blKGRHwM7iX7nvXU=",
+        "owner": "grpc-ecosystem",
+        "repo": "grpc-gateway",
+        "rev": "406eec6eb9ad849ab396da5e19c40437b7692bf7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "grpc-ecosystem",
+        "ref": "v2.10.3",
+        "repo": "grpc-gateway",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1657849727,
@@ -83,6 +100,7 @@
       "inputs": {
         "dbmate": "dbmate",
         "flake-utils": "flake-utils",
+        "grpc-gateway": "grpc-gateway",
         "nixpkgs": "nixpkgs",
         "overmind": "overmind",
         "quicktemplate": "quicktemplate",

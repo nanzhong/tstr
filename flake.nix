@@ -19,9 +19,13 @@
       url = "github:valyala/quicktemplate";
       flake = false;
     };
+    grpc-gateway = {
+      url = "github:grpc-ecosystem/grpc-gateway/v2.10.3";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate }:
+  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate, grpc-gateway }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -60,14 +64,24 @@
           overmind = pkgs.buildGoModule {
             name = "overmind";
             src = overmind;
-            dbCheck = false;
+            doCheck = false;
             vendorSha256 = "sha256-KDMzR6qAruscgS6/bHTN6RnHOlLKCm9lxkr9k3oLY+Y=";
           };
           quicktemplate = pkgs.buildGoModule {
             name = "quicktemplate";
             src = quicktemplate;
-            dbCheck = false;
+            doCheck = false;
             vendorSha256 = null;
+          };
+          grpc-gateway = pkgs.buildGoModule {
+            name = "grpc-gateway";
+            src = grpc-gateway;
+            doCheck = false;
+            subPackages = [
+              "protoc-gen-grpc-gateway"
+              "protoc-gen-openapiv2"
+            ];
+            vendorSha256 = "sha256-FhiTU9VmDZNCPBWrmCqmQo/kPdDe8Da1T2E06CVN2kw=";
           };
         };
       in
@@ -108,6 +122,7 @@
                 devTools.sqlc
                 devTools.dbmate
                 devTools.overmind
+                devTools.grpc-gateway
 
                 yarn
               ];

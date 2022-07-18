@@ -6,8 +6,6 @@ import "common/v1/common.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
-option go_package =  "github.com/nanzhong/tstr/api/runner/v1;runner";
-
 service RunnerService {
   rpc RegisterRunner(RegisterRunnerRequest) returns (RegisterRunnerResponse);
   rpc NextRun(NextRunRequest) returns (NextRunResponse);

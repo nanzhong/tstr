@@ -15,6 +15,8 @@ func FromAccessTokenScope(scope commonv1.AccessToken_Scope) db.AccessTokenScope 
 		return db.AccessTokenScopeControlRw
 	case commonv1.AccessToken_RUNNER:
 		return db.AccessTokenScopeRunner
+	case commonv1.AccessToken_DATA:
+		return db.AccessTokenScopeData
 	default:
 		panic("unknown access token scope:" + scope.String())
 	}

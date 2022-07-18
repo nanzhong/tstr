@@ -1,0 +1,403 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "data/v1/data.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "DataService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/data/v1/runners/{id}": {
+      "get": {
+        "operationId": "DataService_GetRunner",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetRunnerResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
+    "/data/v1/runs/{id}": {
+      "get": {
+        "operationId": "DataService_GetRun",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetRunResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
+    "/data/v1/test_suites/{id}": {
+      "get": {
+        "operationId": "DataService_GetTestSuite",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTestSuiteResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
+    "/data/v1/tests/{id}": {
+      "get": {
+        "operationId": "DataService_GetTest",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetTestResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "LogOutput": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "STDOUT",
+        "STDERR",
+        "TSTR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "RunLog": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string"
+        },
+        "output_type": {
+          "$ref": "#/definitions/LogOutput"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "RunResult": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PASS",
+        "FAIL",
+        "ERROR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "TestRunConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "container_image": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1GetRunResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/v1Run"
+        }
+      }
+    },
+    "v1GetRunnerResponse": {
+      "type": "object",
+      "properties": {
+        "runner": {
+          "$ref": "#/definitions/v1Runner"
+        }
+      }
+    },
+    "v1GetTestResponse": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "$ref": "#/definitions/v1Test"
+        }
+      }
+    },
+    "v1GetTestSuiteResponse": {
+      "type": "object",
+      "properties": {
+        "test_suite": {
+          "$ref": "#/definitions/v1TestSuite"
+        }
+      }
+    },
+    "v1Run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "test_id": {
+          "type": "string"
+        },
+        "test_run_config": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
+        "runner_id": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/RunResult"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RunLog"
+          }
+        },
+        "scheduled_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1Runner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "accept_test_label_selectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "reject_test_label_selectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "registered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_heartbeat_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1Test": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cron_schedule": {
+          "type": "string"
+        },
+        "next_run_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "run_config": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
+        "registered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "archived_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1TestSuite": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "archived_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "admin/v1/admin.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "AdminService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "AccessTokenScope": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "ADMIN",
+        "CONTROL_R",
+        "CONTROL_RW",
+        "RUNNER",
+        "DATA"
+      ],
+      "default": "UNKNOWN"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1AccessToken": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccessTokenScope"
+          }
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revoked_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1GetAccessTokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "$ref": "#/definitions/v1AccessToken"
+        }
+      }
+    },
+    "v1IssueAccessTokenResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "$ref": "#/definitions/v1AccessToken"
+        }
+      }
+    },
+    "v1ListAccessTokensResponse": {
+      "type": "object",
+      "properties": {
+        "accessTokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1AccessToken"
+          }
+        }
+      }
+    },
+    "v1RevokeAccessTokenResponse": {
+      "type": "object"
+    }
+  }
+}

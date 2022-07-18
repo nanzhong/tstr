@@ -8,8 +8,6 @@ import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
 
-option go_package =  "github.com/nanzhong/tstr/api/control/v1;control";
-
 service ControlService {
   rpc RegisterTest(RegisterTestRequest) returns (RegisterTestResponse);
   rpc UpdateTest(UpdateTestRequest) returns (UpdateTestResponse);

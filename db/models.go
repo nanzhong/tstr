@@ -20,6 +20,7 @@ const (
 	AccessTokenScopeControlR  AccessTokenScope = "control_r"
 	AccessTokenScopeControlRw AccessTokenScope = "control_rw"
 	AccessTokenScopeRunner    AccessTokenScope = "runner"
+	AccessTokenScopeData      AccessTokenScope = "data"
 )
 
 func (e *AccessTokenScope) Scan(src interface{}) error {

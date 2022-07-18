@@ -4,8 +4,6 @@ package tstr.common.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package =  "github.com/nanzhong/tstr/api/common/v1;common";
-
 message Test {
   message RunConfig {
     string id = 1; // required (generated)
@@ -89,6 +87,7 @@ message AccessToken {
     CONTROL_R = 2;
     CONTROL_RW = 3;
     RUNNER = 4;
+    DATA = 5;
   }
 
   string id = 1; // required (generated)

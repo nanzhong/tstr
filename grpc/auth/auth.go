@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -43,6 +44,11 @@ var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
 	"/tstr.runner.v1.RunnerService/RegisterRunner": {commonv1.AccessToken_RUNNER},
 	"/tstr.runner.v1.RunnerService/NextRun":        {commonv1.AccessToken_RUNNER},
 	"/tstr.runner.v1.RunnerService/SubmitRun":      {commonv1.AccessToken_RUNNER},
+
+	"/tstr.data.v1.DataService/GetTest":      {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetTestSuite": {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRun":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRunner":    {commonv1.AccessToken_DATA},
 }
 
 // TODO We shouldn't reach out to the db each time to auth, especially when
@@ -71,7 +77,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range toDBScopes(validScopes) {
+		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
 					return handler(ctx, req)
@@ -105,7 +111,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range toDBScopes(validScopes) {
+		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
 					return handler(srv, ss)
@@ -128,35 +134,6 @@ func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
 		return streamer(ctx, desc, cc, method, opts...)
 	}
-}
-
-func toDBScope(scope commonv1.AccessToken_Scope) db.AccessTokenScope {
-	switch scope {
-	case commonv1.AccessToken_ADMIN:
-		return db.AccessTokenScopeAdmin
-	case commonv1.AccessToken_CONTROL_R:
-		return db.AccessTokenScopeControlR
-	case commonv1.AccessToken_CONTROL_RW:
-		return db.AccessTokenScopeControlRw
-	case commonv1.AccessToken_RUNNER:
-		return db.AccessTokenScopeRunner
-	case commonv1.AccessToken_UNKNOWN:
-		// This should never happen and is an indication that an endpoint is not
-		// configured in the scope authorization map.
-		panic("endpoint not scoped")
-	default:
-		// This should never happen and is an indication that proto scopes and db
-		// scopes are not in sync.
-		panic("missing scope definition")
-	}
-}
-
-func toDBScopes(scopes []commonv1.AccessToken_Scope) []db.AccessTokenScope {
-	dbScopes := make([]db.AccessTokenScope, len(scopes))
-	for i, s := range scopes {
-		dbScopes[i] = toDBScope(s)
-	}
-	return dbScopes
 }
 
 func tokenFromMD(md metadata.MD) (string, string, error) {

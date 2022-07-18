@@ -6,8 +6,6 @@ import "common/v1/common.proto";
 import "google/protobuf/duration.proto";
 import "validate/validate.proto";
 
-option go_package =  "github.com/nanzhong/tstr/api/admin/v1;admin";
-
 service AdminService {
   rpc IssueAccessToken(IssueAccessTokenRequest) returns (IssueAccessTokenResponse);
   rpc GetAccessToken(GetAccessTokenRequest) returns (GetAccessTokenResponse);

@@ -18,6 +18,7 @@ import (
 	grpczerolog "github.com/jwreagor/grpc-zerolog"
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	datav1 "github.com/nanzhong/tstr/api/data/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
@@ -27,10 +28,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
+	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -56,7 +61,7 @@ var serveCmd = &cobra.Command{
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 			var textScopes []string
-			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner} {
+			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner, db.AccessTokenScopeData} {
 				textScopes = append(textScopes, string(s))
 			}
 			_, err := db.New().IssueAccessToken(ctx, pgxPool, db.IssueAccessTokenParams{
@@ -72,16 +77,18 @@ var serveCmd = &cobra.Command{
 			}
 		}
 
-		// TODO: consider using cmux to serve http and grpc on the same port?
-		grpcListener, err := net.Listen("tcp", viper.GetString("serve.api-addr"))
+		l, err := net.Listen("tcp", viper.GetString("serve.api-addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
 				Str("api-addr", viper.GetString("serve.api-addr")).
 				Msg("failed to listen on api addr")
 		}
+		cm := cmux.New(l)
+		grpcL := cm.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
+		grpcgwL := cm.Match(cmux.HTTP1Fast())
 
-		webListener, err := net.Listen("tcp", viper.GetString("serve.web-addr"))
+		uiListener, err := net.Listen("tcp", viper.GetString("serve.web-addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
@@ -111,15 +118,18 @@ var serveCmd = &cobra.Command{
 		runnerServer := server.NewRunnerServer(pgxPool)
 		runnerv1.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
-    dataServer := server.NewDataServer()
-    datav1.RegisterDataServiceServer(grpcServer, runnerServer)
+		dataServer := server.NewDataServer(pgxPool)
+		datav1.RegisterDataServiceServer(grpcServer, dataServer)
 
-		mux := runtime.NewServeMux()
-		datav1.RegisterDataServiceHandlerServer(ctx, mux, viper.GetString("serve.api-addr"), nil)
+		grpcgwMux := runtime.NewServeMux()
+		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("serve.api-addr"), gwOpts)
+		grpcgwServer := http.Server{
+			Handler: h2c.NewHandler(hlog.NewHandler(log.Logger)(grpcgwMux), &http2.Server{}),
+		}
 
 		webui := webui.New(pgxPool)
-
-		httpServer := http.Server{
+		webuiServer := http.Server{
 			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),
 		}
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -141,13 +151,22 @@ var serveCmd = &cobra.Command{
 				return nil
 			})
 			eg.Go(func() error {
-				log.Info().Msg("attempting to shutdown grpc server")
+				log.Info().Msg("attempting to stop grpc server")
 				grpcServer.GracefulStop()
 				return nil
 			})
 			eg.Go(func() error {
-				log.Info().Msg("attempting to shutdown http server")
-				return httpServer.Shutdown(shutdownCtx)
+				log.Info().Msg("attempting to shutdown grpc gw proxy")
+				return grpcgwServer.Shutdown(shutdownCtx)
+			})
+			eg.Go(func() error {
+				log.Info().Msg("attempting to shutdown ui server")
+				return webuiServer.Shutdown(shutdownCtx)
+			})
+			eg.Go(func() error {
+				log.Info().Msg("attempting to close api mux")
+				cm.Close()
+				return nil
 			})
 			err := eg.Wait()
 			if err != nil {
@@ -158,21 +177,30 @@ var serveCmd = &cobra.Command{
 		log.Info().Msg("tstr starting")
 		var eg errgroup.Group
 		eg.Go(func() error {
-			log.Info().
-				Msg("starting scheduler")
+			log.Info().Msg("starting scheduler")
 			return scheduler.Start()
 		})
 		eg.Go(func() error {
 			log.Info().
+				Msg("serving grpc server")
+			return grpcServer.Serve(grpcL)
+		})
+		eg.Go(func() error {
+			log.Info().
+				Msg("serving grpc gw proxy")
+			return grpcgwServer.Serve(grpcgwL)
+		})
+		eg.Go(func() error {
+			log.Info().
 				Str("api-addr", viper.GetString("serve.api-addr")).
-				Msg("starting grpc server")
-			return grpcServer.Serve(grpcListener)
+				Msg("serving api mux")
+			return cm.Serve()
 		})
 		eg.Go(func() error {
 			log.Info().
 				Str("web-addr", viper.GetString("serve.web-addr")).
-				Msg("starting http server")
-			return httpServer.Serve(webListener)
+				Msg("starting ui http server")
+			return webuiServer.Serve(uiListener)
 		})
 		err = eg.Wait()
 		log.Info().Msg("tstr shutdown")
@@ -183,7 +211,7 @@ func init() {
 	serveCmd.Flags().String("api-addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
 	viper.BindPFlag("serve.api-addr", serveCmd.Flags().Lookup("api-addr"))
 
-	serveCmd.Flags().String("web-addr", "0.0.0.0:9090", "The address to serve the web UI on.")
+	serveCmd.Flags().String("web-addr", "0.0.0.0:9090", "The address to serve the web ui on.")
 	viper.BindPFlag("serve.web-addr", serveCmd.Flags().Lookup("web-addr"))
 
 	serveCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")

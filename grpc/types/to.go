@@ -29,6 +29,8 @@ func ToAccessTokenScope(scope db.AccessTokenScope) commonv1.AccessToken_Scope {
 		return commonv1.AccessToken_CONTROL_RW
 	case db.AccessTokenScopeRunner:
 		return commonv1.AccessToken_RUNNER
+	case db.AccessTokenScopeData:
+		return commonv1.AccessToken_DATA
 	default:
 		return commonv1.AccessToken_UNKNOWN
 	}

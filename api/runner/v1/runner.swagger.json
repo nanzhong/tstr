@@ -1,0 +1,201 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "runner/v1/runner.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "RunnerService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "LogOutput": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "STDOUT",
+        "STDERR",
+        "TSTR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "RunLog": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string"
+        },
+        "output_type": {
+          "$ref": "#/definitions/LogOutput"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "RunResult": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PASS",
+        "FAIL",
+        "ERROR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "TestRunConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "container_image": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1NextRunResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/v1Run"
+        }
+      }
+    },
+    "v1RegisterRunnerResponse": {
+      "type": "object",
+      "properties": {
+        "runner": {
+          "$ref": "#/definitions/v1Runner"
+        }
+      }
+    },
+    "v1Run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "test_id": {
+          "type": "string"
+        },
+        "test_run_config": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
+        "runner_id": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/RunResult"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RunLog"
+          }
+        },
+        "scheduled_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1Runner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "accept_test_label_selectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "reject_test_label_selectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "registered_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "last_heartbeat_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1SubmitRunResponse": {
+      "type": "object"
+    }
+  }
+}

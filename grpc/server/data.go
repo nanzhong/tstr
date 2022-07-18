@@ -51,26 +51,51 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 			Msg("failed to parse env")
 		return nil, status.Error(codes.Internal, "failed to format run config env")
 	}
+	pbTest := &commonv1.Test{
+		Id:           test.ID.String(),
+		Name:         test.Name,
+		Labels:       map[string]string{},
+		CronSchedule: test.CronSchedule.String,
+		RunConfig: &commonv1.Test_RunConfig{
+			Id:             test.TestRunConfigID.UUID.String(),
+			ContainerImage: test.ContainerImage.String,
+			Command:        test.Command.String,
+			Args:           test.Args,
+			Env:            env,
+			CreatedAt:      types.ToProtoTimestamp(test.CreatedAt),
+		},
+		NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
+		RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
+		UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
+		ArchivedAt:   types.ToProtoTimestamp(test.ArchivedAt),
+	}
+
+	runSummaries, err := s.dbQuerier.RunSummaryForTest(ctx, s.pgxPool, db.RunSummaryForTestParams{
+		TestID: test.ID,
+		// TODO Configure default + query param handling
+		Limit: 200,
+	})
+	if err != nil {
+		log.Error().Err(err).Stringer("test_id", test.ID).Msg("failed to summarize runs for test")
+		return nil, status.Error(codes.Internal, "failed to summarize runs for test")
+	}
+	var pbRunSummaries []*datav1.RunSummary
+	for _, s := range runSummaries {
+		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
+			Id:              s.ID.String(),
+			TestId:          s.TestID.String(),
+			TestRunConfigId: s.TestRunConfigID.String(),
+			RunnerId:        s.RunnerID.UUID.String(),
+			Result:          types.ToRunResult(s.Result.RunResult),
+			ScheduledAt:     types.ToProtoTimestamp(s.ScheduledAt),
+			StartedAt:       types.ToProtoTimestamp(s.StartedAt),
+			FinishedAt:      types.ToProtoTimestamp(s.FinishedAt),
+		})
+	}
 
 	return &datav1.GetTestResponse{
-		Test: &commonv1.Test{
-			Id:           test.ID.String(),
-			Name:         test.Name,
-			Labels:       map[string]string{},
-			CronSchedule: test.CronSchedule.String,
-			RunConfig: &commonv1.Test_RunConfig{
-				Id:             test.TestRunConfigID.UUID.String(),
-				ContainerImage: test.ContainerImage.String,
-				Command:        test.Command.String,
-				Args:           test.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(test.CreatedAt),
-			},
-			NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
-			RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
-			UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
-			ArchivedAt:   types.ToProtoTimestamp(test.ArchivedAt),
-		},
+		Test:         pbTest,
+		RunSummaries: pbRunSummaries,
 	}, nil
 }
 

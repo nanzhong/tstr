@@ -213,33 +213,38 @@ func (m *GetTestResponse) validate(all bool) error {
 		}
 	}
 
-	if all {
-		switch v := interface{}(m.GetRunSummary()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, GetTestResponseValidationError{
-					field:  "RunSummary",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
+	for idx, item := range m.GetRunSummaries() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, GetTestResponseValidationError{
+						field:  fmt.Sprintf("RunSummaries[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, GetTestResponseValidationError{
+						field:  fmt.Sprintf("RunSummaries[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
 			}
-		case interface{ Validate() error }:
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				errors = append(errors, GetTestResponseValidationError{
-					field:  "RunSummary",
+				return GetTestResponseValidationError{
+					field:  fmt.Sprintf("RunSummaries[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
-				})
+				}
 			}
 		}
-	} else if v, ok := interface{}(m.GetRunSummary()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return GetTestResponseValidationError{
-				field:  "RunSummary",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
+
 	}
 
 	if len(errors) > 0 {
@@ -2211,41 +2216,69 @@ func (m *RunSummary) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if err := m._validateUuid(m.GetId()); err != nil {
+		err = RunSummaryValidationError{
+			field:  "Id",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for TestRunConfigId
+	if err := m._validateUuid(m.GetTestId()); err != nil {
+		err = RunSummaryValidationError{
+			field:  "TestId",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
-	// no validation rules for RunnerId
+	if err := m._validateUuid(m.GetTestRunConfigId()); err != nil {
+		err = RunSummaryValidationError{
+			field:  "TestRunConfigId",
+			reason: "value must be a valid UUID",
+			cause:  err,
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetRunnerId() != "" {
+
+		if err := m._validateUuid(m.GetRunnerId()); err != nil {
+			err = RunSummaryValidationError{
+				field:  "RunnerId",
+				reason: "value must be a valid UUID",
+				cause:  err,
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+	}
 
 	// no validation rules for Result
 
-	if all {
-		switch v := interface{}(m.GetScheduledAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, RunSummaryValidationError{
-					field:  "ScheduledAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, RunSummaryValidationError{
-					field:  "ScheduledAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
+	if m.GetScheduledAt() == nil {
+		err := RunSummaryValidationError{
+			field:  "ScheduledAt",
+			reason: "value is required",
 		}
-	} else if v, ok := interface{}(m.GetScheduledAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return RunSummaryValidationError{
-				field:  "ScheduledAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+		if !all {
+			return err
 		}
+		errors = append(errors, err)
 	}
 
 	if all {
@@ -2308,6 +2341,14 @@ func (m *RunSummary) validate(all bool) error {
 
 	if len(errors) > 0 {
 		return RunSummaryMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *RunSummary) _validateUuid(uuid string) error {
+	if matched := _data_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil

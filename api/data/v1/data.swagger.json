@@ -444,8 +444,11 @@
         "test": {
           "$ref": "#/definitions/v1Test"
         },
-        "runSummary": {
-          "$ref": "#/definitions/v1RunSummary"
+        "runSummaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1RunSummary"
+          }
         }
       }
     },
@@ -532,6 +535,9 @@
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "testId": {
           "type": "string"
         },
         "testRunConfigId": {

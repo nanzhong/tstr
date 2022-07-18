@@ -249,6 +249,59 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 	return err
 }
 
+const runSummaryForTest = `-- name: RunSummaryForTest :many
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+FROM runs
+WHERE runs.test_id = $1
+ORDER by runs.started_at desc
+LIMIT $2
+`
+
+type RunSummaryForTestParams struct {
+	TestID uuid.UUID
+	Limit  int32
+}
+
+type RunSummaryForTestRow struct {
+	ID              uuid.UUID
+	TestID          uuid.UUID
+	TestRunConfigID uuid.UUID
+	RunnerID        uuid.NullUUID
+	Result          NullRunResult
+	ScheduledAt     sql.NullTime
+	StartedAt       sql.NullTime
+	FinishedAt      sql.NullTime
+}
+
+func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error) {
+	rows, err := db.Query(ctx, runSummaryForTest, arg.TestID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RunSummaryForTestRow
+	for rows.Next() {
+		var i RunSummaryForTestRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TestID,
+			&i.TestRunConfigID,
+			&i.RunnerID,
+			&i.Result,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const scheduleRun = `-- name: ScheduleRun :one
 WITH scheduled_run AS (
   INSERT INTO runs (test_id, test_run_config_id)

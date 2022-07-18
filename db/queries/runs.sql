@@ -72,3 +72,10 @@ WHERE
   result = 'unknown' AND
   started_at IS NULL AND
   scheduled_at < sqlc.arg('before')::timestamptz;
+
+-- name: RunSummaryForTest :many
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+FROM runs
+WHERE runs.test_id = sqlc.arg('test_id')
+ORDER by runs.started_at desc
+LIMIT sqlc.arg('limit');

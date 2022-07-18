@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"time"
@@ -432,7 +431,6 @@ func (s *RunnerServer) SubmitRun(stream runnerv1.RunnerService_SubmitRunServer) 
 					Data: l.Data,
 				})
 			}
-			fmt.Printf("%#v\n", logs)
 
 			var pgLogs pgtype.JSONB
 			if err := pgLogs.Set(logs); err != nil {

@@ -89,7 +89,7 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 }
 
 const getRun = `-- name: GetRun :one
-SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
@@ -97,20 +97,20 @@ WHERE runs.id = $1
 `
 
 type GetRunRow struct {
-	ID              uuid.UUID
-	TestID          uuid.UUID
-	TestRunConfigID uuid.UUID
-	RunnerID        uuid.NullUUID
-	Result          NullRunResult
-	Logs            pgtype.JSONB
-	ScheduledAt     sql.NullTime
-	StartedAt       sql.NullTime
-	FinishedAt      sql.NullTime
-	ContainerImage  string
-	Command         sql.NullString
-	Args            []string
-	Env             pgtype.JSONB
-	CreatedAt       sql.NullTime
+	ID                     uuid.UUID
+	TestID                 uuid.UUID
+	TestRunConfigID        uuid.UUID
+	RunnerID               uuid.NullUUID
+	Result                 NullRunResult
+	Logs                   pgtype.JSONB
+	ScheduledAt            sql.NullTime
+	StartedAt              sql.NullTime
+	FinishedAt             sql.NullTime
+	ContainerImage         string
+	Command                sql.NullString
+	Args                   []string
+	Env                    pgtype.JSONB
+	TestRunConfigCreatedAt sql.NullTime
 }
 
 func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow, error) {
@@ -130,7 +130,7 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow,
 		&i.Command,
 		&i.Args,
 		&i.Env,
-		&i.CreatedAt,
+		&i.TestRunConfigCreatedAt,
 	)
 	return i, err
 }

@@ -44,6 +44,19 @@ func ToAccessTokenScopes(scopes []db.AccessTokenScope) []commonv1.AccessToken_Sc
 	return protoScopes
 }
 
+func ToRunResult(result db.RunResult) commonv1.Run_Result {
+	switch result {
+	case db.RunResultError:
+		return commonv1.Run_ERROR
+	case db.RunResultFail:
+		return commonv1.Run_FAIL
+	case db.RunResultPass:
+		return commonv1.Run_PASS
+	default:
+		return commonv1.Run_UNKNOWN
+	}
+}
+
 func ToProtoTimestamp(ts interface{}) *timestamppb.Timestamp {
 	switch tt := ts.(type) {
 	case time.Time:
@@ -56,4 +69,16 @@ func ToProtoTimestamp(ts interface{}) *timestamppb.Timestamp {
 	default:
 		panic("unexpected type for time")
 	}
+}
+
+func ToRunLogs(logs []db.RunLog) []*commonv1.Run_Log {
+	var pbLogs []*commonv1.Run_Log
+	for _, l := range logs {
+		pbLogs = append(pbLogs, &commonv1.Run_Log{
+			Time:       l.Time,
+			OutputType: commonv1.Run_Log_Output(commonv1.Run_Log_Output_value[l.Type]),
+			Data:       l.Data,
+		})
+	}
+	return pbLogs
 }

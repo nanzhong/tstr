@@ -1,5 +1,5 @@
 -- name: GetRun :one
-SELECT runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at
+SELECT runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id

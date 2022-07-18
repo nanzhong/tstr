@@ -16,6 +16,42 @@
     "application/json"
   ],
   "paths": {
+    "/data/v1/runners": {
+      "get": {
+        "operationId": "DataService_QueryRunners",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1QueryRunnersResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "includeRevoked",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "lastHeartbeatWithin",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
     "/data/v1/runners/{id}": {
       "get": {
         "operationId": "DataService_GetRunner",
@@ -39,6 +75,118 @@
             "in": "path",
             "required": true,
             "type": "string"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
+    "/data/v1/runs": {
+      "get": {
+        "operationId": "DataService_QueryRuns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1QueryRunsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "testIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "testSuiteIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "runnerIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "results",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "UNKNOWN",
+                "PASS",
+                "FAIL",
+                "ERROR"
+              ]
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "scheduledBefore",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "scheduledAfter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "startedBefore",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "startedAfter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "finishedBefore",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "finishedAfter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
           }
         ],
         "tags": [
@@ -76,6 +224,28 @@
         ]
       }
     },
+    "/data/v1/test_suites": {
+      "get": {
+        "operationId": "DataService_QueryTestSuites",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1QueryTestSuitesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
     "/data/v1/test_suites/{id}": {
       "get": {
         "operationId": "DataService_GetTestSuite",
@@ -101,6 +271,28 @@
             "type": "string"
           }
         ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
+    "/data/v1/tests": {
+      "get": {
+        "operationId": "DataService_QueryTests",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1QueryTestsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
         "tags": [
           "DataService"
         ]
@@ -251,14 +443,50 @@
       "properties": {
         "test": {
           "$ref": "#/definitions/v1Test"
+        },
+        "runSummary": {
+          "$ref": "#/definitions/v1RunSummary"
         }
       }
     },
     "v1GetTestSuiteResponse": {
       "type": "object",
       "properties": {
-        "test_suite": {
+        "testSuite": {
           "$ref": "#/definitions/v1TestSuite"
+        }
+      }
+    },
+    "v1QueryRunnersResponse": {
+      "type": "object",
+      "properties": {
+        "runners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Runner"
+          }
+        }
+      }
+    },
+    "v1QueryRunsResponse": {
+      "type": "object",
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Run"
+          }
+        }
+      }
+    },
+    "v1QueryTestSuitesResponse": {
+      "type": "object"
+    },
+    "v1QueryTestsResponse": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "$ref": "#/definitions/v1Test"
         }
       }
     },
@@ -295,6 +523,35 @@
           "format": "date-time"
         },
         "finished_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1RunSummary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "testRunConfigId": {
+          "type": "string"
+        },
+        "runnerId": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/RunResult"
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
           "type": "string",
           "format": "date-time"
         }

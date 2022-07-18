@@ -102,6 +102,47 @@ func (q *Queries) ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSO
 	return items, nil
 }
 
+const queryTestSuites = `-- name: QueryTestSuites :many
+SELECT id, name, labels, created_at, updated_at, archived_at
+FROM test_suites
+WHERE
+  ($1::uuid[] IS NULL OR id = ANY ($1::uuid[])) AND
+  ($2::jsonb IS NULL OR labels @> $2::jsonb)
+ORDER BY name ASC
+`
+
+type QueryTestSuitesParams struct {
+	Ids    []uuid.UUID
+	Labels pgtype.JSONB
+}
+
+func (q *Queries) QueryTestSuites(ctx context.Context, db DBTX, arg QueryTestSuitesParams) ([]TestSuite, error) {
+	rows, err := db.Query(ctx, queryTestSuites, arg.Ids, arg.Labels)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []TestSuite
+	for rows.Next() {
+		var i TestSuite
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Labels,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ArchivedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateTestSuite = `-- name: UpdateTestSuite :exec
 UPDATE test_suites
 SET

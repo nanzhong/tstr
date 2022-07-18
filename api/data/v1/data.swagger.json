@@ -241,6 +241,18 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
         "tags": [
           "DataService"
         ]
@@ -505,7 +517,15 @@
       }
     },
     "v1QueryTestSuitesResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "testSuites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1TestSuite"
+          }
+        }
+      }
     },
     "v1QueryTestsResponse": {
       "type": "object",

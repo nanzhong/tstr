@@ -236,7 +236,51 @@ func (s *DataServer) GetTestSuite(ctx context.Context, r *datav1.GetTestSuiteReq
 }
 
 func (s *DataServer) QueryTestSuites(ctx context.Context, r *datav1.QueryTestSuitesRequest) (*datav1.QueryTestSuitesResponse, error) {
-	return nil, nil
+	var testSuiteIDs []uuid.UUID
+	for _, rid := range r.Ids {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse test suite id")
+		}
+		testSuiteIDs = append(testSuiteIDs, id)
+	}
+
+	var labels pgtype.JSONB
+	if err := labels.Set(&r.Labels); err != nil {
+		log.Error().Err(err).Msg("failed to parse labels")
+		return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
+	}
+
+	testSuites, err := s.dbQuerier.QueryTestSuites(ctx, s.pgxPool, db.QueryTestSuitesParams{
+		Ids:    testSuiteIDs,
+		Labels: labels,
+	})
+	if err != nil {
+		log.Error().
+			Err(err).
+			Dict("labels", zerolog.Dict().Fields(labels)).
+			Msg("failed to query test suites")
+		return nil, status.Error(codes.Internal, "failed to query test suites")
+	}
+	var pbTestSuites []*commonv1.TestSuite
+	for _, ts := range testSuites {
+		var pbLabels map[string]string
+		if err := ts.Labels.AssignTo(&pbLabels); err != nil {
+			log.Error().Err(err).Stringer("test_suite_id", ts.ID).Msg("failed to format labels")
+			return nil, status.Error(codes.Internal, "failed to format labels for test suite")
+		}
+		pbTestSuites = append(pbTestSuites, &commonv1.TestSuite{
+			Id:        ts.ID.String(),
+			Name:      ts.Name,
+			Labels:    pbLabels,
+			CreatedAt: types.ToProtoTimestamp(ts.CreatedAt),
+			UpdatedAt: types.ToProtoTimestamp(ts.UpdatedAt),
+		})
+	}
+
+	return &datav1.QueryTestSuitesResponse{
+		TestSuites: pbTestSuites,
+	}, nil
 }
 
 func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*datav1.GetRunResponse, error) {

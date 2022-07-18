@@ -95,11 +95,14 @@ message GetTestSuiteResponse {
 }
 
 message QueryTestSuitesRequest {
-
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  map<string, string> labels = 2;
 }
 
 message QueryTestSuitesResponse {
-
+  repeated tstr.common.v1.TestSuite test_suites = 1;
 }
 
 message GetRunRequest {

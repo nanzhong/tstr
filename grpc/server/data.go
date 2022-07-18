@@ -200,7 +200,39 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 }
 
 func (s *DataServer) GetTestSuite(ctx context.Context, r *datav1.GetTestSuiteRequest) (*datav1.GetTestSuiteResponse, error) {
-	return nil, nil
+	id, err := uuid.Parse(r.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid test suite id")
+	}
+
+	testSuite, err := s.dbQuerier.GetTestSuite(ctx, s.pgxPool, id)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Stringer("test_suite_id", id).
+			Msg("failed to get test suite")
+		return nil, status.Error(codes.Internal, "failed to get test suite")
+	}
+
+	var labels map[string]string
+	if err := testSuite.Labels.AssignTo(&labels); err != nil {
+		log.Error().
+			Err(err).
+			Stringer("test_suite_id", testSuite.ID).
+			Msg("failed to parse labels")
+		return nil, status.Error(codes.Internal, "failed to format labels")
+	}
+	pbTestSuite := &commonv1.TestSuite{
+		Id:        testSuite.ID.String(),
+		Name:      testSuite.Name,
+		Labels:    labels,
+		CreatedAt: types.ToProtoTimestamp(testSuite.CreatedAt),
+		UpdatedAt: types.ToProtoTimestamp(testSuite.UpdatedAt),
+	}
+
+	return &datav1.GetTestSuiteResponse{
+		TestSuite: pbTestSuite,
+	}, nil
 }
 
 func (s *DataServer) QueryTestSuites(ctx context.Context, r *datav1.QueryTestSuitesRequest) (*datav1.QueryTestSuitesResponse, error) {

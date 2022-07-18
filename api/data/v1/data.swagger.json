@@ -293,6 +293,28 @@
             }
           }
         },
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "testSuiteIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
         "tags": [
           "DataService"
         ]
@@ -488,8 +510,11 @@
     "v1QueryTestsResponse": {
       "type": "object",
       "properties": {
-        "test": {
-          "$ref": "#/definitions/v1Test"
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Test"
+          }
         }
       }
     },

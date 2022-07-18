@@ -87,3 +87,22 @@ LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
 WHERE next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
 FOR UPDATE OF tests SKIP LOCKED;
+
+-- name: QueryTests :many
+SELECT tests.*, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+FROM tests
+JOIN test_run_configs AS latest_configs
+ON tests.id = latest_configs.test_id
+LEFT JOIN test_run_configs
+ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
+WHERE
+  (sqlc.narg('ids')::uuid[] IS NULL OR test.id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR test.id = ANY (
+    SELECT tests.id
+    FROM test_suites
+    JOIN tests
+    ON tests.labels @> test_suites.labels
+    WHERE test_suites.id = ANY (sqlc.narg('test_suite_ids')::uuid[])
+    )) AND
+  (sqlc.narg('labels')::jsonb IS NULL OR tests.labels @> sqlc.narg('labels')::jsonb)
+ORDER BY tests.name ASC;

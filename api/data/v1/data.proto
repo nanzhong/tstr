@@ -71,11 +71,17 @@ message GetTestResponse {
 }
 
 message QueryTestsRequest {
-
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_suite_ids = 2 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  map<string, string> labels = 3;
 }
 
 message QueryTestsResponse {
-  tstr.common.v1.Test test = 1;
+  repeated tstr.common.v1.Test tests = 1;
 }
 
 message GetTestSuiteRequest {

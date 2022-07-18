@@ -347,8 +347,60 @@ func (m *QueryTestsRequest) validate(all bool) error {
 
 	var errors []error
 
+	if len(m.GetIds()) > 0 {
+
+		for idx, item := range m.GetIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryTestsRequestValidationError{
+					field:  fmt.Sprintf("Ids[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
+	if len(m.GetTestSuiteIds()) > 0 {
+
+		for idx, item := range m.GetTestSuiteIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryTestsRequestValidationError{
+					field:  fmt.Sprintf("TestSuiteIds[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
+	// no validation rules for Labels
+
 	if len(errors) > 0 {
 		return QueryTestsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *QueryTestsRequest) _validateUuid(uuid string) error {
+	if matched := _data_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil
@@ -449,33 +501,38 @@ func (m *QueryTestsResponse) validate(all bool) error {
 
 	var errors []error
 
-	if all {
-		switch v := interface{}(m.GetTest()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, QueryTestsResponseValidationError{
-					field:  "Test",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
+	for idx, item := range m.GetTests() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, QueryTestsResponseValidationError{
+						field:  fmt.Sprintf("Tests[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, QueryTestsResponseValidationError{
+						field:  fmt.Sprintf("Tests[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
 			}
-		case interface{ Validate() error }:
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
 			if err := v.Validate(); err != nil {
-				errors = append(errors, QueryTestsResponseValidationError{
-					field:  "Test",
+				return QueryTestsResponseValidationError{
+					field:  fmt.Sprintf("Tests[%v]", idx),
 					reason: "embedded message failed validation",
 					cause:  err,
-				})
+				}
 			}
 		}
-	} else if v, ok := interface{}(m.GetTest()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return QueryTestsResponseValidationError{
-				field:  "Test",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
+
 	}
 
 	if len(errors) > 0 {

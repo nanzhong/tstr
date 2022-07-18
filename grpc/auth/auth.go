@@ -9,7 +9,7 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/nanzhong/tstr/api/common/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
@@ -20,29 +20,29 @@ import (
 
 const mdAuthKey = "authorization"
 
-var scopeAuthorizations = map[string][]common.AccessToken_Scope{
-	"/tstr.control.v1.ControlService/RegisterTest":     {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateTest":       {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTest":          {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTests":        {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ArchiveTest":      {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/DefineTestSuite":  {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateSuite":      {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTestSuite":     {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTestSuites":   {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ArchiveTestSuite": {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetRun":           {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListRuns":         {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ScheduleRun":      {common.AccessToken_CONTROL_RW},
+var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
+	"/tstr.control.v1.ControlService/RegisterTest":     {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/UpdateTest":       {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetTest":          {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListTests":        {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ArchiveTest":      {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/DefineTestSuite":  {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/UpdateSuite":      {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetTestSuite":     {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListTestSuites":   {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ArchiveTestSuite": {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetRun":           {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListRuns":         {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ScheduleRun":      {commonv1.AccessToken_CONTROL_RW},
 
-	"/tstr.admin.v1.AdminService/IssueAccessToken":  {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/GetAccessToken":    {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/ListAccessTokens":  {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/RevokeAccessToken": {common.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/IssueAccessToken":  {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/GetAccessToken":    {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/ListAccessTokens":  {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/RevokeAccessToken": {commonv1.AccessToken_ADMIN},
 
-	"/tstr.runner.v1.RunnerService/RegisterRunner": {common.AccessToken_RUNNER},
-	"/tstr.runner.v1.RunnerService/NextRun":        {common.AccessToken_RUNNER},
-	"/tstr.runner.v1.RunnerService/SubmitRun":      {common.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/RegisterRunner": {commonv1.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/NextRun":        {commonv1.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/SubmitRun":      {commonv1.AccessToken_RUNNER},
 }
 
 // TODO We shouldn't reach out to the db each time to auth, especially when
@@ -130,17 +130,17 @@ func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 	}
 }
 
-func toDBScope(scope common.AccessToken_Scope) db.AccessTokenScope {
+func toDBScope(scope commonv1.AccessToken_Scope) db.AccessTokenScope {
 	switch scope {
-	case common.AccessToken_ADMIN:
+	case commonv1.AccessToken_ADMIN:
 		return db.AccessTokenScopeAdmin
-	case common.AccessToken_CONTROL_R:
+	case commonv1.AccessToken_CONTROL_R:
 		return db.AccessTokenScopeControlR
-	case common.AccessToken_CONTROL_RW:
+	case commonv1.AccessToken_CONTROL_RW:
 		return db.AccessTokenScopeControlRw
-	case common.AccessToken_RUNNER:
+	case commonv1.AccessToken_RUNNER:
 		return db.AccessTokenScopeRunner
-	case common.AccessToken_UNKNOWN:
+	case commonv1.AccessToken_UNKNOWN:
 		// This should never happen and is an indication that an endpoint is not
 		// configured in the scope authorization map.
 		panic("endpoint not scoped")
@@ -151,7 +151,7 @@ func toDBScope(scope common.AccessToken_Scope) db.AccessTokenScope {
 	}
 }
 
-func toDBScopes(scopes []common.AccessToken_Scope) []db.AccessTokenScope {
+func toDBScopes(scopes []commonv1.AccessToken_Scope) []db.AccessTokenScope {
 	dbScopes := make([]db.AccessTokenScope, len(scopes))
 	for i, s := range scopes {
 		dbScopes[i] = toDBScope(s)

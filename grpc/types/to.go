@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgtype"
-	"github.com/nanzhong/tstr/api/common/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -19,23 +19,23 @@ func ToUUIDString(uuid pgtype.UUID) string {
 	return uuidString
 }
 
-func ToAccessTokenScope(scope db.AccessTokenScope) common.AccessToken_Scope {
+func ToAccessTokenScope(scope db.AccessTokenScope) commonv1.AccessToken_Scope {
 	switch scope {
 	case db.AccessTokenScopeAdmin:
-		return common.AccessToken_ADMIN
+		return commonv1.AccessToken_ADMIN
 	case db.AccessTokenScopeControlR:
-		return common.AccessToken_CONTROL_R
+		return commonv1.AccessToken_CONTROL_R
 	case db.AccessTokenScopeControlRw:
-		return common.AccessToken_CONTROL_RW
+		return commonv1.AccessToken_CONTROL_RW
 	case db.AccessTokenScopeRunner:
-		return common.AccessToken_RUNNER
+		return commonv1.AccessToken_RUNNER
 	default:
-		return common.AccessToken_UNKNOWN
+		return commonv1.AccessToken_UNKNOWN
 	}
 }
 
-func ToAccessTokenScopes(scopes []db.AccessTokenScope) []common.AccessToken_Scope {
-	var protoScopes []common.AccessToken_Scope
+func ToAccessTokenScopes(scopes []db.AccessTokenScope) []commonv1.AccessToken_Scope {
+	var protoScopes []commonv1.AccessToken_Scope
 	for _, s := range scopes {
 		protoScopes = append(protoScopes, ToAccessTokenScope(s))
 	}

@@ -106,6 +106,7 @@
           devShell = with pkgs;
             mkShell {
               buildInputs = [
+                buf
                 go_1_18
                 go-tools
                 gopls

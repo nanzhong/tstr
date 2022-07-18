@@ -1,26 +1,26 @@
 package types
 
 import (
-	"github.com/nanzhong/tstr/api/common/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 )
 
-func FromAccessTokenScope(scope common.AccessToken_Scope) db.AccessTokenScope {
+func FromAccessTokenScope(scope commonv1.AccessToken_Scope) db.AccessTokenScope {
 	switch scope {
-	case common.AccessToken_ADMIN:
+	case commonv1.AccessToken_ADMIN:
 		return db.AccessTokenScopeAdmin
-	case common.AccessToken_CONTROL_R:
+	case commonv1.AccessToken_CONTROL_R:
 		return db.AccessTokenScopeControlR
-	case common.AccessToken_CONTROL_RW:
+	case commonv1.AccessToken_CONTROL_RW:
 		return db.AccessTokenScopeControlRw
-	case common.AccessToken_RUNNER:
+	case commonv1.AccessToken_RUNNER:
 		return db.AccessTokenScopeRunner
 	default:
 		panic("unknown access token scope:" + scope.String())
 	}
 }
 
-func FromAccessTokenScopes(scopes []common.AccessToken_Scope) []db.AccessTokenScope {
+func FromAccessTokenScopes(scopes []commonv1.AccessToken_Scope) []db.AccessTokenScope {
 	var dbScopes []db.AccessTokenScope
 	for _, s := range scopes {
 		dbScopes = append(dbScopes, FromAccessTokenScope(s))
@@ -28,13 +28,13 @@ func FromAccessTokenScopes(scopes []common.AccessToken_Scope) []db.AccessTokenSc
 	return dbScopes
 }
 
-func FromRunResult(result common.Run_Result) db.RunResult {
+func FromRunResult(result commonv1.Run_Result) db.RunResult {
 	switch result {
-	case common.Run_ERROR:
+	case commonv1.Run_ERROR:
 		return db.RunResultError
-	case common.Run_FAIL:
+	case commonv1.Run_FAIL:
 		return db.RunResultFail
-	case common.Run_PASS:
+	case commonv1.Run_PASS:
 		return db.RunResultPass
 	default:
 		return db.RunResultUnknown

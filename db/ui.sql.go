@@ -133,7 +133,7 @@ type UIRunnerSummaryRow struct {
 	TestName   string
 	TestID     uuid.UUID
 	RunID      uuid.UUID
-	Result     RunResult
+	Result     NullRunResult
 	FinishedAt sql.NullTime
 	StartedAt  sql.NullTime
 }
@@ -182,7 +182,7 @@ type UIRunsSummaryRow struct {
 	ID              uuid.UUID
 	TestRunConfigID uuid.UUID
 	RunnerID        uuid.NullUUID
-	Result          RunResult
+	Result          NullRunResult
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime

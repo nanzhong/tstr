@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nanzhong/tstr/api/admin/v1"
-	"github.com/nanzhong/tstr/api/common/v1"
+	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -26,20 +26,20 @@ var (
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))
 			defer cancel()
 
-			req := &admin.IssueAccessTokenRequest{
+			req := &adminv1.IssueAccessTokenRequest{
 				Name: ctlAccessTokenIssueName,
 			}
 
 			for _, s := range ctlAccessTokenScopes {
 				switch strings.ToLower(s) {
 				case "admin":
-					req.Scopes = append(req.Scopes, common.AccessToken_ADMIN)
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_ADMIN)
 				case "control_r":
-					req.Scopes = append(req.Scopes, common.AccessToken_CONTROL_R)
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL_R)
 				case "control_rw":
-					req.Scopes = append(req.Scopes, common.AccessToken_CONTROL_RW)
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL_RW)
 				case "runner":
-					req.Scopes = append(req.Scopes, common.AccessToken_RUNNER)
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_RUNNER)
 				default:
 					return fmt.Errorf("invalid access token scope %s", s)
 				}
@@ -49,7 +49,7 @@ var (
 				req.ValidDuration = durationpb.New(ctlAccessTokenValidDuration)
 			}
 
-			return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client admin.AdminServiceClient) error {
+			return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
 				res, err := client.IssueAccessToken(ctx, req)
 				if err != nil {
 					return err

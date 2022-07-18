@@ -10,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/nanzhong/tstr/api/admin/v1"
-	"github.com/nanzhong/tstr/api/common/v1"
+	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
@@ -20,20 +20,20 @@ import (
 )
 
 type AdminServer struct {
-	admin.UnimplementedAdminServiceServer
+	adminv1.UnimplementedAdminServiceServer
 
 	pgxPool   *pgxpool.Pool
 	dbQuerier db.Querier
 }
 
-func NewAdminServer(pgxPool *pgxpool.Pool) admin.AdminServiceServer {
+func NewAdminServer(pgxPool *pgxpool.Pool) adminv1.AdminServiceServer {
 	return &AdminServer{
 		pgxPool:   pgxPool,
 		dbQuerier: db.New(),
 	}
 }
 
-func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAccessTokenRequest) (*admin.IssueAccessTokenResponse, error) {
+func (s *AdminServer) IssueAccessToken(ctx context.Context, req *adminv1.IssueAccessTokenRequest) (*adminv1.IssueAccessTokenResponse, error) {
 	var expiresAt sql.NullTime
 	if req.ValidDuration != nil {
 		expiresAt.Valid = true
@@ -66,8 +66,8 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 		return nil, status.Error(codes.Internal, "failed to issue access token")
 	}
 
-	return &admin.IssueAccessTokenResponse{
-		AccessToken: &common.AccessToken{
+	return &adminv1.IssueAccessTokenResponse{
+		AccessToken: &commonv1.AccessToken{
 			Id:   issuedToken.ID.String(),
 			Name: issuedToken.Name,
 			// TODO return actual scopes inserted, pending sqlc bug fix re enum arrays
@@ -80,7 +80,7 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *admin.IssueAcce
 	}, nil
 }
 
-func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTokenRequest) (*admin.GetAccessTokenResponse, error) {
+func (s *AdminServer) GetAccessToken(ctx context.Context, req *adminv1.GetAccessTokenRequest) (*adminv1.GetAccessTokenResponse, error) {
 	tokenID, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
@@ -92,8 +92,8 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 		return nil, status.Error(codes.Internal, "failed to get access token")
 	}
 
-	return &admin.GetAccessTokenResponse{
-		AccessToken: &common.AccessToken{
+	return &adminv1.GetAccessTokenResponse{
+		AccessToken: &commonv1.AccessToken{
 			Id:        token.ID.String(),
 			Name:      token.Name,
 			Scopes:    types.ToAccessTokenScopes(token.Scopes),
@@ -104,7 +104,7 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *admin.GetAccessTo
 	}, nil
 }
 
-func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAccessTokensRequest) (*admin.ListAccessTokensResponse, error) {
+func (s *AdminServer) ListAccessTokens(ctx context.Context, req *adminv1.ListAccessTokensRequest) (*adminv1.ListAccessTokensResponse, error) {
 	tokens, err := s.dbQuerier.ListAccessTokens(ctx, s.pgxPool, db.ListAccessTokensParams{
 		IncludeExpired: req.IncludeExpired,
 		IncludeRevoked: req.IncludeRevoked,
@@ -114,9 +114,9 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 		return nil, status.Error(codes.Internal, "failed to list access tokens")
 	}
 
-	res := &admin.ListAccessTokensResponse{}
+	res := &adminv1.ListAccessTokensResponse{}
 	for _, token := range tokens {
-		res.AccessTokens = append(res.AccessTokens, &common.AccessToken{
+		res.AccessTokens = append(res.AccessTokens, &commonv1.AccessToken{
 			Id:        token.ID.String(),
 			Name:      token.Name,
 			Scopes:    types.ToAccessTokenScopes(token.Scopes),
@@ -129,7 +129,7 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *admin.ListAcces
 	return res, nil
 }
 
-func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAccessTokenRequest) (*admin.RevokeAccessTokenResponse, error) {
+func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *adminv1.RevokeAccessTokenRequest) (*adminv1.RevokeAccessTokenResponse, error) {
 	tokenID, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid access token id")
@@ -141,5 +141,5 @@ func (s *AdminServer) RevokeAccessToken(ctx context.Context, req *admin.RevokeAc
 		return nil, status.Error(codes.Internal, "failed to revoke access tokens")
 	}
 
-	return &admin.RevokeAccessTokenResponse{}, nil
+	return &adminv1.RevokeAccessTokenResponse{}, nil
 }

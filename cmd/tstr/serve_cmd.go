@@ -15,9 +15,9 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/jackc/pgx/v4/pgxpool"
 	grpczerolog "github.com/jwreagor/grpc-zerolog"
-	"github.com/nanzhong/tstr/api/admin/v1"
-	"github.com/nanzhong/tstr/api/control/v1"
-	"github.com/nanzhong/tstr/api/runner/v1"
+	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
+	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/server"
@@ -102,13 +102,13 @@ var serveCmd = &cobra.Command{
 		scheduler := scheduler.New(pgxPool)
 
 		controlServer := server.NewControlServer(pgxPool)
-		control.RegisterControlServiceServer(grpcServer, controlServer)
+		controlv1.RegisterControlServiceServer(grpcServer, controlServer)
 
 		adminServer := server.NewAdminServer(pgxPool)
-		admin.RegisterAdminServiceServer(grpcServer, adminServer)
+		adminv1.RegisterAdminServiceServer(grpcServer, adminServer)
 
 		runnerServer := server.NewRunnerServer(pgxPool)
-		runner.RegisterRunnerServiceServer(grpcServer, runnerServer)
+		runnerv1.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
 		webui := webui.New(pgxPool)
 

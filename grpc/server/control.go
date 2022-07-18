@@ -8,8 +8,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/nanzhong/tstr/api/common/v1"
-	"github.com/nanzhong/tstr/api/control/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
+	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/robfig/cron/v3"
@@ -19,14 +19,14 @@ import (
 )
 
 type ControlServer struct {
-	control.UnimplementedControlServiceServer
+	controlv1.UnimplementedControlServiceServer
 	pgxPool    *pgxpool.Pool
 	dbQuerier  db.Querier
 	cronParser cron.Parser
 	clock      clock.Clock
 }
 
-func NewControlServer(pgxPool *pgxpool.Pool) control.ControlServiceServer {
+func NewControlServer(pgxPool *pgxpool.Pool) controlv1.ControlServiceServer {
 	return &ControlServer{
 		pgxPool:    pgxPool,
 		dbQuerier:  db.New(),
@@ -35,7 +35,7 @@ func NewControlServer(pgxPool *pgxpool.Pool) control.ControlServiceServer {
 	}
 }
 
-func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTestRequest) (*control.RegisterTestResponse, error) {
+func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterTestRequest) (*controlv1.RegisterTestResponse, error) {
 	labels := pgtype.JSONB{}
 	if err := labels.Set(r.Labels); err != nil {
 		log.Error().Err(err).Msg("failed to parse test labels")
@@ -84,14 +84,14 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 		return nil, status.Error(codes.Internal, "failed to format env")
 	}
 
-	return &control.RegisterTestResponse{
-		Test: &common.Test{
+	return &controlv1.RegisterTestResponse{
+		Test: &commonv1.Test{
 			Id:           result.ID.String(),
 			Name:         result.Name,
 			Labels:       resultLabels,
 			CronSchedule: result.CronSchedule.String,
 			NextRunAt:    types.ToProtoTimestamp(result.NextRunAt),
-			RunConfig: &common.Test_RunConfig{
+			RunConfig: &commonv1.Test_RunConfig{
 				Id:             result.TestRunConfigID.String(),
 				ContainerImage: result.ContainerImage,
 				Command:        result.Command.String,
@@ -105,7 +105,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *control.RegisterTes
 	}, nil
 }
 
-func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRunRequest) (*control.ScheduleRunResponse, error) {
+func (s *ControlServer) ScheduleRun(ctx context.Context, req *controlv1.ScheduleRunRequest) (*controlv1.ScheduleRunResponse, error) {
 	testID, err := uuid.Parse(req.TestId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
@@ -138,11 +138,11 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, req *control.ScheduleRu
 		return nil, status.Error(codes.Internal, "failed to format run config env")
 	}
 
-	return &control.ScheduleRunResponse{
-		Run: &common.Run{
+	return &controlv1.ScheduleRunResponse{
+		Run: &commonv1.Run{
 			Id:     run.ID.String(),
 			TestId: run.TestID.String(),
-			TestRunConfig: &common.Test_RunConfig{
+			TestRunConfig: &commonv1.Test_RunConfig{
 				Id:             run.TestRunConfigID.String(),
 				ContainerImage: run.ContainerImage,
 				Command:        run.Command.String,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nanzhong/tstr/api/admin/v1"
+	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -21,12 +21,12 @@ var (
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))
 			defer cancel()
 
-			req := &admin.ListAccessTokensRequest{
+			req := &adminv1.ListAccessTokensRequest{
 				IncludeExpired: ctlAccessTokenListIncludeRevoked,
 				IncludeRevoked: ctlAccessTokenListIncludeRevoked,
 			}
 
-			return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client admin.AdminServiceClient) error {
+			return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
 				res, err := client.ListAccessTokens(ctx, req)
 				if err != nil {
 					return err

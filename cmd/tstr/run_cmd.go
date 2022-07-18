@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	runnerapi "github.com/nanzhong/tstr/api/runner/v1"
+	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/runner"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -43,7 +43,7 @@ var runCmd = &cobra.Command{
 			rejectLabelSelectors[parts[0]] = parts[1]
 		}
 
-		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerapi.RunnerServiceClient) error {
+		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
 			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),

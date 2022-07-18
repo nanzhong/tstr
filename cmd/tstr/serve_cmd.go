@@ -13,6 +13,7 @@ import (
 	"time"
 
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/jackc/pgx/v4/pgxpool"
 	grpczerolog "github.com/jwreagor/grpc-zerolog"
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
@@ -110,6 +111,12 @@ var serveCmd = &cobra.Command{
 		runnerServer := server.NewRunnerServer(pgxPool)
 		runnerv1.RegisterRunnerServiceServer(grpcServer, runnerServer)
 
+    dataServer := server.NewDataServer()
+    datav1.RegisterDataServiceServer(grpcServer, runnerServer)
+
+		mux := runtime.NewServeMux()
+		datav1.RegisterDataServiceHandlerServer(ctx, mux, viper.GetString("serve.api-addr"), nil)
+
 		webui := webui.New(pgxPool)
 
 		httpServer := http.Server{
@@ -173,7 +180,7 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
-	serveCmd.Flags().String("api-addr", "0.0.0.0:9000", "The address to serve the gRPC API on.")
+	serveCmd.Flags().String("api-addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
 	viper.BindPFlag("serve.api-addr", serveCmd.Flags().Lookup("api-addr"))
 
 	serveCmd.Flags().String("web-addr", "0.0.0.0:9090", "The address to serve the web UI on.")

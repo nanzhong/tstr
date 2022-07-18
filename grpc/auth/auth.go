@@ -21,6 +21,9 @@ import (
 
 const mdAuthKey = "authorization"
 
+// TODO We can probably be a bit smarter/less verbose here and instead of direct
+// string matches on the full method, build up the set of allowable tokens given
+// a full method and a list of regexes (or something like that)
 var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
 	"/tstr.control.v1.ControlService/RegisterTest":     {commonv1.AccessToken_CONTROL_RW},
 	"/tstr.control.v1.ControlService/UpdateTest":       {commonv1.AccessToken_CONTROL_RW},

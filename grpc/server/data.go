@@ -397,7 +397,7 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 		FinishedAfter:   finishedAfter,
 	})
 	if err != nil {
-		resultStrings := make([]str, len(results))
+		resultStrings := make([]string, len(results))
 		for i, r := range results {
 			resultStrings[i] = string(r)
 		}
@@ -462,7 +462,39 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 }
 
 func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) (*datav1.GetRunnerResponse, error) {
-	return nil, nil
+	id, err := uuid.Parse(r.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
+	}
+
+	runner, err := s.dbQuerier.GetRunner(ctx, s.pgxPool, id)
+	if err != nil {
+		log.Error().Err(err).Stringer("runner_id", id).Msg("failed to get runner")
+		return nil, status.Error(codes.Internal, "failed to get runner")
+	}
+
+	var (
+		acceptSelectors map[string]string
+		rejectSelectors map[string]string
+	)
+	if err := runner.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
+		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format accept label selectors")
+		return nil, status.Error(codes.Internal, "failed to format accept label selectors")
+	}
+	if err := runner.AcceptTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
+		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format reject label selectors")
+	}
+	pbRunner := &commonv1.Runner{
+		Id:                       runner.ID.String(),
+		Name:                     runner.Name,
+		AcceptTestLabelSelectors: acceptSelectors,
+		RejectTestLabelSelectors: rejectSelectors,
+		RegisteredAt:             types.ToProtoTimestamp(runner.RegisteredAt),
+		LastHeartbeatAt:          types.ToProtoTimestamp(runner.LastHeartbeatAt),
+	}
+	return &datav1.GetRunnerResponse{
+		Runner: pbRunner,
+	}, nil
 }
 
 func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersRequest) (*datav1.QueryRunnersResponse, error) {

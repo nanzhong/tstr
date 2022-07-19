@@ -2161,8 +2161,6 @@ func (m *QueryRunnersRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for IncludeRevoked
-
 	if all {
 		switch v := interface{}(m.GetLastHeartbeatWithin()).(type) {
 		case interface{ ValidateAll() error }:

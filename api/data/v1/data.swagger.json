@@ -35,12 +35,6 @@
         },
         "parameters": [
           {
-            "name": "includeRevoked",
-            "in": "query",
-            "required": false,
-            "type": "boolean"
-          },
-          {
             "name": "lastHeartbeatWithin",
             "in": "query",
             "required": false,

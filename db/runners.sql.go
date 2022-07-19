@@ -67,6 +67,40 @@ func (q *Queries) ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.N
 	return items, nil
 }
 
+const queryRunners = `-- name: QueryRunners :many
+SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
+FROM runners
+WHERE last_heartbeat_at > $1
+ORDER by name ASC
+`
+
+func (q *Queries) QueryRunners(ctx context.Context, db DBTX, lastHeartbeatSince sql.NullTime) ([]Runner, error) {
+	rows, err := db.Query(ctx, queryRunners, lastHeartbeatSince)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Runner
+	for rows.Next() {
+		var i Runner
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.AcceptTestLabelSelectors,
+			&i.RejectTestLabelSelectors,
+			&i.RegisteredAt,
+			&i.LastHeartbeatAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const registerRunner = `-- name: RegisterRunner :one
 INSERT INTO runners (name, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
 VALUES (

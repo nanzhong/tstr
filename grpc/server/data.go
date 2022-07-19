@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"database/sql"
 
+	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -21,12 +23,14 @@ type DataServer struct {
 
 	pgxPool   *pgxpool.Pool
 	dbQuerier db.Querier
+	clock     clock.Clock
 }
 
 func NewDataServer(pgxPool *pgxpool.Pool) datav1.DataServiceServer {
 	return &DataServer{
 		pgxPool:   pgxPool,
 		dbQuerier: db.New(),
+		clock:     clock.New(),
 	}
 }
 
@@ -498,5 +502,49 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 }
 
 func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersRequest) (*datav1.QueryRunnersResponse, error) {
-	return nil, nil
+	var lastHeartbeatSince sql.NullTime
+	if r.LastHeartbeatWithin != nil {
+		lastHeartbeatSince.Valid = true
+		lastHeartbeatSince.Time = s.clock.Now().Add(-r.LastHeartbeatWithin.AsDuration())
+	}
+
+	runners, err := s.dbQuerier.QueryRunners(ctx, s.pgxPool, lastHeartbeatSince)
+	if err != nil {
+		log.Error().Err(err).Time("last_heartbeat_since", lastHeartbeatSince.Time).Msg("failed to query runners")
+		return nil, status.Error(codes.Internal, "failed to query runners")
+	}
+	var pbRunners []*commonv1.Runner
+	for _, r := range runners {
+		var (
+			acceptSelectors map[string]string
+			rejectSelectors map[string]string
+		)
+		if err := r.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("runner_id", r.ID).
+				Msg("failed to format accept selectors")
+			return nil, status.Error(codes.Internal, "failed to format accept selectorr")
+		}
+		if err := r.RejectTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("runner_id", r.ID).
+				Msg("failed to format reject selectors")
+			return nil, status.Error(codes.Internal, "failed to format reject selectorr")
+		}
+
+		pbRunners = append(pbRunners, &commonv1.Runner{
+			Id:                       r.ID.String(),
+			Name:                     r.Name,
+			AcceptTestLabelSelectors: acceptSelectors,
+			RejectTestLabelSelectors: rejectSelectors,
+			RegisteredAt:             types.ToProtoTimestamp(r.RegisteredAt),
+			LastHeartbeatAt:          types.ToProtoTimestamp(r.LastHeartbeatAt),
+		})
+	}
+
+	return &datav1.QueryRunnersResponse{
+		Runners: pbRunners,
+	}, nil
 }

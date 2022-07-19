@@ -152,8 +152,7 @@ message GetRunnerResponse {
 }
 
 message QueryRunnersRequest {
-  bool include_revoked = 1;
-  google.protobuf.Duration last_heartbeat_within = 2;
+  google.protobuf.Duration last_heartbeat_within = 1;
 }
 
 message QueryRunnersResponse {

@@ -116,16 +116,25 @@ message GetRunResponse {
 }
 
 message QueryRunsRequest {
-  repeated string test_ids = 1;
-  repeated string test_suite_ids = 2;
-  repeated string runner_ids = 3;
-  repeated tstr.common.v1.Run.Result results = 4;
-  google.protobuf.Timestamp scheduled_before = 5;
-  google.protobuf.Timestamp scheduled_after = 6;
-  google.protobuf.Timestamp started_before = 7;
-  google.protobuf.Timestamp started_after = 8;
-  google.protobuf.Timestamp finished_before = 9;
-  google.protobuf.Timestamp finished_after = 10;
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_ids = 2 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_suite_ids = 3 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string runner_ids = 4 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated tstr.common.v1.Run.Result results = 5;
+  google.protobuf.Timestamp scheduled_before = 6;
+  google.protobuf.Timestamp scheduled_after = 7;
+  google.protobuf.Timestamp started_before = 8;
+  google.protobuf.Timestamp started_after = 9;
+  google.protobuf.Timestamp finished_before = 10;
+  google.protobuf.Timestamp finished_after = 11;
 }
 
 message QueryRunsResponse {

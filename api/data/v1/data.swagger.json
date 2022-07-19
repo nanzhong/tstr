@@ -101,6 +101,16 @@
         },
         "parameters": [
           {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
             "name": "testIds",
             "in": "query",
             "required": false,

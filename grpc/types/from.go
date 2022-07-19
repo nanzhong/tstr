@@ -1,8 +1,11 @@
 package types
 
 import (
+	"database/sql"
+
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func FromAccessTokenScope(scope commonv1.AccessToken_Scope) db.AccessTokenScope {
@@ -41,4 +44,19 @@ func FromRunResult(result commonv1.Run_Result) db.RunResult {
 	default:
 		return db.RunResultUnknown
 	}
+}
+
+func FromRunResults(results []commonv1.Run_Result) []db.RunResult {
+	var dbResults []db.RunResult
+	for _, r := range results {
+		dbResults = append(dbResults, FromRunResult(r))
+	}
+	return dbResults
+}
+
+func FromProtoTimestampAsNullTime(ts *timestamppb.Timestamp) sql.NullTime {
+	if ts == nil {
+		return sql.NullTime{}
+	}
+	return sql.NullTime{Valid: true, Time: ts.AsTime()}
 }

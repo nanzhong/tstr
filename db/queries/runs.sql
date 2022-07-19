@@ -79,3 +79,29 @@ FROM runs
 WHERE runs.test_id = sqlc.arg('test_id')
 ORDER by runs.started_at desc
 LIMIT sqlc.arg('limit');
+
+-- name: QueryRuns :many
+SELECT runs.*, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+FROM runs
+JOIN test_run_configs
+ON runs.test_run_config_id = test_run_configs.id
+WHERE
+  (sqlc.narg('ids')::uuid[] IS NULL OR runs.id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('test_ids')::uuid[] IS NULL OR runs.test_id = ANY (sqlc.narg('test_ids')::uuid[])) AND
+  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR runs.test_id = ANY (
+      SELECT tests.id
+      FROM test_suites
+      JOIN tests
+      ON tests.labels @> test_suites.labels
+      WHERE test_suites.id = ANY (sqlc.narg('test_suite_ids')::uuid[])
+    )) AND
+  (sqlc.narg('runner_ids')::uuid[] IS NULL OR runner_id = ANY (sqlc.narg('runner_ids')::uuid[])) AND
+  (sqlc.narg('results')::run_result[] IS NULL OR result = ANY (sqlc.narg('results')::run_result[])) AND
+  (sqlc.arg('scheduled_before')::timestamptz IS NULL OR scheduled_at < sqlc.narg('scheduled_before')::timestamptz) AND
+  (sqlc.narg('scheduled_after')::timestamptz IS NULL OR scheduled_at > sqlc.narg('scheduled_after')::timestamptz) AND
+  (sqlc.narg('started_before')::timestamptz IS NULL OR started_at < sqlc.narg('started_before')::timestamptz) AND
+  (sqlc.narg('started_after')::timestamptz IS NULL OR started_at > sqlc.narg('started_after')::timestamptz) AND
+  (sqlc.narg('finished_before')::timestamptz IS NULL OR finished_at < sqlc.narg('finished_before')::timestamptz) AND
+  (sqlc.narg('finished_after')::timestamptz IS NULL OR finished_at > sqlc.narg('finished_after')::timestamptz);
+
+

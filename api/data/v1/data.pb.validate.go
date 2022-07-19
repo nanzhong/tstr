@@ -1408,6 +1408,90 @@ func (m *QueryRunsRequest) validate(all bool) error {
 
 	var errors []error
 
+	if len(m.GetIds()) > 0 {
+
+		for idx, item := range m.GetIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryRunsRequestValidationError{
+					field:  fmt.Sprintf("Ids[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
+	if len(m.GetTestIds()) > 0 {
+
+		for idx, item := range m.GetTestIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryRunsRequestValidationError{
+					field:  fmt.Sprintf("TestIds[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
+	if len(m.GetTestSuiteIds()) > 0 {
+
+		for idx, item := range m.GetTestSuiteIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryRunsRequestValidationError{
+					field:  fmt.Sprintf("TestSuiteIds[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
+	if len(m.GetRunnerIds()) > 0 {
+
+		for idx, item := range m.GetRunnerIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryRunsRequestValidationError{
+					field:  fmt.Sprintf("RunnerIds[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
 	if all {
 		switch v := interface{}(m.GetScheduledBefore()).(type) {
 		case interface{ ValidateAll() error }:
@@ -1584,6 +1668,14 @@ func (m *QueryRunsRequest) validate(all bool) error {
 
 	if len(errors) > 0 {
 		return QueryRunsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *QueryRunsRequest) _validateUuid(uuid string) error {
+	if matched := _data_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil

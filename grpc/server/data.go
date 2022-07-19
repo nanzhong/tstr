@@ -338,8 +338,127 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 	}, nil
 }
 
-func (s *DataServer) QueryRun(ctx context.Context, r *datav1.QueryRunsRequest) (*datav1.QueryRunsResponse, error) {
-	return nil, nil
+func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) (*datav1.QueryRunsResponse, error) {
+	var runIDs []uuid.UUID
+	for _, rid := range r.Ids {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse run id")
+		}
+		runIDs = append(runIDs, id)
+	}
+
+	var testIDs []uuid.UUID
+	for _, rid := range r.TestIds {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse test id")
+		}
+		testIDs = append(testIDs, id)
+	}
+
+	var testSuiteIDs []uuid.UUID
+	for _, rid := range r.TestSuiteIds {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse test suite id")
+		}
+		testSuiteIDs = append(testSuiteIDs, id)
+	}
+
+	var runnerIDs []uuid.UUID
+	for _, rid := range r.RunnerIds {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse runner id")
+		}
+		runnerIDs = append(runnerIDs, id)
+	}
+
+	results := types.FromRunResults(r.Results)
+	scheduledBefore := types.FromProtoTimestampAsNullTime(r.ScheduledBefore)
+	scheduledAfter := types.FromProtoTimestampAsNullTime(r.ScheduledAfter)
+	startedBefore := types.FromProtoTimestampAsNullTime(r.StartedBefore)
+	startedAfter := types.FromProtoTimestampAsNullTime(r.StartedAfter)
+	finishedBefore := types.FromProtoTimestampAsNullTime(r.FinishedBefore)
+	finishedAfter := types.FromProtoTimestampAsNullTime(r.FinishedAfter)
+
+	runs, err := s.dbQuerier.QueryRuns(ctx, s.pgxPool, db.QueryRunsParams{
+		Ids:             runIDs,
+		TestIds:         testIDs,
+		TestSuiteIds:    testSuiteIDs,
+		RunnerIds:       runnerIDs,
+		Results:         results,
+		ScheduledBefore: scheduledBefore,
+		ScheduledAfter:  scheduledAfter,
+		StartedBefore:   startedBefore,
+		StartedAfter:    startedAfter,
+		FinishedBefore:  finishedBefore,
+		FinishedAfter:   finishedAfter,
+	})
+	if err != nil {
+		resultStrings := make([]str, len(results))
+		for i, r := range results {
+			resultStrings[i] = string(r)
+		}
+		log.Error().
+			Err(err).
+			Strs("ids", r.Ids).
+			Strs("test_ids", r.TestIds).
+			Strs("test_suite_ids", r.TestSuiteIds).
+			Strs("results", resultStrings).
+			Time("scheduled_before", scheduledBefore.Time).
+			Time("scheduled_after", scheduledAfter.Time).
+			Time("started_before", startedBefore.Time).
+			Time("started_after", startedAfter.Time).
+			Time("finished_before", finishedBefore.Time).
+			Time("finished_after", finishedAfter.Time)
+		return nil, status.Error(codes.Internal, "failed to query runs")
+	}
+
+	var pbRuns []*commonv1.Run
+	for _, run := range runs {
+		var env map[string]string
+		if err := run.Env.AssignTo(&env); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", run.ID).
+				Msg("failed to parse env")
+			return nil, status.Error(codes.Internal, "failed to format run config env")
+		}
+
+		var logs []db.RunLog
+		if err := run.Logs.AssignTo(&logs); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", run.ID).
+				Msg("failed to parse logs")
+			return nil, status.Error(codes.Internal, "failed to format run logs")
+		}
+
+		pbRuns = append(pbRuns, &commonv1.Run{
+			Id:     run.ID.String(),
+			TestId: run.TestID.String(),
+			TestRunConfig: &commonv1.Test_RunConfig{
+				Id:             run.TestRunConfigID.String(),
+				ContainerImage: run.ContainerImage,
+				Command:        run.Command.String,
+				Args:           run.Args,
+				Env:            env,
+				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
+			},
+			RunnerId:    run.RunnerID.UUID.String(),
+			Result:      types.ToRunResult(run.Result.RunResult),
+			Logs:        types.ToRunLogs(logs),
+			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
+			StartedAt:   types.ToProtoTimestamp(run.StartedAt),
+			FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
+		})
+	}
+
+	return &datav1.QueryRunsResponse{
+		Runs: pbRuns,
+	}, nil
 }
 
 func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) (*datav1.GetRunnerResponse, error) {

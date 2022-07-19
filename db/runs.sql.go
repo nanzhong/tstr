@@ -235,6 +235,109 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]
 	return items, nil
 }
 
+const queryRuns = `-- name: QueryRuns :many
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+FROM runs
+JOIN test_run_configs
+ON runs.test_run_config_id = test_run_configs.id
+WHERE
+  ($1::uuid[] IS NULL OR runs.id = ANY ($1::uuid[])) AND
+  ($2::uuid[] IS NULL OR runs.test_id = ANY ($2::uuid[])) AND
+  ($3::uuid[] IS NULL OR runs.test_id = ANY (
+      SELECT tests.id
+      FROM test_suites
+      JOIN tests
+      ON tests.labels @> test_suites.labels
+      WHERE test_suites.id = ANY ($3::uuid[])
+    )) AND
+  ($4::uuid[] IS NULL OR runner_id = ANY ($4::uuid[])) AND
+  ($5::run_result[] IS NULL OR result = ANY ($5::run_result[])) AND
+  ($6::timestamptz IS NULL OR scheduled_at < $6::timestamptz) AND
+  ($7::timestamptz IS NULL OR scheduled_at > $7::timestamptz) AND
+  ($8::timestamptz IS NULL OR started_at < $8::timestamptz) AND
+  ($9::timestamptz IS NULL OR started_at > $9::timestamptz) AND
+  ($10::timestamptz IS NULL OR finished_at < $10::timestamptz) AND
+  ($11::timestamptz IS NULL OR finished_at > $11::timestamptz)
+`
+
+type QueryRunsParams struct {
+	Ids             []uuid.UUID
+	TestIds         []uuid.UUID
+	TestSuiteIds    []uuid.UUID
+	RunnerIds       []uuid.UUID
+	Results         []RunResult
+	ScheduledBefore sql.NullTime
+	ScheduledAfter  sql.NullTime
+	StartedBefore   sql.NullTime
+	StartedAfter    sql.NullTime
+	FinishedBefore  sql.NullTime
+	FinishedAfter   sql.NullTime
+}
+
+type QueryRunsRow struct {
+	ID                     uuid.UUID
+	TestID                 uuid.UUID
+	TestRunConfigID        uuid.UUID
+	RunnerID               uuid.NullUUID
+	Result                 NullRunResult
+	Logs                   pgtype.JSONB
+	ScheduledAt            sql.NullTime
+	StartedAt              sql.NullTime
+	FinishedAt             sql.NullTime
+	ContainerImage         string
+	Command                sql.NullString
+	Args                   []string
+	Env                    pgtype.JSONB
+	TestRunConfigCreatedAt sql.NullTime
+}
+
+func (q *Queries) QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) ([]QueryRunsRow, error) {
+	rows, err := db.Query(ctx, queryRuns,
+		arg.Ids,
+		arg.TestIds,
+		arg.TestSuiteIds,
+		arg.RunnerIds,
+		arg.Results,
+		arg.ScheduledBefore,
+		arg.ScheduledAfter,
+		arg.StartedBefore,
+		arg.StartedAfter,
+		arg.FinishedBefore,
+		arg.FinishedAfter,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []QueryRunsRow
+	for rows.Next() {
+		var i QueryRunsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TestID,
+			&i.TestRunConfigID,
+			&i.RunnerID,
+			&i.Result,
+			&i.Logs,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
+			&i.ContainerImage,
+			&i.Command,
+			&i.Args,
+			&i.Env,
+			&i.TestRunConfigCreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const resetOrphanedRuns = `-- name: ResetOrphanedRuns :exec
 UPDATE runs
 SET runner_id = NULL

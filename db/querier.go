@@ -35,6 +35,7 @@ type Querier interface {
 	ListTests(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]ListTestsRow, error)
 	ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, arg ListTestsIDsMatchingLabelKeysParams) ([]ListTestsIDsMatchingLabelKeysRow, error)
 	ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error)
+	QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) ([]QueryRunsRow, error)
 	QueryTestSuites(ctx context.Context, db DBTX, arg QueryTestSuitesParams) ([]TestSuite, error)
 	QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]QueryTestsRow, error)
 	RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunnerParams) (Runner, error)

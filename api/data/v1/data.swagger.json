@@ -474,7 +474,7 @@
         "runner": {
           "$ref": "#/definitions/v1Runner"
         },
-        "runSummaries": {
+        "run_summaries": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1RunSummary"
@@ -488,7 +488,7 @@
         "test": {
           "$ref": "#/definitions/v1Test"
         },
-        "runSummaries": {
+        "run_summaries": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1RunSummary"
@@ -592,27 +592,27 @@
         "id": {
           "type": "string"
         },
-        "testId": {
+        "test_id": {
           "type": "string"
         },
         "testRunConfigId": {
           "type": "string"
         },
-        "runnerId": {
+        "runner_id": {
           "type": "string"
         },
         "result": {
           "$ref": "#/definitions/RunResult"
         },
-        "scheduledAt": {
+        "scheduled_at": {
           "type": "string",
           "format": "date-time"
         },
-        "startedAt": {
+        "started_at": {
           "type": "string",
           "format": "date-time"
         },
-        "finishedAt": {
+        "finished_at": {
           "type": "string",
           "format": "date-time"
         }

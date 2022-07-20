@@ -46,10 +46,14 @@ func FromRunResult(result commonv1.Run_Result) db.RunResult {
 	}
 }
 
-func FromRunResults(results []commonv1.Run_Result) []db.RunResult {
-	var dbResults []db.RunResult
+// FromRunResults converts pb run results to db run results.
+// XXX There is currently a bug preventing enmu arrays from being usable. Using
+// []string until this is resolved.
+// https://github.com/kyleconroy/sqlc/issues/1256
+func FromRunResults(results []commonv1.Run_Result) []string {
+	var dbResults []string
 	for _, r := range results {
-		dbResults = append(dbResults, FromRunResult(r))
+		dbResults = append(dbResults, string(FromRunResult(r)))
 	}
 	return dbResults
 }

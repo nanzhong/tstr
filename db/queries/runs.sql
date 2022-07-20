@@ -103,7 +103,7 @@ WHERE
       WHERE test_suites.id = ANY (sqlc.narg('test_suite_ids')::uuid[])
     )) AND
   (sqlc.narg('runner_ids')::uuid[] IS NULL OR runner_id = ANY (sqlc.narg('runner_ids')::uuid[])) AND
-  (sqlc.narg('results')::run_result[] IS NULL OR result = ANY (sqlc.narg('results')::run_result[])) AND
+  (sqlc.narg('results')::text[] IS NULL OR result::text = ANY (sqlc.narg('results')::text[])) AND
   (sqlc.arg('scheduled_before')::timestamptz IS NULL OR scheduled_at < sqlc.narg('scheduled_before')::timestamptz) AND
   (sqlc.narg('scheduled_after')::timestamptz IS NULL OR scheduled_at > sqlc.narg('scheduled_after')::timestamptz) AND
   (sqlc.narg('started_before')::timestamptz IS NULL OR started_at < sqlc.narg('started_before')::timestamptz) AND

@@ -251,7 +251,7 @@ WHERE
       WHERE test_suites.id = ANY ($3::uuid[])
     )) AND
   ($4::uuid[] IS NULL OR runner_id = ANY ($4::uuid[])) AND
-  ($5::run_result[] IS NULL OR result = ANY ($5::run_result[])) AND
+  ($5::text[] IS NULL OR result::text = ANY ($5::text[])) AND
   ($6::timestamptz IS NULL OR scheduled_at < $6::timestamptz) AND
   ($7::timestamptz IS NULL OR scheduled_at > $7::timestamptz) AND
   ($8::timestamptz IS NULL OR started_at < $8::timestamptz) AND
@@ -265,7 +265,7 @@ type QueryRunsParams struct {
 	TestIds         []uuid.UUID
 	TestSuiteIds    []uuid.UUID
 	RunnerIds       []uuid.UUID
-	Results         []RunResult
+	Results         []string
 	ScheduledBefore sql.NullTime
 	ScheduledAfter  sql.NullTime
 	StartedBefore   sql.NullTime

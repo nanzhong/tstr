@@ -490,9 +490,11 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format accept label selectors")
 		return nil, status.Error(codes.Internal, "failed to format accept label selectors")
 	}
-	if err := runner.AcceptTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
+	if err := runner.RejectTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
 		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format reject label selectors")
+		return nil, status.Error(codes.Internal, "failed to format reject label selectors")
 	}
+
 	pbRunner := &commonv1.Runner{
 		Id:                       runner.ID.String(),
 		Name:                     runner.Name,

@@ -15,7 +15,7 @@ var (
 	ctlAccessTokenListIncludeRevoked bool
 	ctlAccessTokenListCmd            = &cobra.Command{
 		Use:   "list",
-		Short: "Retrieve information for all access tokens.",
+		Short: "Retrieve information for all access tokens",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))

@@ -12,7 +12,7 @@ import (
 
 var ctlRunScheduleCmd = &cobra.Command{
 	Use:   "schedule",
-	Short: "Schedule a test run.",
+	Short: "Schedule a test run",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))

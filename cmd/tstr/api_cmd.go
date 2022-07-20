@@ -24,7 +24,6 @@ import (
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/server"
 	"github.com/nanzhong/tstr/scheduler"
-	"github.com/nanzhong/tstr/webui"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
@@ -39,9 +38,9 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var serveCmd = &cobra.Command{
-	Use:   "serve",
-	Short: "serve the gRPC API and web UI.",
+var apiCmd = &cobra.Command{
+	Use:   "api",
+	Short: "serve the gRPC and HTTP JSON API",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := context.Background()
@@ -77,24 +76,16 @@ var serveCmd = &cobra.Command{
 			}
 		}
 
-		l, err := net.Listen("tcp", viper.GetString("serve.api-addr"))
+		l, err := net.Listen("tcp", viper.GetString("serve.addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
-				Str("api-addr", viper.GetString("serve.api-addr")).
+				Str("addr", viper.GetString("serve.addr")).
 				Msg("failed to listen on api addr")
 		}
 		cm := cmux.New(l)
 		grpcL := cm.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
 		grpcgwL := cm.Match(cmux.HTTP1Fast())
-
-		uiListener, err := net.Listen("tcp", viper.GetString("serve.web-addr"))
-		if err != nil {
-			log.Fatal().
-				Err(err).
-				Str("web-addr", viper.GetString("serve.web-addr")).
-				Msg("failed to listen on web addr")
-		}
 
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
@@ -123,15 +114,11 @@ var serveCmd = &cobra.Command{
 
 		grpcgwMux := runtime.NewServeMux()
 		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("serve.api-addr"), gwOpts)
+		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("serve.addr"), gwOpts)
 		grpcgwServer := http.Server{
 			Handler: h2c.NewHandler(hlog.NewHandler(log.Logger)(grpcgwMux), &http2.Server{}),
 		}
 
-		webui := webui.New(pgxPool)
-		webuiServer := http.Server{
-			Handler: hlog.NewHandler(log.Logger)(webui.Handler()),
-		}
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
 
@@ -158,10 +145,6 @@ var serveCmd = &cobra.Command{
 			eg.Go(func() error {
 				log.Info().Msg("attempting to shutdown grpc gw proxy")
 				return grpcgwServer.Shutdown(shutdownCtx)
-			})
-			eg.Go(func() error {
-				log.Info().Msg("attempting to shutdown ui server")
-				return webuiServer.Shutdown(shutdownCtx)
 			})
 			eg.Go(func() error {
 				log.Info().Msg("attempting to close api mux")
@@ -192,15 +175,9 @@ var serveCmd = &cobra.Command{
 		})
 		eg.Go(func() error {
 			log.Info().
-				Str("api-addr", viper.GetString("serve.api-addr")).
+				Str("addr", viper.GetString("serve.addr")).
 				Msg("serving api mux")
 			return cm.Serve()
-		})
-		eg.Go(func() error {
-			log.Info().
-				Str("web-addr", viper.GetString("serve.web-addr")).
-				Msg("starting ui http server")
-			return webuiServer.Serve(uiListener)
 		})
 		err = eg.Wait()
 		log.Info().Msg("tstr shutdown")
@@ -208,17 +185,14 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
-	serveCmd.Flags().String("api-addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
-	viper.BindPFlag("serve.api-addr", serveCmd.Flags().Lookup("api-addr"))
+	apiCmd.Flags().String("addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
+	viper.BindPFlag("serve.addr", apiCmd.Flags().Lookup("addr"))
 
-	serveCmd.Flags().String("web-addr", "0.0.0.0:9090", "The address to serve the web ui on.")
-	viper.BindPFlag("serve.web-addr", serveCmd.Flags().Lookup("web-addr"))
+	apiCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")
+	viper.BindPFlag("serve.pg-dsn", apiCmd.Flags().Lookup("pg-dsn"))
 
-	serveCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")
-	viper.BindPFlag("serve.pg-dsn", serveCmd.Flags().Lookup("pg-dsn"))
+	apiCmd.Flags().String("bootstrap-token", "", "Bootstrap with provided access token (note that this token will have admin scope valid for 24h).")
+	viper.BindPFlag("serve.bootstrap-token", apiCmd.Flags().Lookup("bootstrap-token"))
 
-	serveCmd.Flags().String("bootstrap-token", "", "Bootstrap with provided access token (note that this token will have admin scope valid for 24h).")
-	viper.BindPFlag("serve.bootstrap-token", serveCmd.Flags().Lookup("bootstrap-token"))
-
-	rootCmd.AddCommand(serveCmd)
+	rootCmd.AddCommand(apiCmd)
 }

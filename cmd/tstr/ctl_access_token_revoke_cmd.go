@@ -12,7 +12,7 @@ import (
 
 var ctlAccessTokenRevokeCmd = &cobra.Command{
 	Use:   "revoke",
-	Short: "Revoke an access token.",
+	Short: "Revoke an access token",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))

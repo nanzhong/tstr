@@ -12,7 +12,7 @@ import (
 
 var accessTokenGetCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Retrieve information for an access token.",
+	Short: "Retrieve information for an access token",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))

@@ -19,7 +19,7 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Start a tstr runner for executing test workloads.",
+	Short: "Start a tstr runner for executing test workloads",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})

@@ -20,7 +20,7 @@ var (
 	ctlAccessTokenScopes        []string
 	accessTokenIssueCmd         = &cobra.Command{
 		Use:   "issue",
-		Short: "Issue a new access token.",
+		Short: "Issue a new access token",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))

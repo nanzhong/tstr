@@ -25,7 +25,7 @@ var (
 	ctlTestRegisterEnv     []string
 	ctlTestRegisterCmd     = &cobra.Command{
 		Use:   "register",
-		Short: "Register a new test.",
+		Short: "Register a new test",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			req := &controlv1.RegisterTestRequest{

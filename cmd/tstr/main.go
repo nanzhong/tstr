@@ -10,7 +10,7 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "tstr",
-	Short: "tstr schedules, orchestrates, and reports on test runs.",
+	Short: "tstr schedules, orchestrates, and reports on test runs",
 	Long:  "tstr is a tool that helps manage test workloads by taking care of test configuration, scheduling, orchestration, and reporting.",
 }
 

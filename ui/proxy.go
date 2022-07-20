@@ -21,8 +21,8 @@ func NewAPIProxy(grpcGW *url.URL, accessToken string) http.Handler {
 			// NOTE This should always be the case if the proxy handler is correct
 			// configured using APIPathPrefix. If not, do nothing :shrug: and let the
 			// proxy target handle it and presumably fail.
-			if strings.HasPrefix(APIPathPrefix+"/", r.URL.Path) {
-				newPath := strings.TrimPrefix(APIPathPrefix, r.URL.Path)
+			if strings.HasPrefix(r.URL.Path, APIPathPrefix+"/") {
+				newPath := strings.TrimPrefix(r.URL.Path, APIPathPrefix)
 				r.URL.Path, r.URL.RawPath = newPath, url.PathEscape(r.URL.Path)
 			}
 

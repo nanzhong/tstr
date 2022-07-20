@@ -31,7 +31,7 @@ var uiCmd = &cobra.Command{
 			log.Fatal().Err(err).Str("api_base_url", viper.GetString("api_base_url")).Msg("invalid api base url")
 		}
 
-		uiProxy := ui.NewAPIProxy(apiURL, viper.GetString("access-token"))
+		uiProxy := ui.NewAPIProxy(apiURL, viper.GetString("ui.access-token"))
 		uiServer := ui.NewUIServer()
 
 		mux := http.NewServeMux()
@@ -77,6 +77,7 @@ func init() {
 	viper.BindPFlag("ui.api-base-url", uiCmd.Flags().Lookup("api-base-url"))
 
 	uiCmd.Flags().String("access-token", "", "The access token to use when communicating with the tstr api (it must have the data scope)")
+	viper.BindPFlag("ui.access-token", uiCmd.Flags().Lookup("access-token"))
 
 	rootCmd.AddCommand(uiCmd)
 }

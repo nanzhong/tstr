@@ -352,11 +352,64 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 	return err
 }
 
+const runSummaryForRunner = `-- name: RunSummaryForRunner :many
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+FROM runs
+WHERE runs.runner_id = $1::uuid
+ORDER by runs.scheduled_at desc
+LIMIT $2
+`
+
+type RunSummaryForRunnerParams struct {
+	RunnerID uuid.UUID
+	Limit    int32
+}
+
+type RunSummaryForRunnerRow struct {
+	ID              uuid.UUID
+	TestID          uuid.UUID
+	TestRunConfigID uuid.UUID
+	RunnerID        uuid.NullUUID
+	Result          NullRunResult
+	ScheduledAt     sql.NullTime
+	StartedAt       sql.NullTime
+	FinishedAt      sql.NullTime
+}
+
+func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error) {
+	rows, err := db.Query(ctx, runSummaryForRunner, arg.RunnerID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RunSummaryForRunnerRow
+	for rows.Next() {
+		var i RunSummaryForRunnerRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TestID,
+			&i.TestRunConfigID,
+			&i.RunnerID,
+			&i.Result,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const runSummaryForTest = `-- name: RunSummaryForTest :many
 SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
 FROM runs
 WHERE runs.test_id = $1
-ORDER by runs.started_at desc
+ORDER by runs.scheduled_at desc
 LIMIT $2
 `
 

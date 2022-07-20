@@ -149,6 +149,7 @@ message GetRunnerRequest {
 
 message GetRunnerResponse {
   tstr.common.v1.Runner runner = 1;
+  repeated RunSummary run_summaries = 2;
 }
 
 message QueryRunnersRequest {

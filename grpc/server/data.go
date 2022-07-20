@@ -496,8 +496,33 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 		RegisteredAt:             types.ToProtoTimestamp(runner.RegisteredAt),
 		LastHeartbeatAt:          types.ToProtoTimestamp(runner.LastHeartbeatAt),
 	}
+
+	runSummaries, err := s.dbQuerier.RunSummaryForRunner(ctx, s.pgxPool, db.RunSummaryForRunnerParams{
+		RunnerID: runner.ID,
+		// TODO Configure default + query param handling
+		Limit: 200,
+	})
+	if err != nil {
+		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to summarize runs for runner")
+		return nil, status.Error(codes.Internal, "failed to summarize runs for test")
+	}
+	var pbRunSummaries []*datav1.RunSummary
+	for _, s := range runSummaries {
+		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
+			Id:              s.ID.String(),
+			TestId:          s.TestID.String(),
+			TestRunConfigId: s.TestRunConfigID.String(),
+			RunnerId:        s.RunnerID.UUID.String(),
+			Result:          types.ToRunResult(s.Result.RunResult),
+			ScheduledAt:     types.ToProtoTimestamp(s.ScheduledAt),
+			StartedAt:       types.ToProtoTimestamp(s.StartedAt),
+			FinishedAt:      types.ToProtoTimestamp(s.FinishedAt),
+		})
+	}
+
 	return &datav1.GetRunnerResponse{
-		Runner: pbRunner,
+		Runner:       pbRunner,
+		RunSummaries: pbRunSummaries,
 	}, nil
 }
 

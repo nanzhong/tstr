@@ -77,7 +77,14 @@ WHERE
 SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
 FROM runs
 WHERE runs.test_id = sqlc.arg('test_id')
-ORDER by runs.started_at desc
+ORDER by runs.scheduled_at desc
+LIMIT sqlc.arg('limit');
+
+-- name: RunSummaryForRunner :many
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+FROM runs
+WHERE runs.runner_id = sqlc.arg('runner_id')::uuid
+ORDER by runs.scheduled_at desc
 LIMIT sqlc.arg('limit');
 
 -- name: QueryRuns :many

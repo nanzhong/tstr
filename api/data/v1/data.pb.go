@@ -753,7 +753,8 @@ type GetRunnerResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Runner *v1.Runner `protobuf:"bytes,1,opt,name=runner,proto3" json:"runner,omitempty"`
+	Runner       *v1.Runner    `protobuf:"bytes,1,opt,name=runner,proto3" json:"runner,omitempty"`
+	RunSummaries []*RunSummary `protobuf:"bytes,2,rep,name=run_summaries,json=runSummaries,proto3" json:"run_summaries,omitempty"`
 }
 
 func (x *GetRunnerResponse) Reset() {
@@ -791,6 +792,13 @@ func (*GetRunnerResponse) Descriptor() ([]byte, []int) {
 func (x *GetRunnerResponse) GetRunner() *v1.Runner {
 	if x != nil {
 		return x.Runner
+	}
+	return nil
+}
+
+func (x *GetRunnerResponse) GetRunSummaries() []*RunSummary {
+	if x != nil {
+		return x.RunSummaries
 	}
 	return nil
 }
@@ -1118,11 +1126,15 @@ var file_data_v1_data_proto_rawDesc = []byte{
 	0x04, 0x72, 0x75, 0x6e, 0x73, 0x22, 0x2c, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e,
 	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x02, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x08, 0xfa, 0x42, 0x05, 0x72, 0x03, 0xb0, 0x01, 0x01, 0x52,
-	0x02, 0x69, 0x64, 0x22, 0x43, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x06, 0x72, 0x75, 0x6e, 0x6e,
-	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e,
-	0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72,
-	0x52, 0x06, 0x72, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x22, 0x64, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72,
+	0x02, 0x69, 0x64, 0x22, 0x82, 0x01, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x06, 0x72, 0x75, 0x6e,
+	0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x74, 0x73, 0x74, 0x72,
+	0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x6e, 0x65,
+	0x72, 0x52, 0x06, 0x72, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0d, 0x72, 0x75, 0x6e,
+	0x5f, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x18, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x76, 0x31, 0x2e,
+	0x52, 0x75, 0x6e, 0x53, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x52, 0x0c, 0x72, 0x75, 0x6e, 0x53,
+	0x75, 0x6d, 0x6d, 0x61, 0x72, 0x69, 0x65, 0x73, 0x22, 0x64, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72,
 	0x79, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
 	0x4d, 0x0a, 0x15, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x68, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61,
 	0x74, 0x5f, 0x77, 0x69, 0x74, 0x68, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
@@ -1287,33 +1299,34 @@ var file_data_v1_data_proto_depIdxs = []int32{
 	23, // 14: tstr.data.v1.QueryRunsRequest.finished_after:type_name -> google.protobuf.Timestamp
 	21, // 15: tstr.data.v1.QueryRunsResponse.runs:type_name -> tstr.common.v1.Run
 	24, // 16: tstr.data.v1.GetRunnerResponse.runner:type_name -> tstr.common.v1.Runner
-	25, // 17: tstr.data.v1.QueryRunnersRequest.last_heartbeat_within:type_name -> google.protobuf.Duration
-	24, // 18: tstr.data.v1.QueryRunnersResponse.runners:type_name -> tstr.common.v1.Runner
-	22, // 19: tstr.data.v1.RunSummary.result:type_name -> tstr.common.v1.Run.Result
-	23, // 20: tstr.data.v1.RunSummary.scheduled_at:type_name -> google.protobuf.Timestamp
-	23, // 21: tstr.data.v1.RunSummary.started_at:type_name -> google.protobuf.Timestamp
-	23, // 22: tstr.data.v1.RunSummary.finished_at:type_name -> google.protobuf.Timestamp
-	0,  // 23: tstr.data.v1.DataService.GetTest:input_type -> tstr.data.v1.GetTestRequest
-	2,  // 24: tstr.data.v1.DataService.QueryTests:input_type -> tstr.data.v1.QueryTestsRequest
-	4,  // 25: tstr.data.v1.DataService.GetTestSuite:input_type -> tstr.data.v1.GetTestSuiteRequest
-	6,  // 26: tstr.data.v1.DataService.QueryTestSuites:input_type -> tstr.data.v1.QueryTestSuitesRequest
-	8,  // 27: tstr.data.v1.DataService.GetRun:input_type -> tstr.data.v1.GetRunRequest
-	10, // 28: tstr.data.v1.DataService.QueryRuns:input_type -> tstr.data.v1.QueryRunsRequest
-	12, // 29: tstr.data.v1.DataService.GetRunner:input_type -> tstr.data.v1.GetRunnerRequest
-	14, // 30: tstr.data.v1.DataService.QueryRunners:input_type -> tstr.data.v1.QueryRunnersRequest
-	1,  // 31: tstr.data.v1.DataService.GetTest:output_type -> tstr.data.v1.GetTestResponse
-	3,  // 32: tstr.data.v1.DataService.QueryTests:output_type -> tstr.data.v1.QueryTestsResponse
-	5,  // 33: tstr.data.v1.DataService.GetTestSuite:output_type -> tstr.data.v1.GetTestSuiteResponse
-	7,  // 34: tstr.data.v1.DataService.QueryTestSuites:output_type -> tstr.data.v1.QueryTestSuitesResponse
-	9,  // 35: tstr.data.v1.DataService.GetRun:output_type -> tstr.data.v1.GetRunResponse
-	11, // 36: tstr.data.v1.DataService.QueryRuns:output_type -> tstr.data.v1.QueryRunsResponse
-	13, // 37: tstr.data.v1.DataService.GetRunner:output_type -> tstr.data.v1.GetRunnerResponse
-	15, // 38: tstr.data.v1.DataService.QueryRunners:output_type -> tstr.data.v1.QueryRunnersResponse
-	31, // [31:39] is the sub-list for method output_type
-	23, // [23:31] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	16, // 17: tstr.data.v1.GetRunnerResponse.run_summaries:type_name -> tstr.data.v1.RunSummary
+	25, // 18: tstr.data.v1.QueryRunnersRequest.last_heartbeat_within:type_name -> google.protobuf.Duration
+	24, // 19: tstr.data.v1.QueryRunnersResponse.runners:type_name -> tstr.common.v1.Runner
+	22, // 20: tstr.data.v1.RunSummary.result:type_name -> tstr.common.v1.Run.Result
+	23, // 21: tstr.data.v1.RunSummary.scheduled_at:type_name -> google.protobuf.Timestamp
+	23, // 22: tstr.data.v1.RunSummary.started_at:type_name -> google.protobuf.Timestamp
+	23, // 23: tstr.data.v1.RunSummary.finished_at:type_name -> google.protobuf.Timestamp
+	0,  // 24: tstr.data.v1.DataService.GetTest:input_type -> tstr.data.v1.GetTestRequest
+	2,  // 25: tstr.data.v1.DataService.QueryTests:input_type -> tstr.data.v1.QueryTestsRequest
+	4,  // 26: tstr.data.v1.DataService.GetTestSuite:input_type -> tstr.data.v1.GetTestSuiteRequest
+	6,  // 27: tstr.data.v1.DataService.QueryTestSuites:input_type -> tstr.data.v1.QueryTestSuitesRequest
+	8,  // 28: tstr.data.v1.DataService.GetRun:input_type -> tstr.data.v1.GetRunRequest
+	10, // 29: tstr.data.v1.DataService.QueryRuns:input_type -> tstr.data.v1.QueryRunsRequest
+	12, // 30: tstr.data.v1.DataService.GetRunner:input_type -> tstr.data.v1.GetRunnerRequest
+	14, // 31: tstr.data.v1.DataService.QueryRunners:input_type -> tstr.data.v1.QueryRunnersRequest
+	1,  // 32: tstr.data.v1.DataService.GetTest:output_type -> tstr.data.v1.GetTestResponse
+	3,  // 33: tstr.data.v1.DataService.QueryTests:output_type -> tstr.data.v1.QueryTestsResponse
+	5,  // 34: tstr.data.v1.DataService.GetTestSuite:output_type -> tstr.data.v1.GetTestSuiteResponse
+	7,  // 35: tstr.data.v1.DataService.QueryTestSuites:output_type -> tstr.data.v1.QueryTestSuitesResponse
+	9,  // 36: tstr.data.v1.DataService.GetRun:output_type -> tstr.data.v1.GetRunResponse
+	11, // 37: tstr.data.v1.DataService.QueryRuns:output_type -> tstr.data.v1.QueryRunsResponse
+	13, // 38: tstr.data.v1.DataService.GetRunner:output_type -> tstr.data.v1.GetRunnerResponse
+	15, // 39: tstr.data.v1.DataService.QueryRunners:output_type -> tstr.data.v1.QueryRunnersResponse
+	32, // [32:40] is the sub-list for method output_type
+	24, // [24:32] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_data_v1_data_proto_init() }

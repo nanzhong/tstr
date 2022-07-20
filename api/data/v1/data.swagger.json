@@ -473,6 +473,12 @@
       "properties": {
         "runner": {
           "$ref": "#/definitions/v1Runner"
+        },
+        "runSummaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1RunSummary"
+          }
         }
       }
     },

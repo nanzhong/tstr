@@ -48,10 +48,14 @@ var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
 	"/tstr.runner.v1.RunnerService/NextRun":        {commonv1.AccessToken_RUNNER},
 	"/tstr.runner.v1.RunnerService/SubmitRun":      {commonv1.AccessToken_RUNNER},
 
-	"/tstr.data.v1.DataService/GetTest":      {commonv1.AccessToken_DATA},
-	"/tstr.data.v1.DataService/GetTestSuite": {commonv1.AccessToken_DATA},
-	"/tstr.data.v1.DataService/GetRun":       {commonv1.AccessToken_DATA},
-	"/tstr.data.v1.DataService/GetRunner":    {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetTest":         {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryTests":      {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetTestSuite":    {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryTestSuites": {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRun":          {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryRuns":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRunner":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryRunners":    {commonv1.AccessToken_DATA},
 }
 
 // TODO We shouldn't reach out to the db each time to auth, especially when

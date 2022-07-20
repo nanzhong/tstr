@@ -420,7 +420,8 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 			Time("started_before", startedBefore.Time).
 			Time("started_after", startedAfter.Time).
 			Time("finished_before", finishedBefore.Time).
-			Time("finished_after", finishedAfter.Time)
+			Time("finished_after", finishedAfter.Time).
+			Msg("failed to query runs")
 		return nil, status.Error(codes.Internal, "failed to query runs")
 	}
 

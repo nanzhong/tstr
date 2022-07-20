@@ -96,8 +96,8 @@ ON tests.id = latest_configs.test_id
 LEFT JOIN test_run_configs
 ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE
-  (sqlc.narg('ids')::uuid[] IS NULL OR test.id = ANY (sqlc.narg('ids')::uuid[])) AND
-  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR test.id = ANY (
+  (sqlc.narg('ids')::uuid[] IS NULL OR tests.id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR tests.id = ANY (
     SELECT tests.id
     FROM test_suites
     JOIN tests

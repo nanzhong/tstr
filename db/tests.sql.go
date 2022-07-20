@@ -287,8 +287,8 @@ ON tests.id = latest_configs.test_id
 LEFT JOIN test_run_configs
 ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE
-  ($1::uuid[] IS NULL OR test.id = ANY ($1::uuid[])) AND
-  ($2::uuid[] IS NULL OR test.id = ANY (
+  ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
+  ($2::uuid[] IS NULL OR tests.id = ANY (
     SELECT tests.id
     FROM test_suites
     JOIN tests

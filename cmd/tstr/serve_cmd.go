@@ -98,12 +98,12 @@ var serveCmd = &cobra.Command{
 
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
-				grpc_validator.UnaryServerInterceptor(),
 				auth.UnaryServerInterceptor(pgxPool),
+				grpc_validator.UnaryServerInterceptor(),
 			),
 			grpc.ChainStreamInterceptor(
-				grpc_validator.StreamServerInterceptor(),
 				auth.StreamServerInterceptor(pgxPool),
+				grpc_validator.StreamServerInterceptor(),
 			),
 		)
 

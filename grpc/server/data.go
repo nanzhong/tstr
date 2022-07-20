@@ -132,10 +132,12 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 		testSuiteIDs = append(testSuiteIDs, id)
 	}
 
-	var labels pgtype.JSONB
-	if err := labels.Set(&r.Labels); err != nil {
-		log.Error().Err(err).Msg("failed to parse labels")
-		return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
+	labels := pgtype.JSONB{Status: pgtype.Null}
+	if r.Labels != nil {
+		if err := labels.Set(&r.Labels); err != nil {
+			log.Error().Err(err).Msg("failed to parse labels")
+			return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
+		}
 	}
 
 	tests, err := s.dbQuerier.QueryTests(ctx, s.pgxPool, db.QueryTestsParams{
@@ -249,10 +251,12 @@ func (s *DataServer) QueryTestSuites(ctx context.Context, r *datav1.QueryTestSui
 		testSuiteIDs = append(testSuiteIDs, id)
 	}
 
-	var labels pgtype.JSONB
-	if err := labels.Set(&r.Labels); err != nil {
-		log.Error().Err(err).Msg("failed to parse labels")
-		return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
+	labels := pgtype.JSONB{Status: pgtype.Null}
+	if r.Labels != nil {
+		if err := labels.Set(&r.Labels); err != nil {
+			log.Error().Err(err).Msg("failed to parse labels")
+			return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
+		}
 	}
 
 	testSuites, err := s.dbQuerier.QueryTestSuites(ctx, s.pgxPool, db.QueryTestSuitesParams{

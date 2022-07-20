@@ -7,7 +7,11 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:9090'
+        target: 'http://localhost:9000',
+        rewrite: (path) => path.replace(/^\/api/, ''),
+        headers: {
+          'Authorization': 'Bearer dev'
+        }
       }
     }
 

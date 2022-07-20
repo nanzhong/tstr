@@ -41,22 +41,21 @@ export default {
         series() {
 
             const colors = {
-                pass: '#009900',
-                fail: '#ff0000',
-                error: '#ff9900',
-                unknown: '#000000',
+                PASS: '#009900',
+                FAIL: '#ff0000',
+                ERRROR: '#ff9900',
+                UNKNOWN: '#000000',
             }
 
-
-            return ['pass', 'fail', 'unknown', 'error'].map(result => {
+            return ['PASS', 'FAIL', 'UNKNOWN', 'ERROR'].map(result => {
                 return {
                     name: result,
                     color: colors[result],
-                    data: this.runs.filter(s => s.Result == result).filter(s => s.StartedAt != null).map(s => {
+                    data: this.runs.filter(s => s.result == result).filter(s => s.started_at != null).map(s => {
                         return {
-                            x: s.StartedAt.ts,
-                            y: Interval.fromDateTimes(s.StartedAt, s.FinishedAt).toDuration(['seconds']).seconds,
-                            id: s.ID,
+                            x: s.started_at.ts,
+                            y: Interval.fromDateTimes(s.started_at, s.finished_at).toDuration(['seconds']).seconds,
+                            id: s.id,
                         }
                     })
                 }

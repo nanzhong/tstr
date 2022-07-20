@@ -6,14 +6,14 @@ import RunnerInfo from '../components/RunnerInfo.vue'
 <template>
 
     <q-tab-panel name="runners" v-if="runner != null">
-        <div class="text-h6">Runner: {{ runner.Name }}</div>
+        <div class="text-h6">Runner: {{ runner.name }}</div>
 
         <runner-info :runner="runner"></runner-info>
 
         <br />
         <div class="text-h6">Test Runs</div>
 
-        <q-markup-table separator="vertical" flat bordered v-if="runner.LastRuns.length > 0">
+        <q-markup-table separator="vertical" flat bordered v-if="run_summaries != null && run_summaries.length > 0">
             <thead>
                 <tr>
                     <th class="text-left">Test</th>
@@ -24,26 +24,26 @@ import RunnerInfo from '../components/RunnerInfo.vue'
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="run in runner.LastRuns">
+                <tr v-for="run in run_summaries">
                     <td class="text-left">
-                        <router-link :to="{ name: 'test-details', params: { id: run.TestID } }"> {{ run.TestName }}
+                        <router-link :to="{ name: 'test-details', params: { id: run.test_id } }"> TODO:test_name {{ run.test_name }}
                         </router-link>
                     </td>
                     <td class="text-left">
-                        <router-link :to="{ name: 'run-details', params: { id: run.RunID } }">view run</router-link>
+                        <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
                     </td>
-                    <td class="text-right">{{ run.StartedAt != null ? $filters.absoluteDate(run.StartedAt) : null }}
+                    <td class="text-right">{{ run.started_at != null ? $filters.absoluteDate(run.started_at) : null }}
                     </td>
                     <td class="text-right">
-                        {{ $filters.relativeDate(run.StartedAt, run.FinishedAt, ['minutes', 'seconds']) }} </td>
+                        {{ $filters.relativeDate(run.started_at, run.finished_at, ['minutes', 'seconds']) }} </td>
                     <td class="text-right">
-                        <test-result-badge :result="run.Result"></test-result-badge>
+                        <test-result-badge :result="run.result"></test-result-badge>
                     </td>
                 </tr>
 
             </tbody>
         </q-markup-table>
-        <div v-if="runner.LastRuns.length == 0">
+        <div v-if="run_summaries.length == 0">
             <p>
                 This runner doesn't have any test run recorded.
             </p>
@@ -62,12 +62,16 @@ export default {
     data() {
         return {
             runner: null,
+            run_summaries: null,
         }
     },
     methods: {
         async fetchRunnerDetails(runnerId) {
-            const runner = await tstr.fetchRunnerDetails(runnerId)
-            this.runner = runner
+            const runnerDetails = await tstr.fetchRunnerDetails(runnerId)
+            this.runner = runnerDetails.runner
+            this.run_summaries = runnerDetails.run_summaries
+            console.log("RUNNER", this.runner)
+            console.log("RUN_SUMMARIES", this.run_summaries)
         }
     }
 }

@@ -5,8 +5,8 @@ import TestSummary from '../components/TestSummary.vue'
 <template>
     <q-page>
         <q-tab-panel name="tests">
-            <div style="" v-for="test in Tests" :key="test.ID">
-                <test-summary :ID="test.ID" :Name="test.Name"></test-summary>
+            <div style="" v-for="test in Tests" :key="test.id">
+                <test-summary :id="test.id" :name="test.name"></test-summary>
             </div>
         </q-tab-panel>
     </q-page>

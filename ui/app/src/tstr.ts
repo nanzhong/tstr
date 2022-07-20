@@ -6,12 +6,23 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
     return null;
   }
 
+  const datetime_fields = new Set()
+  datetime_fields.add('finished_at')
+  datetime_fields.add('next_run_at')
+  datetime_fields.add('registered_at')
+  datetime_fields.add('scheduled_at')
+  datetime_fields.add('started_at')
+  datetime_fields.add('updated_at')
+  datetime_fields.add('last_heartbeat_at')
+
   if (root) {
     if (Array.isArray(obj)) {
       return obj.map((o) => APINullableToJs(o, true));
     } else {
       Object.keys(obj).map(function (key) {
-        obj[key] = APINullableToJs(obj[key], false);
+        if (datetime_fields.has(key)) {
+          obj[key] = obj[key] != null? DateTime.fromISO(obj[key]) : null
+        }
       });
       return obj;
     }
@@ -34,35 +45,39 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
 
 export default {
   fetchTests: async function () {
-    const url = "/api/tests";
-    return await axios.get(url).then(r => r.data)
+    const url = "/api/data/v1/tests";
+    return await axios.get(url).then(r => r.data.tests)
   },
 
   fetchRunners: async function () {
-    const url = "/api/runners";
+    const url = "/api/data/v1/runners";
     return await axios.get(url).then(r => r.data)
   },
 
   fetchRunDetails: async function (runId: String) {
-    const url = `/api/runs/${runId}`;
-    return await axios.get(url).then (r => APINullableToJs(r.data))
+    const url = `/api/data/v1/runs/${runId}`;
+    return await axios.get(url).then (r => APINullableToJs(r.data.run))
   },
 
   fetchRuns: async function () {
-    const url = `/api/runs`;
-    return await axios.get(url).then (r => APINullableToJs(r.data))
+    const url = `/api/data/v1/runs`;
+    return await axios.get(url).then (r => APINullableToJs(r.data.runs))
   },
 
   fetchTestDetails: async function (
     testId: String,
     includeRuns: boolean = true
   ) {
-    const url = `/api/tests/${testId}?runs=${includeRuns ? 100 : 0}`;
+    const url = `/api/data/v1/tests/${testId}?runs=${includeRuns ? 100 : 0}`;
 
     var testDetails = await axios.get(url).then(r => r.data)
+    // console.log("API_",testDetails)
 
-    testDetails = APINullableToJs(testDetails);
-    testDetails.RunsSummary = APINullableToJs(testDetails.RunsSummary);
+    testDetails.test = APINullableToJs(testDetails.test)
+    testDetails.run_summaries = APINullableToJs(testDetails.run_summaries)
+
+    // testDetails = APINullableToJs(testDetails);
+    // testDetails.RunsSummary = APINullableToJs(testDetails.RunsSummary);
 
     return testDetails;
   },
@@ -71,20 +86,17 @@ export default {
     runnerId: String,
     includeRuns: boolean = true
   ) {
-    const url = `/api/runners/${runnerId}?runs=${includeRuns ? 100 : 0}`;
+    const url = `/api/data/v1/runners/${runnerId}?runs=${includeRuns ? 100 : 0}`;
     var data = await axios.get(url).then(r => r.data)
 
-    var runner = data.Runner;
+    data.runner = APINullableToJs(data.runner);
 
-    runner = APINullableToJs(data.Runner);
-
-    if (data.RunsSummary != null) {
-      runner["LastRuns"] = data.RunsSummary.map(function (run) {
+    if (data.run_summaries != null) {
+      data.run_summaries = data.run_summaries.map(function (run) {
         run = APINullableToJs(run);
-
         return run;
       });
     }
-    return runner;
+    return data;
   },
 };

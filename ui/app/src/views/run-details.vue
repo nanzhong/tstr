@@ -12,11 +12,11 @@ import TestLogLine from '../components/TestLogLine.vue'
             <div class="row inline">
 
                 <div>
-                    <div class="text-h6">Test: {{ test.Name }}</div>
+                    <div class="text-h6">Test: {{ test.name }}</div>
                     <test-details :test="test"></test-details>
                 </div>
                 <div class="">
-                    <div class="text-h6">Runner: {{ runner.Name }}</div>
+                    <div class="text-h6">Runner: {{ runner.name }}</div>
                     <runner-info :runner="runner"></runner-info>
                 </div>
                 <div class="">
@@ -25,7 +25,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Started</q-item-label>
                             <q-item-label>
-                                {{ $filters.absoluteDate(run.StartedAt) }}
+                                {{ $filters.absoluteDate(run.started_at) }}
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -34,7 +34,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Duration</q-item-label>
                             <q-item-label>
-                                {{ $filters.relativeDate(run.StartedAt, run.FinishedAt) }}
+                                {{ $filters.relativeDate(run.started_at, run.finished_at) }}
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -43,7 +43,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Result</q-item-label>
                             <q-item-label>
-                                <test-result-badge :result="run.Result"></test-result-badge>
+                                <test-result-badge :result="run.result"></test-result-badge>
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -51,7 +51,7 @@ import TestLogLine from '../components/TestLogLine.vue'
             </div>
 
             <div class="text-h6">Logs</div>
-            <test-log-line :logline="logline" v-for="logline in run.Logs"></test-log-line>
+            <test-log-line :logline="logline" v-for="logline in run.logs"></test-log-line>
         </q-tab-panel>
     </q-page>
 
@@ -73,19 +73,23 @@ export default {
             run: null,
             runner: null,
             test: null,
-            runconfig: null,
         }
     },
     methods: {
         async fetchRunDetails(runId) {
             const runDetails = await tstr.fetchRunDetails(runId)
             this.run = runDetails
+            console.log("RUN",this.run)
 
-            const runnerDetails = await tstr.fetchRunnerDetails(runDetails.RunnerID, false)
-            this.runner = runnerDetails
+            const runnerDetails = await tstr.fetchRunnerDetails(this.run.runner_id, false)
+            this.runner = runnerDetails.runner
+            console.log("RUNNER",this.runner)
 
-            const testDetails = await tstr.fetchTestDetails(runDetails.TestID, false)
-            this.test = testDetails
+            const testDetails = await tstr.fetchTestDetails(this.run.test_id, false)
+            this.test = testDetails.test
+
+            console.log("TEST",this.test)
+
         }
     }
 

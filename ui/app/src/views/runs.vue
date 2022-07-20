@@ -18,23 +18,23 @@ import TestResultBadge from '../components/TestResultBadge.vue'
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="run in Runs">
+                    <tr v-for="run in runs">
                         <td class="text-left">
-                            <router-link :to="{ name: 'test-details', params: { id: run.TestID } }"> {{ run.TestName }}
+                            <router-link :to="{ name: 'test-details', params: { id: run.test_id } }"> FIXME test_name {{ run.TestName }}
                             </router-link>
                         </td>
                         <td class="text-left">
-                            <router-link :to="{ name: 'run-details', params: { id: run.ID } }">view run</router-link>
+                            <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
                         </td>
-                        <td class="text-right">{{ run.StartedAt != null ? $filters.absoluteDate(run.StartedAt) : null }}
-                        </td>
-                        <td class="text-right">
-                            {{ $filters.relativeDate(run.StartedAt, run.FinishedAt, ['minutes', 'seconds']) }} </td>
-                        <td class="text-right">
-                            <test-result-badge :result="run.Result"></test-result-badge>
+                        <td class="text-right">{{ run.started_at != null ? $filters.absoluteDate(run.started_at) : null }}
                         </td>
                         <td class="text-right">
-                            {{ run.RunnerName }}
+                            <span v-if="run.finished_at != null && run.started_at != null"> {{ $filters.relativeDate(run.started_at, run.finished_at, ['minutes', 'seconds']) }}</span> </td>
+                        <td class="text-right">
+                            <test-result-badge :result="run.result"></test-result-badge>
+                        </td>
+                        <td class="text-right">
+                            <router-link :to="{ name: 'runner-details', params: { id: run.runner_id } }">TODO runner_name {{run.runner_name}}</router-link>
                         </td>
 
                     </tr>
@@ -55,13 +55,14 @@ export default {
     },
     data() {
         return {
-            Runs: [],
+            runs: [],
         }
     },
     methods: {
         async fetchRunners() {
             const runs = await tstr.fetchRuns()
-            this.Runs = runs
+            this.runs = runs
+            console.log("RUNS",this.runs)
         }
     }
 

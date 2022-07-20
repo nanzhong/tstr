@@ -51,7 +51,7 @@ export default {
 
   fetchRunners: async function () {
     const url = "/api/data/v1/runners";
-    return await axios.get(url).then(r => r.data)
+    return await axios.get(url).then(r => APINullableToJs(r.data.runners))
   },
 
   fetchRunDetails: async function (runId: String) {

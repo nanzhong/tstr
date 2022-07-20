@@ -14,28 +14,28 @@
                         <th class="text-right">Last Heartbeat</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr v-for="runner in this.Runners">
+                <tbody v-if="runners != null">
+                    <tr v-for="runner in runners">
                         <td class="text-left">
-                            <router-link :to="{ name: 'runner-details', params: { id: runner.ID } }">{{ runner.Name }}
+                            <router-link :to="{ name: 'runner-details', params: { id: runner.id } }">{{ runner.name }}
                             </router-link>
                         </td>
                         <td class="text-right">
-                            <q-badge color="gray" v-for="lbl, val in runner.AcceptTestLabelSelectors">
+                            <q-badge color="gray" v-for="lbl, val in runner.accept_test_label_selectors">
                                 {{ lbl }}={{ val }}
                             </q-badge>
                         </td>
                         <td class="text-right">
-                            <q-badge color="gray" v-for="lbl, val in runner.RejectTestLabelSelectors">
+                            <q-badge color="gray" v-for="lbl, val in runner.reject_test_label_selectors">
                                 {{ lbl }}={{ val }}
                             </q-badge>
                         </td>
-                        <td class="text-right"><span v-if="runner.RegisteredAt.Valid"></span>{{
-                                runner.RegisteredAt.Time
+                        <td class="text-right"><span v-if="runner.registered_at"></span>{{
+                                runner.registered_at
                         }}
                         </td>
-                        <td class="text-right"><span v-if="runner.LastHeartbeatAt.Valid"></span>{{
-                                runner.LastHeartbeatAt.Time
+                        <td class="text-right"><span v-if="runner.last_heartbeat_at"></span>{{
+                                runner.last_heartbeat_at
                         }}
                         </td>
                     </tr>
@@ -55,12 +55,12 @@ export default {
     },
     data() {
         return {
-            Runners: [],
+            runners: null,
         }
     },
     methods: {
         async fetchRunners() {
-            this.Runners = await tstr.fetchRunners()
+            this.runners = await tstr.fetchRunners()
         }
     }
 }

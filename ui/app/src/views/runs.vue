@@ -20,20 +20,20 @@ import TestResultBadge from '../components/TestResultBadge.vue'
                 <tbody>
                     <tr v-for="run in runs">
                         <td class="text-left">
-                            <router-link :to="{ name: 'test-details', params: { id: run.test_id } }">{{ tests[run.test_id].name }}</router-link>
+                            <router-link :to="{ name: 'test-details', params: { id: run.testId } }">{{ tests[run.testId].name }}</router-link>
                         </td>
                         <td class="text-left">
                             <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
                         </td>
-                        <td class="text-right">{{ run.started_at != null ? $filters.absoluteDate(run.started_at) : null }}
+                        <td class="text-right">{{ run.startedAt != null ? $filters.absoluteDate(run.startedAt) : null }}
                         </td>
                         <td class="text-right">
-                            <span v-if="run.finished_at != null && run.started_at != null"> {{ $filters.relativeDate(run.started_at, run.finished_at, ['minutes', 'seconds']) }}</span> </td>
+                            <span v-if="run.finishedAt != null && run.startedAt != null"> {{ $filters.relativeDate(run.startedAt, run.finishedAt, ['minutes', 'seconds']) }}</span> </td>
                         <td class="text-right">
                             <test-result-badge :result="run.result"></test-result-badge>
                         </td>
                         <td class="text-right">
-                            <router-link :to="{ name: 'runner-details', params: { id: run.runner_id } }">{{ 'runner_id' in run ? run.runner_id : '' }}</router-link>
+                            <router-link :to="{ name: 'runner-details', params: { id: run.runnerId } }">{{ 'runnerId' in run ? run.runnerId : '' }}</router-link>
                         </td>
 
                     </tr>
@@ -65,9 +65,9 @@ export default {
       const runnerIDs = new Set();
       const runs = await tstr.fetchRuns();
       runs.forEach(r => {
-        testIDs.add(r.test_id);
-        if ('runner_id' in r) {
-          runnerIDs.add(r.runner_id);
+        testIDs.add(r.testId);
+        if ('runnerId' in r) {
+          runnerIDs.add(r.runnerId);
         }
       })
 

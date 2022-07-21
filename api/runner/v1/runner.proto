@@ -15,8 +15,8 @@ service RunnerService {
 message RegisterRunnerRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
-  map<string, string> accept_test_label_selectors = 2 [json_name="accept_test_label_selectors"];
-  map<string, string> reject_test_label_selectors = 3 [json_name="reject_test_label_selectors"];
+  map<string, string> accept_test_label_selectors = 2;
+  map<string, string> reject_test_label_selectors = 3;
 }
 
 message RegisterRunnerResponse {
@@ -40,8 +40,8 @@ message SubmitRunRequest {
   tstr.common.v1.Run.Result result = 3;
   repeated tstr.common.v1.Run.Log logs = 4;
 
-  google.protobuf.Timestamp started_at = 10 [json_name="started_at"];
-  google.protobuf.Timestamp finished_at = 11 [json_name="finished_at"];
+  google.protobuf.Timestamp started_at = 10;
+  google.protobuf.Timestamp finished_at = 11;
 }
 
 message SubmitRunResponse {}

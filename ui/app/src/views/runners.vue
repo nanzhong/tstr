@@ -21,21 +21,21 @@
                             </router-link>
                         </td>
                         <td class="text-right">
-                            <q-badge color="gray" v-for="lbl, val in runner.accept_test_label_selectors">
+                            <q-badge color="gray" v-for="lbl, val in runner.acceptTestLabelSelectors">
                                 {{ lbl }}={{ val }}
                             </q-badge>
                         </td>
                         <td class="text-right">
-                            <q-badge color="gray" v-for="lbl, val in runner.reject_test_label_selectors">
+                            <q-badge color="gray" v-for="lbl, val in runner.rejectTestLabelSelectors">
                                 {{ lbl }}={{ val }}
                             </q-badge>
                         </td>
-                        <td class="text-right"><span v-if="runner.registered_at"></span>{{
-                                runner.registered_at
+                        <td class="text-right"><span v-if="runner.registeredAt"></span>{{
+                                runner.registeredAt
                         }}
                         </td>
-                        <td class="text-right"><span v-if="runner.last_heartbeat_at"></span>{{
-                                runner.last_heartbeat_at
+                        <td class="text-right"><span v-if="runner.lastHeartbeatAt"></span>{{
+                                runner.lastHeartbeatAt
                         }}
                         </td>
                     </tr>

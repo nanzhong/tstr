@@ -33,7 +33,7 @@
         "time": {
           "type": "string"
         },
-        "output_type": {
+        "outputType": {
           "$ref": "#/definitions/LogOutput"
         },
         "data": {
@@ -58,7 +58,7 @@
         "id": {
           "type": "string"
         },
-        "container_image": {
+        "containerImage": {
           "type": "string"
         },
         "command": {
@@ -76,7 +76,7 @@
             "type": "string"
           }
         },
-        "created_at": {
+        "createdAt": {
           "type": "string",
           "format": "date-time"
         }
@@ -118,7 +118,7 @@
     "v1DefineTestSuiteResponse": {
       "type": "object",
       "properties": {
-        "test_suite": {
+        "testSuite": {
           "$ref": "#/definitions/v1TestSuite"
         }
       }
@@ -150,7 +150,7 @@
     "v1GetTestSuiteResponse": {
       "type": "object",
       "properties": {
-        "test_suite": {
+        "testSuite": {
           "$ref": "#/definitions/v1TestSuite"
         }
       }
@@ -180,7 +180,7 @@
     "v1ListTestSuitesResponse": {
       "type": "object",
       "properties": {
-        "test_suites": {
+        "testSuites": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1TestSuite"
@@ -213,13 +213,13 @@
         "id": {
           "type": "string"
         },
-        "test_id": {
+        "testId": {
           "type": "string"
         },
-        "test_run_config": {
+        "testRunConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },
-        "runner_id": {
+        "runnerId": {
           "type": "string"
         },
         "result": {
@@ -231,15 +231,15 @@
             "$ref": "#/definitions/RunLog"
           }
         },
-        "scheduled_at": {
+        "scheduledAt": {
           "type": "string",
           "format": "date-time"
         },
-        "started_at": {
+        "startedAt": {
           "type": "string",
           "format": "date-time"
         },
-        "finished_at": {
+        "finishedAt": {
           "type": "string",
           "format": "date-time"
         }
@@ -254,23 +254,23 @@
         "name": {
           "type": "string"
         },
-        "accept_test_label_selectors": {
+        "acceptTestLabelSelectors": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
-        "reject_test_label_selectors": {
+        "rejectTestLabelSelectors": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           }
         },
-        "registered_at": {
+        "registeredAt": {
           "type": "string",
           "format": "date-time"
         },
-        "last_heartbeat_at": {
+        "lastHeartbeatAt": {
           "type": "string",
           "format": "date-time"
         }
@@ -299,25 +299,25 @@
             "type": "string"
           }
         },
-        "cron_schedule": {
+        "cronSchedule": {
           "type": "string"
         },
-        "next_run_at": {
+        "nextRunAt": {
           "type": "string",
           "format": "date-time"
         },
-        "run_config": {
+        "runConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },
-        "registered_at": {
+        "registeredAt": {
           "type": "string",
           "format": "date-time"
         },
-        "updated_at": {
+        "updatedAt": {
           "type": "string",
           "format": "date-time"
         },
-        "archived_at": {
+        "archivedAt": {
           "type": "string",
           "format": "date-time"
         }
@@ -338,15 +338,15 @@
             "type": "string"
           }
         },
-        "created_at": {
+        "createdAt": {
           "type": "string",
           "format": "date-time"
         },
-        "updated_at": {
+        "updatedAt": {
           "type": "string",
           "format": "date-time"
         },
-        "archived_at": {
+        "archivedAt": {
           "type": "string",
           "format": "date-time"
         }

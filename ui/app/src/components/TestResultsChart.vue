@@ -51,10 +51,10 @@ export default {
                 return {
                     name: result,
                     color: colors[result],
-                    data: this.runs.filter(s => s.result == result).filter(s => s.started_at != null).map(s => {
+                    data: this.runs.filter(s => s.result == result).filter(s => s.startedAt != null).map(s => {
                         return {
-                            x: s.started_at.ts,
-                            y: Interval.fromDateTimes(s.started_at, s.finished_at).toDuration(['seconds']).seconds,
+                            x: s.startedAt.ts,
+                            y: Interval.fromDateTimes(s.startedAt, s.finishedAt).toDuration(['seconds']).seconds,
                             id: s.id,
                         }
                     })

@@ -6,21 +6,21 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
     return null;
   }
 
-  const datetime_fields = new Set()
-  datetime_fields.add('finished_at')
-  datetime_fields.add('next_run_at')
-  datetime_fields.add('registered_at')
-  datetime_fields.add('scheduled_at')
-  datetime_fields.add('started_at')
-  datetime_fields.add('updated_at')
-  datetime_fields.add('last_heartbeat_at')
+  const datetimeFields = new Set()
+  datetimeFields.add('finishedAt')
+  datetimeFields.add('nextRunAt')
+  datetimeFields.add('registeredAt')
+  datetimeFields.add('scheduledAt')
+  datetimeFields.add('startedAt')
+  datetimeFields.add('updatedAt')
+  datetimeFields.add('lastHeartbeatAt')
 
   if (root) {
     if (Array.isArray(obj)) {
       return obj.map((o) => APINullableToJs(o, true));
     } else {
       Object.keys(obj).map(function (key) {
-        if (datetime_fields.has(key)) {
+        if (datetimeFields.has(key)) {
           obj[key] = obj[key] != null? DateTime.fromISO(obj[key]) : null
         }
       });
@@ -84,7 +84,7 @@ export default {
     // console.log("API_",testDetails)
 
     testDetails.test = APINullableToJs(testDetails.test)
-    testDetails.run_summaries = APINullableToJs(testDetails.run_summaries)
+    testDetails.runSummaries = APINullableToJs(testDetails.runSummaries)
 
     // testDetails = APINullableToJs(testDetails);
     // testDetails.RunsSummary = APINullableToJs(testDetails.RunsSummary);
@@ -101,8 +101,8 @@ export default {
 
     data.runner = APINullableToJs(data.runner);
 
-    if (data.run_summaries != null) {
-      data.run_summaries = data.run_summaries.map(function (run) {
+    if (data.runSummaries != null) {
+      data.runSummaries = data.runSummaries.map(function (run) {
         run = APINullableToJs(run);
         return run;
       });

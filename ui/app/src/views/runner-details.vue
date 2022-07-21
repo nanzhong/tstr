@@ -13,7 +13,7 @@ import RunnerInfo from '../components/RunnerInfo.vue'
         <br />
         <div class="text-h6">Test Runs</div>
 
-        <q-markup-table separator="vertical" flat bordered v-if="run_summaries != null && run_summaries.length > 0">
+        <q-markup-table separator="vertical" flat bordered v-if="runSummaries != null && runSummaries.length > 0">
             <thead>
                 <tr>
                     <th class="text-left">Test</th>
@@ -24,18 +24,18 @@ import RunnerInfo from '../components/RunnerInfo.vue'
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="run in run_summaries">
+                <tr v-for="run in runSummaries">
                     <td class="text-left">
-                        <router-link :to="{ name: 'test-details', params: { id: run.test_id } }"> TODO:test_name {{ run.test_name }}
+                        <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> TODO:test_name {{ run.test_name }}
                         </router-link>
                     </td>
                     <td class="text-left">
                         <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
                     </td>
-                    <td class="text-right">{{ run.started_at != null ? $filters.absoluteDate(run.started_at) : null }}
+                    <td class="text-right">{{ run.startedAt != null ? $filters.absoluteDate(run.startedAt) : null }}
                     </td>
                     <td class="text-right">
-                        {{ $filters.relativeDate(run.started_at, run.finished_at, ['minutes', 'seconds']) }} </td>
+                        {{ $filters.relativeDate(run.startedAt, run.finishedAt, ['minutes', 'seconds']) }} </td>
                     <td class="text-right">
                         <test-result-badge :result="run.result"></test-result-badge>
                     </td>
@@ -43,7 +43,7 @@ import RunnerInfo from '../components/RunnerInfo.vue'
 
             </tbody>
         </q-markup-table>
-        <div v-if="run_summaries.length == 0">
+        <div v-if="runSummaries.length == 0">
             <p>
                 This runner doesn't have any test run recorded.
             </p>
@@ -62,16 +62,16 @@ export default {
     data() {
         return {
             runner: null,
-            run_summaries: null,
+            runSummaries: null,
         }
     },
     methods: {
         async fetchRunnerDetails(runnerId) {
             const runnerDetails = await tstr.fetchRunnerDetails(runnerId)
             this.runner = runnerDetails.runner
-            this.run_summaries = runnerDetails.run_summaries
+            this.runSummaries = runnerDetails.runSummaries
             console.log("RUNNER", this.runner)
-            console.log("RUN_SUMMARIES", this.run_summaries)
+            console.log("RUN_SUMMARIES", this.runSummaries)
         }
     }
 }

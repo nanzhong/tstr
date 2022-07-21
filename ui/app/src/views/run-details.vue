@@ -25,7 +25,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Started</q-item-label>
                             <q-item-label>
-                                {{ $filters.absoluteDate(run.started_at) }}
+                                {{ $filters.absoluteDate(run.startedAt) }}
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -34,7 +34,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Duration</q-item-label>
                             <q-item-label>
-                                {{ $filters.relativeDate(run.started_at, run.finished_at) }}
+                                {{ $filters.relativeDate(run.startedAt, run.finishedAt) }}
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -81,11 +81,11 @@ export default {
             this.run = runDetails
             console.log("RUN",this.run)
 
-            const runnerDetails = await tstr.fetchRunnerDetails(this.run.runner_id, false)
+            const runnerDetails = await tstr.fetchRunnerDetails(this.run.runnerId, false)
             this.runner = runnerDetails.runner
             console.log("RUNNER",this.runner)
 
-            const testDetails = await tstr.fetchTestDetails(this.run.test_id, false)
+            const testDetails = await tstr.fetchTestDetails(this.run.testId, false)
             this.test = testDetails.test
 
             console.log("TEST",this.test)

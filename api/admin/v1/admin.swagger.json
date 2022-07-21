@@ -74,15 +74,15 @@
             "$ref": "#/definitions/AccessTokenScope"
           }
         },
-        "issued_at": {
+        "issuedAt": {
           "type": "string",
           "format": "date-time"
         },
-        "expires_at": {
+        "expiresAt": {
           "type": "string",
           "format": "date-time"
         },
-        "revoked_at": {
+        "revokedAt": {
           "type": "string",
           "format": "date-time"
         }

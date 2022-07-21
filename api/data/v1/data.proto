@@ -67,7 +67,7 @@ message GetTestRequest {
 
 message GetTestResponse {
   tstr.common.v1.Test test = 1;
-  repeated RunSummary run_summaries = 2 [json_name ="run_summaries"];
+  repeated RunSummary run_summaries = 2;
 }
 
 message QueryTestsRequest {
@@ -148,8 +148,8 @@ message GetRunnerRequest {
 }
 
 message GetRunnerResponse {
-  tstr.common.v1.Runner runner = 1 [json_name = "runner"];
-  repeated RunSummary run_summaries = 2 [json_name ="run_summaries"];
+  tstr.common.v1.Runner runner = 1;
+  repeated RunSummary run_summaries = 2;
 }
 
 message QueryRunnersRequest {
@@ -168,22 +168,19 @@ message RunSummary {
     (validate.rules).string.uuid =  true
   ];
   string test_id = 2 [
-    (validate.rules).string.uuid = true,
-    json_name = "test_id"
+    (validate.rules).string.uuid = true
   ];
   string test_run_config_id = 3 [
     (validate.rules).string.uuid = true
   ];
   string runner_id = 4 [
-    (validate.rules).string = {ignore_empty: true, uuid: true},
-    json_name = "runner_id"
+    (validate.rules).string = {ignore_empty: true, uuid: true}
   ];
   tstr.common.v1.Run.Result result = 5;
 
   google.protobuf.Timestamp scheduled_at = 10 [
-    (validate.rules).timestamp.required = true,
-    json_name = "scheduled_at"
+    (validate.rules).timestamp.required = true
   ];
-  google.protobuf.Timestamp started_at = 11 [json_name="started_at"];
-  google.protobuf.Timestamp finished_at = 12 [json_name="finished_at"];
+  google.protobuf.Timestamp started_at = 11;
+  google.protobuf.Timestamp finished_at = 12;
 }

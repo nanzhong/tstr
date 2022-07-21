@@ -36,6 +36,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var apiCmd = &cobra.Command{
@@ -112,7 +113,14 @@ var apiCmd = &cobra.Command{
 		dataServer := server.NewDataServer(pgxPool)
 		datav1.RegisterDataServiceServer(grpcServer, dataServer)
 
-		grpcgwMux := runtime.NewServeMux()
+		grpcgwMux := runtime.NewServeMux(runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				EmitUnpopulated: false,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}))
 		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("serve.addr"), gwOpts)
 		grpcgwServer := http.Server{

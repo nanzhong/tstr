@@ -13,7 +13,7 @@ import TestResultsChart from '../components/TestResultsChart.vue'
                 </div>
             </div>
 
-            <test-results-chart :runs="run_summaries"></test-results-chart>
+            <test-results-chart :runs="runSummaries"></test-results-chart>
 
         </q-tab-panel>
     </q-page>
@@ -30,14 +30,14 @@ export default {
     data() {
         return {
             test: null,
-            run_summaries: null,
+            runSummaries: null,
         }
     },
     methods: {
         async fetchTestDetails(testId) {
             const testDetails = await tstr.fetchTestDetails(testId)
             this.test = testDetails.test
-            this.run_summaries = testDetails.run_summaries
+            this.runSummaries = testDetails.runSummaries
         }
     }
 }

@@ -9,7 +9,7 @@ import (
 
 var ctlCmd = &cobra.Command{
 	Use:   "ctl",
-	Short: "The cli interface for interacting with tstr.",
+	Short: "The cli interface for interacting with tstr",
 }
 
 func init() {

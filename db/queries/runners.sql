@@ -23,3 +23,11 @@ ORDER by last_heartbeat_at DESC, registered_at;
 UPDATE runners
 SET last_heartbeat_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id');
+
+-- name: QueryRunners :many
+SELECT *
+FROM runners
+WHERE
+  (sqlc.narg('ids')::uuid[] IS NULL OR runners.id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('last_heartbeat_since')::timestamptz IS NULL) OR last_heartbeat_at > sqlc.narg('last_heartbeat_since')
+ORDER by name ASC;

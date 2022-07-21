@@ -1,0 +1,362 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "control/v1/control.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "ControlService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "LogOutput": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "STDOUT",
+        "STDERR",
+        "TSTR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "RunLog": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string"
+        },
+        "outputType": {
+          "$ref": "#/definitions/LogOutput"
+        },
+        "data": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "RunResult": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "PASS",
+        "FAIL",
+        "ERROR"
+      ],
+      "default": "UNKNOWN"
+    },
+    "TestRunConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "containerImage": {
+          "type": "string"
+        },
+        "command": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1ArchiveTestResponse": {
+      "type": "object"
+    },
+    "v1ArchiveTestSuiteResponse": {
+      "type": "object"
+    },
+    "v1DefineTestSuiteResponse": {
+      "type": "object",
+      "properties": {
+        "testSuite": {
+          "$ref": "#/definitions/v1TestSuite"
+        }
+      }
+    },
+    "v1GetRunResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/v1Run"
+        }
+      }
+    },
+    "v1GetRunnerResponse": {
+      "type": "object",
+      "properties": {
+        "runner": {
+          "$ref": "#/definitions/v1Runner"
+        }
+      }
+    },
+    "v1GetTestResponse": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "$ref": "#/definitions/v1Test"
+        }
+      }
+    },
+    "v1GetTestSuiteResponse": {
+      "type": "object",
+      "properties": {
+        "testSuite": {
+          "$ref": "#/definitions/v1TestSuite"
+        }
+      }
+    },
+    "v1ListRunnersResponse": {
+      "type": "object",
+      "properties": {
+        "runners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Runner"
+          }
+        }
+      }
+    },
+    "v1ListRunsResponse": {
+      "type": "object",
+      "properties": {
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Run"
+          }
+        }
+      }
+    },
+    "v1ListTestSuitesResponse": {
+      "type": "object",
+      "properties": {
+        "testSuites": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1TestSuite"
+          }
+        }
+      }
+    },
+    "v1ListTestsResponse": {
+      "type": "object",
+      "properties": {
+        "tests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Test"
+          }
+        }
+      }
+    },
+    "v1RegisterTestResponse": {
+      "type": "object",
+      "properties": {
+        "test": {
+          "$ref": "#/definitions/v1Test"
+        }
+      }
+    },
+    "v1Run": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "testId": {
+          "type": "string"
+        },
+        "testRunConfig": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
+        "runnerId": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/RunResult"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RunLog"
+          }
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "finishedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1Runner": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "acceptTestLabelSelectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "rejectTestLabelSelectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "registeredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastHeartbeatAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1ScheduleRunResponse": {
+      "type": "object",
+      "properties": {
+        "run": {
+          "$ref": "#/definitions/v1Run"
+        }
+      }
+    },
+    "v1Test": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cronSchedule": {
+          "type": "string"
+        },
+        "nextRunAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "runConfig": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
+        "registeredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "archivedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1TestSuite": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "archivedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1UpdateTestResponse": {
+      "type": "object"
+    },
+    "v1UpdateTestSuiteResponse": {
+      "type": "object"
+    }
+  }
+}

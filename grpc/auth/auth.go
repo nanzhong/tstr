@@ -9,8 +9,9 @@ import (
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/nanzhong/tstr/api/common/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -20,29 +21,41 @@ import (
 
 const mdAuthKey = "authorization"
 
-var scopeAuthorizations = map[string][]common.AccessToken_Scope{
-	"/tstr.control.v1.ControlService/RegisterTest":     {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateTest":       {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTest":          {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTests":        {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ArchiveTest":      {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/DefineTestSuite":  {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateSuite":      {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTestSuite":     {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTestSuites":   {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ArchiveTestSuite": {common.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetRun":           {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListRuns":         {common.AccessToken_CONTROL_RW, common.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ScheduleRun":      {common.AccessToken_CONTROL_RW},
+// TODO We can probably be a bit smarter/less verbose here and instead of direct
+// string matches on the full method, build up the set of allowable tokens given
+// a full method and a list of regexes (or something like that)
+var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
+	"/tstr.control.v1.ControlService/RegisterTest":     {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/UpdateTest":       {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetTest":          {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListTests":        {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ArchiveTest":      {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/DefineTestSuite":  {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/UpdateSuite":      {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetTestSuite":     {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListTestSuites":   {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ArchiveTestSuite": {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetRun":           {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListRuns":         {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ScheduleRun":      {commonv1.AccessToken_CONTROL_RW},
 
-	"/tstr.admin.v1.AdminService/IssueAccessToken":  {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/GetAccessToken":    {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/ListAccessTokens":  {common.AccessToken_ADMIN},
-	"/tstr.admin.v1.AdminService/RevokeAccessToken": {common.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/IssueAccessToken":  {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/GetAccessToken":    {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/ListAccessTokens":  {commonv1.AccessToken_ADMIN},
+	"/tstr.admin.v1.AdminService/RevokeAccessToken": {commonv1.AccessToken_ADMIN},
 
-	"/tstr.runner.v1.RunnerService/RegisterRunner": {common.AccessToken_RUNNER},
-	"/tstr.runner.v1.RunnerService/NextRun":        {common.AccessToken_RUNNER},
-	"/tstr.runner.v1.RunnerService/SubmitRun":      {common.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/RegisterRunner": {commonv1.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/NextRun":        {commonv1.AccessToken_RUNNER},
+	"/tstr.runner.v1.RunnerService/SubmitRun":      {commonv1.AccessToken_RUNNER},
+
+	"/tstr.data.v1.DataService/GetTest":         {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryTests":      {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetTestSuite":    {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryTestSuites": {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRun":          {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryRuns":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/GetRunner":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/QueryRunners":    {commonv1.AccessToken_DATA},
 }
 
 // TODO We shouldn't reach out to the db each time to auth, especially when
@@ -71,7 +84,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range toDBScopes(validScopes) {
+		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
 					return handler(ctx, req)
@@ -105,7 +118,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range toDBScopes(validScopes) {
+		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
 					return handler(srv, ss)
@@ -128,35 +141,6 @@ func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
 		return streamer(ctx, desc, cc, method, opts...)
 	}
-}
-
-func toDBScope(scope common.AccessToken_Scope) db.AccessTokenScope {
-	switch scope {
-	case common.AccessToken_ADMIN:
-		return db.AccessTokenScopeAdmin
-	case common.AccessToken_CONTROL_R:
-		return db.AccessTokenScopeControlR
-	case common.AccessToken_CONTROL_RW:
-		return db.AccessTokenScopeControlRw
-	case common.AccessToken_RUNNER:
-		return db.AccessTokenScopeRunner
-	case common.AccessToken_UNKNOWN:
-		// This should never happen and is an indication that an endpoint is not
-		// configured in the scope authorization map.
-		panic("endpoint not scoped")
-	default:
-		// This should never happen and is an indication that proto scopes and db
-		// scopes are not in sync.
-		panic("missing scope definition")
-	}
-}
-
-func toDBScopes(scopes []common.AccessToken_Scope) []db.AccessTokenScope {
-	dbScopes := make([]db.AccessTokenScope, len(scopes))
-	for i, s := range scopes {
-		dbScopes[i] = toDBScope(s)
-	}
-	return dbScopes
 }
 
 func tokenFromMD(md metadata.MD) (string, string, error) {

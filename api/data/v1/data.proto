@@ -1,0 +1,186 @@
+syntax = "proto3";
+
+package tstr.data.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "validate/validate.proto";
+
+service DataService {
+  rpc GetTest(GetTestRequest) returns (GetTestResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/tests/{id}"
+    };
+  };
+
+  rpc QueryTests(QueryTestsRequest) returns (QueryTestsResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/tests"
+    };
+  };
+
+  rpc GetTestSuite(GetTestSuiteRequest) returns (GetTestSuiteResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/test_suites/{id}"
+    };
+  };
+
+  rpc QueryTestSuites(QueryTestSuitesRequest) returns (QueryTestSuitesResponse) {
+     option (google.api.http) = {
+      get: "/data/v1/test_suites"
+    };
+  };
+
+  rpc GetRun(GetRunRequest) returns (GetRunResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/runs/{id}"
+    };
+  };
+
+  rpc QueryRuns(QueryRunsRequest) returns (QueryRunsResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/runs"
+    };
+  };
+
+  rpc GetRunner(GetRunnerRequest) returns (GetRunnerResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/runners/{id}"
+    };
+  };
+
+  rpc QueryRunners(QueryRunnersRequest) returns (QueryRunnersResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/runners"
+    };
+  };
+}
+
+message GetTestRequest {
+  string id = 1 [
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message GetTestResponse {
+  tstr.common.v1.Test test = 1;
+  repeated RunSummary run_summaries = 2;
+}
+
+message QueryTestsRequest {
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_suite_ids = 2 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  map<string, string> labels = 3;
+}
+
+message QueryTestsResponse {
+  repeated tstr.common.v1.Test tests = 1;
+}
+
+message GetTestSuiteRequest {
+  string id = 1 [
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message GetTestSuiteResponse {
+  tstr.common.v1.TestSuite test_suite = 1;
+}
+
+message QueryTestSuitesRequest {
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  map<string, string> labels = 2;
+}
+
+message QueryTestSuitesResponse {
+  repeated tstr.common.v1.TestSuite test_suites = 1;
+}
+
+message GetRunRequest {
+  string id = 1 [
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message GetRunResponse {
+  tstr.common.v1.Run run = 1;
+}
+
+message QueryRunsRequest {
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_ids = 2 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string test_suite_ids = 3 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated string runner_ids = 4 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  repeated tstr.common.v1.Run.Result results = 5;
+  google.protobuf.Timestamp scheduled_before = 6;
+  google.protobuf.Timestamp scheduled_after = 7;
+  google.protobuf.Timestamp started_before = 8;
+  google.protobuf.Timestamp started_after = 9;
+  google.protobuf.Timestamp finished_before = 10;
+  google.protobuf.Timestamp finished_after = 11;
+}
+
+message QueryRunsResponse {
+  repeated tstr.common.v1.Run runs = 1;
+}
+
+message GetRunnerRequest {
+  string id = 1 [
+    (validate.rules).string.uuid = true
+  ];
+}
+
+message GetRunnerResponse {
+  tstr.common.v1.Runner runner = 1;
+  repeated RunSummary run_summaries = 2;
+}
+
+message QueryRunnersRequest {
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  google.protobuf.Duration last_heartbeat_within = 2;
+}
+
+message QueryRunnersResponse {
+  repeated tstr.common.v1.Runner runners = 1;
+}
+
+message RunSummary {
+  string id = 1 [
+    (validate.rules).string.uuid =  true
+  ];
+  string test_id = 2 [
+    (validate.rules).string.uuid = true
+  ];
+  string test_run_config_id = 3 [
+    (validate.rules).string.uuid = true
+  ];
+  string runner_id = 4 [
+    (validate.rules).string = {ignore_empty: true, uuid: true}
+  ];
+  tstr.common.v1.Run.Result result = 5;
+
+  google.protobuf.Timestamp scheduled_at = 10 [
+    (validate.rules).timestamp.required = true
+  ];
+  google.protobuf.Timestamp started_at = 11;
+  google.protobuf.Timestamp finished_at = 12;
+}

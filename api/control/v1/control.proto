@@ -2,13 +2,11 @@ syntax = "proto3";
 
 package tstr.control.v1;
 
-import "api/common/v1/common.proto";
+import "common/v1/common.proto";
 
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
 import "validate/validate.proto";
-
-option go_package =  "github.com/nanzhong/tstr/api/control/v1;control";
 
 service ControlService {
   rpc RegisterTest(RegisterTestRequest) returns (RegisterTestResponse);
@@ -35,8 +33,7 @@ message RegisterTestRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
   map<string, string> labels = 2;
-  string cron_schedule = 3
-    [json_name="cron_schedule"];
+  string cron_schedule = 3;
   tstr.common.v1.Test.RunConfig run_config = 4
     [(validate.rules).message.required = true, json_name="run_config"];
 }
@@ -46,13 +43,13 @@ message RegisterTestResponse {
 }
 
 message UpdateTestRequest {
-  google.protobuf.FieldMask field_mask = 1 [json_name="field_mask"];
+  google.protobuf.FieldMask field_mask = 1;
 
   string id = 2; // required
   string name = 3;
   map<string, string> labels = 4;
-  string cron_schedule = 5 [json_name="cron_schedule"];
-  tstr.common.v1.Test.RunConfig run_config = 6 [json_name="run_config"];
+  string cron_schedule = 5;
+  tstr.common.v1.Test.RunConfig run_config = 6;
 }
 
 message GetTestRequest {
@@ -85,11 +82,11 @@ message DefineTestSuiteRequest {
 }
 
 message DefineTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1 [json_name="test_suite"]; // required
+  tstr.common.v1.TestSuite test_suite = 1; // required
 }
 
 message UpdateTestSuiteRequest {
-  google.protobuf.FieldMask field_mask = 1 [json_name="field_mask"];
+  google.protobuf.FieldMask field_mask = 1;
 
   string id = 2; // required
   string name = 3;
@@ -103,13 +100,13 @@ message GetTestSuiteRequest {
 }
 
 message GetTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1 [json_name="test_suite"]; // required
+  tstr.common.v1.TestSuite test_suite = 1; // required
 }
 
 message ListTestSuitesRequest {}
 
 message ListTestSuitesResponse {
-  repeated tstr.common.v1.TestSuite test_suites = 1 [json_name="test_suites"]; // required
+  repeated tstr.common.v1.TestSuite test_suites = 1; // required
 }
 
 message ArchiveTestSuiteRequest {
@@ -127,16 +124,16 @@ message GetRunResponse {
 }
 
 message ListRunsRequest {
-  repeated string test_ids = 1 [json_name="test_ids"];
-  repeated string test_suite_ids = 2 [json_name="test_suite_ids"];
-  repeated string runner_ids = 3 [json_name="runner_ids"];
+  repeated string test_ids = 1;
+  repeated string test_suite_ids = 2;
+  repeated string runner_ids = 3;
   repeated tstr.common.v1.Run.Result results = 4;
-  google.protobuf.Timestamp scheduled_before = 5 [json_name="scheduled_before"];
-  google.protobuf.Timestamp scheduled_after = 6 [json_name="scheduled_after"];
-  google.protobuf.Timestamp started_before = 7 [json_name="started_before"];
-  google.protobuf.Timestamp started_after = 8 [json_name="started_after"];
-  google.protobuf.Timestamp finished_before = 9 [json_name="finished_before"];
-  google.protobuf.Timestamp finished_after = 10 [json_name="finished_after"];
+  google.protobuf.Timestamp scheduled_before = 5;
+  google.protobuf.Timestamp scheduled_after = 6;
+  google.protobuf.Timestamp started_before = 7;
+  google.protobuf.Timestamp started_after = 8;
+  google.protobuf.Timestamp finished_before = 9;
+  google.protobuf.Timestamp finished_after = 10;
 }
 
 message ListRunsResponse {

@@ -4,29 +4,27 @@ package tstr.common.v1;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package =  "github.com/nanzhong/tstr/api/common/v1;common";
-
 message Test {
   message RunConfig {
     string id = 1; // required (generated)
-    string container_image = 2 [json_name="container_image"]; // required
+    string container_image = 2; // required
     string command = 3;
     repeated string args = 4;
     map<string, string> env = 5;
 
-    google.protobuf.Timestamp created_at = 10 [json_name="created_at"]; // required
+    google.protobuf.Timestamp created_at = 10; // required
   }
 
   string id = 1; // required (generated)
   string name = 2; // required
   map<string, string> labels = 3;
-  string cron_schedule = 4 [json_name="cron_schedule"];
-  google.protobuf.Timestamp next_run_at = 5 [json_name="next_run_at"];
-  RunConfig run_config = 6 [json_name="run_config"]; // required
+  string cron_schedule = 4;
+  google.protobuf.Timestamp next_run_at = 5;
+  RunConfig run_config = 6; // required
 
-  google.protobuf.Timestamp registered_at = 10 [json_name="registered_at"]; // required
-  google.protobuf.Timestamp updated_at = 11 [json_name="updated_at"]; // required
-  google.protobuf.Timestamp archived_at = 12 [json_name="archived_at"];
+  google.protobuf.Timestamp registered_at = 10; // required
+  google.protobuf.Timestamp updated_at = 11; // required
+  google.protobuf.Timestamp archived_at = 12;
 }
 
 message TestSuite {
@@ -34,9 +32,9 @@ message TestSuite {
   string name = 2;
   map<string, string> labels = 3;
 
-  google.protobuf.Timestamp created_at = 10 [json_name="created_at"]; // required
-  google.protobuf.Timestamp updated_at = 11 [json_name="updated_at"]; // required
-  google.protobuf.Timestamp archived_at = 12 [json_name="archived_at"];
+  google.protobuf.Timestamp created_at = 10; // required
+  google.protobuf.Timestamp updated_at = 11; // required
+  google.protobuf.Timestamp archived_at = 12;
 }
 
 message Run {
@@ -56,30 +54,30 @@ message Run {
     }
 
     string time = 1; // required
-    Output output_type = 2 [json_name="output_type"]; // required
+    Output output_type = 2; // required
     bytes data = 3; // required
   }
 
   string id = 1;  // required (generated)
-  string test_id = 2 [json_name="test_id"]; // required
-  Test.RunConfig test_run_config = 3 [json_name="test_run_config"]; // required
-  string runner_id = 4 [json_name="runner_id"];
+  string test_id = 2; // required
+  Test.RunConfig test_run_config = 3; // required
+  string runner_id = 4;
   Result result = 5;
   repeated Log logs = 6;
 
-  google.protobuf.Timestamp scheduled_at = 10 [json_name="scheduled_at"]; // required
-  google.protobuf.Timestamp started_at = 11 [json_name="started_at"];
-  google.protobuf.Timestamp finished_at = 12 [json_name="finished_at"];
+  google.protobuf.Timestamp scheduled_at = 10; // required
+  google.protobuf.Timestamp started_at = 11;
+  google.protobuf.Timestamp finished_at = 12;
 }
 
 message Runner {
   string id = 1; // required (generated)
   string name = 2; // required
-  map<string, string> accept_test_label_selectors = 3 [json_name="accept_test_label_selectors"];
-  map<string, string> reject_test_label_selectors = 4 [json_name="reject_test_label_selectors"];
+  map<string, string> accept_test_label_selectors = 3;
+  map<string, string> reject_test_label_selectors = 4;
 
-  google.protobuf.Timestamp registered_at = 10 [json_name="registered_at"]; // required
-  google.protobuf.Timestamp last_heartbeat_at = 11 [json_name="last_heartbeat_at"];
+  google.protobuf.Timestamp registered_at = 10; // required
+  google.protobuf.Timestamp last_heartbeat_at = 11;
 }
 
 message AccessToken {
@@ -89,6 +87,7 @@ message AccessToken {
     CONTROL_R = 2;
     CONTROL_RW = 3;
     RUNNER = 4;
+    DATA = 5;
   }
 
   string id = 1; // required (generated)
@@ -96,7 +95,7 @@ message AccessToken {
   string token = 3; // required (generated) will be present only on issuance, empty otherwise
   repeated Scope scopes = 4; // required
 
-  google.protobuf.Timestamp issued_at = 10 [json_name="issued_at"]; // required
-  google.protobuf.Timestamp expires_at = 11 [json_name="expires_at"];
-  google.protobuf.Timestamp revoked_at = 12 [json_name="revoked_at"];
+  google.protobuf.Timestamp issued_at = 10; // required
+  google.protobuf.Timestamp expires_at = 11;
+  google.protobuf.Timestamp revoked_at = 12;
 }

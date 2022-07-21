@@ -26,3 +26,11 @@ ORDER BY name ASC;
 UPDATE test_suites
 SET archived_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id');
+
+-- name: QueryTestSuites :many
+SELECT *
+FROM test_suites
+WHERE
+  (sqlc.narg('ids')::uuid[] IS NULL OR id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('labels')::jsonb IS NULL OR labels @> sqlc.narg('labels')::jsonb)
+ORDER BY name ASC;

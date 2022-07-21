@@ -19,9 +19,13 @@
       url = "github:valyala/quicktemplate";
       flake = false;
     };
+    grpc-gateway = {
+      url = "github:grpc-ecosystem/grpc-gateway/v2.10.3";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate }:
+  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate, grpc-gateway }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -38,12 +42,12 @@
         };
 
         devTools = {
-          sqlc = pkgs.buildGoModule {
+          sqlc = pkgs.buildGo118Module {
             name = "sqlc";
             src = sqlc;
             subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-LX8C7098P940wdg8yig6h6azAsxdai+vEVhjdILIoMQ=";
+            vendorSha256 = "sha256-0Q2HYP3am8H757wT8WqI+jglAuTkmysKPaZFKVQMYFo=";
             proxyVendor = true;
             buildInputs = [
               pkgs.xxHash
@@ -60,14 +64,24 @@
           overmind = pkgs.buildGoModule {
             name = "overmind";
             src = overmind;
-            dbCheck = false;
+            doCheck = false;
             vendorSha256 = "sha256-KDMzR6qAruscgS6/bHTN6RnHOlLKCm9lxkr9k3oLY+Y=";
           };
           quicktemplate = pkgs.buildGoModule {
             name = "quicktemplate";
             src = quicktemplate;
-            dbCheck = false;
+            doCheck = false;
             vendorSha256 = null;
+          };
+          grpc-gateway = pkgs.buildGoModule {
+            name = "grpc-gateway";
+            src = grpc-gateway;
+            doCheck = false;
+            subPackages = [
+              "protoc-gen-grpc-gateway"
+              "protoc-gen-openapiv2"
+            ];
+            vendorSha256 = "sha256-FhiTU9VmDZNCPBWrmCqmQo/kPdDe8Da1T2E06CVN2kw=";
           };
         };
       in
@@ -92,23 +106,24 @@
           devShell = with pkgs;
             mkShell {
               buildInputs = [
-                go_1_18
+                buf
+                entr
                 go-tools
+                go_1_18
                 gopls
+                grpcurl
+                nodePackages.vls
+                postgresql_14
                 protobuf
                 protoc-gen-go
                 protoc-gen-go-grpc
                 protoc-gen-validate
-
-                entr
-                grpcurl
-
-                postgresql_14
+                yarn
 
                 devTools.sqlc
                 devTools.dbmate
                 devTools.overmind
-                devTools.quicktemplate
+                devTools.grpc-gateway
               ];
             };
         }

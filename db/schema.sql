@@ -31,7 +31,8 @@ CREATE TYPE public.access_token_scope AS ENUM (
     'admin',
     'control_r',
     'control_rw',
-    'runner'
+    'runner',
+    'data'
 );
 
 

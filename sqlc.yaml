@@ -1,10 +1,12 @@
-version: "1"
-packages:
-  - name: "db"
-    path: "db"
+version: "2"
+sql:
+  - schema: "./db/schema.sql"
     queries: "./db/queries/"
-    schema: "./db/schema.sql"
     engine: "postgresql"
-    sql_package: "pgx/v4"
-    emit_interface: true
-    emit_methods_with_db_argument: true
+    gen:
+      go:
+        package: "db"
+        out: "db"
+        sql_package: "pgx/v4"
+        emit_interface: true
+        emit_methods_with_db_argument: true

@@ -14,8 +14,8 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/nanzhong/tstr/api/common/v1"
-	"github.com/nanzhong/tstr/api/runner/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
+	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
@@ -26,7 +26,7 @@ import (
 var errRunnerRevoked = errors.New("runner revoked")
 
 type Runner struct {
-	runnerClient runner.RunnerServiceClient
+	runnerClient runnerv1.RunnerServiceClient
 	dockerClient *client.Client
 	retryDelay   time.Duration
 	clock        clock.Clock
@@ -42,7 +42,7 @@ type Runner struct {
 }
 
 func New(
-	runnerClient runner.RunnerServiceClient,
+	runnerClient runnerv1.RunnerServiceClient,
 	name string,
 	allowLabelSelectors map[string]string,
 	rejectLabelSelectors map[string]string,
@@ -78,7 +78,7 @@ func (r *Runner) Run() error {
 		return fmt.Errorf("docker not available, unable to ping: %w", err)
 	}
 
-	regRes, err := r.runnerClient.RegisterRunner(ctx, &runner.RegisterRunnerRequest{
+	regRes, err := r.runnerClient.RegisterRunner(ctx, &runnerv1.RegisterRunnerRequest{
 		Name:                     r.name,
 		AcceptTestLabelSelectors: r.allowLabelSelectors,
 		RejectTestLabelSelectors: r.rejectLabelSelectors,
@@ -97,7 +97,7 @@ func (r *Runner) Run() error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-r.clock.After(r.retryDelay):
-			runRes, err := r.runnerClient.NextRun(ctx, &runner.NextRunRequest{
+			runRes, err := r.runnerClient.NextRun(ctx, &runnerv1.NextRunRequest{
 				Id: r.id,
 			})
 			if err != nil {
@@ -128,7 +128,7 @@ func (r *Runner) Stop(ctx context.Context) {
 	}
 }
 
-func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
+func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 	runLogger := log.With().
 		Str("run_id", run.Id).
 		Logger()
@@ -145,7 +145,7 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 		}
 	}()
 
-	if err := stream.Send(&runner.SubmitRunRequest{
+	if err := stream.Send(&runnerv1.SubmitRunRequest{
 		Id:    r.id,
 		RunId: run.Id,
 	}); err != nil {
@@ -206,7 +206,7 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 		return fmt.Errorf("starting container: %w", err)
 	}
 
-	if err := stream.Send(&runner.SubmitRunRequest{
+	if err := stream.Send(&runnerv1.SubmitRunRequest{
 		Id:        r.id,
 		RunId:     run.Id,
 		StartedAt: timestamppb.New(startedAt),
@@ -234,8 +234,8 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 		defer logs.Close()
 		runLogger.Debug().Msg("started getting logs")
 
-		stdOutStreamer := newRunLogStreamPipe(common.Run_Log_STDOUT, stream)
-		stdErrStreamer := newRunLogStreamPipe(common.Run_Log_STDERR, stream)
+		stdOutStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDOUT, stream)
+		stdErrStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDERR, stream)
 
 		var eg errgroup.Group
 		eg.Go(func() error {
@@ -275,12 +275,12 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 			Msg("run execution completed")
 
 		if err != nil {
-			if err := stream.Send(&runner.SubmitRunRequest{
-				Result: common.Run_ERROR,
-				Logs: []*common.Run_Log{
+			if err := stream.Send(&runnerv1.SubmitRunRequest{
+				Result: commonv1.Run_ERROR,
+				Logs: []*commonv1.Run_Log{
 					{
 						Time:       now.Format(time.RFC3339Nano),
-						OutputType: common.Run_Log_TSTR,
+						OutputType: commonv1.Run_Log_TSTR,
 						Data:       []byte(fmt.Sprintf("test run execution failed to capture test output: %s", err)),
 					},
 				},
@@ -291,13 +291,13 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 			return fmt.Errorf("streaming run execution logs: %w", err)
 		}
 
-		var result common.Run_Result
+		var result commonv1.Run_Result
 		if status.StatusCode == 0 {
-			result = common.Run_PASS
+			result = commonv1.Run_PASS
 		} else {
-			result = common.Run_FAIL
+			result = commonv1.Run_FAIL
 		}
-		if err := stream.Send(&runner.SubmitRunRequest{
+		if err := stream.Send(&runnerv1.SubmitRunRequest{
 			Result:     result,
 			FinishedAt: timestamppb.New(now),
 		}); err != nil {
@@ -309,12 +309,12 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 		return nil
 	case err := <-errCh:
 		now := r.clock.Now()
-		if err := stream.Send(&runner.SubmitRunRequest{
-			Result: common.Run_ERROR,
-			Logs: []*common.Run_Log{
+		if err := stream.Send(&runnerv1.SubmitRunRequest{
+			Result: commonv1.Run_ERROR,
+			Logs: []*commonv1.Run_Log{
 				{
 					Time:       now.Format(time.RFC3339Nano),
-					OutputType: common.Run_Log_TSTR,
+					OutputType: commonv1.Run_Log_TSTR,
 					Data:       []byte(fmt.Sprintf("test run execution failed: %s", err)),
 				},
 			},
@@ -327,13 +327,13 @@ func (r Runner) executeRun(ctx context.Context, run *common.Run) error {
 }
 
 type runLogStreamPipe struct {
-	stream     runner.RunnerService_SubmitRunClient
-	outputType common.Run_Log_Output
+	stream     runnerv1.RunnerService_SubmitRunClient
+	outputType commonv1.Run_Log_Output
 	reader     *bufio.Reader
 	writer     io.WriteCloser
 }
 
-func newRunLogStreamPipe(outputType common.Run_Log_Output, stream runner.RunnerService_SubmitRunClient) *runLogStreamPipe {
+func newRunLogStreamPipe(outputType commonv1.Run_Log_Output, stream runnerv1.RunnerService_SubmitRunClient) *runLogStreamPipe {
 	r, w := io.Pipe()
 	return &runLogStreamPipe{
 		stream:     stream,
@@ -360,8 +360,8 @@ func (w *runLogStreamPipe) Stream(ctx context.Context) error {
 				// Ignore time if not found
 				time, data = "", time
 			}
-			if err := w.stream.Send(&runner.SubmitRunRequest{
-				Logs: []*common.Run_Log{{
+			if err := w.stream.Send(&runnerv1.SubmitRunRequest{
+				Logs: []*commonv1.Run_Log{{
 					Time:       time,
 					OutputType: w.outputType,
 					Data:       []byte(data),

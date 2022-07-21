@@ -15,3 +15,19 @@ SELECT test_id,array_agg(result) AS results FROM runs where test_id is not null 
 
 -- name: UIListTests :many
 select * from tests;
+
+-- name: UIRunsSummary :many
+SELECT id, test_run_config_id, runner_id, result, scheduled_at, started_at,finished_at
+FROM runs
+WHERE runs.test_id = sqlc.narg('test_id')::uuid 
+ORDER by runs.started_at desc
+LIMIT sqlc.arg('limit');
+
+
+-- name: UIRunnerSummary :many
+SELECT T.name AS test_name, T.id as test_id, R.id as run_id, R.result, R.finished_at , R.started_at from runs R 
+INNER JOIN tests T on T.id = R.test_id 
+WHERE runner_id = sqlc.narg('runner_id')::uuid
+ORDER BY R.started_at DESC
+LIMIT sqlc.arg('limit');
+

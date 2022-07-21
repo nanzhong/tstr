@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"regexp"
 	"time"
@@ -14,8 +13,8 @@ import (
 	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/nanzhong/tstr/api/common/v1"
-	"github.com/nanzhong/tstr/api/runner/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
+	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
@@ -28,10 +27,10 @@ type RunnerServer struct {
 	dbQuerier db.Querier
 	clock     clock.Clock
 
-	runner.UnimplementedRunnerServiceServer
+	runnerv1.UnimplementedRunnerServiceServer
 }
 
-func NewRunnerServer(pgxPool *pgxpool.Pool) runner.RunnerServiceServer {
+func NewRunnerServer(pgxPool *pgxpool.Pool) runnerv1.RunnerServiceServer {
 	return &RunnerServer{
 		pgxPool:   pgxPool,
 		dbQuerier: db.New(),
@@ -39,7 +38,7 @@ func NewRunnerServer(pgxPool *pgxpool.Pool) runner.RunnerServiceServer {
 	}
 }
 
-func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runner.RegisterRunnerRequest) (*runner.RegisterRunnerResponse, error) {
+func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.RegisterRunnerRequest) (*runnerv1.RegisterRunnerResponse, error) {
 	for _, v := range req.AcceptTestLabelSelectors {
 		if _, err := regexp.Compile(v); err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid accept test label selectors, must be valid RE")
@@ -88,8 +87,8 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runner.RegisterR
 		return nil, status.Error(codes.Internal, "failed to format response")
 	}
 
-	return &runner.RegisterRunnerResponse{
-		Runner: &common.Runner{
+	return &runnerv1.RegisterRunnerResponse{
+		Runner: &commonv1.Runner{
 			Id:                       regRunner.ID.String(),
 			Name:                     regRunner.Name,
 			AcceptTestLabelSelectors: acceptSelectors,
@@ -100,7 +99,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runner.RegisterR
 	}, nil
 }
 
-func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) (*runner.NextRunResponse, error) {
+func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest) (*runnerv1.NextRunResponse, error) {
 	runnerID, err := uuid.Parse(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
@@ -251,11 +250,11 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 			Msg("failed to parse run config env")
 		return nil, status.Error(codes.Internal, "failed to format response")
 	}
-	return &runner.NextRunResponse{
-		Run: &common.Run{
+	return &runnerv1.NextRunResponse{
+		Run: &commonv1.Run{
 			Id:     run.ID.String(),
 			TestId: run.TestID.String(),
-			TestRunConfig: &common.Test_RunConfig{
+			TestRunConfig: &commonv1.Test_RunConfig{
 				Id:             run.TestRunConfigID.String(),
 				ContainerImage: run.ContainerImage,
 				Command:        run.Command.String,
@@ -269,7 +268,7 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runner.NextRunRequest) 
 	}, nil
 }
 
-func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) error {
+func (s *RunnerServer) SubmitRun(stream runnerv1.RunnerService_SubmitRunServer) error {
 	var (
 		runnerID   uuid.UUID
 		runID      uuid.UUID
@@ -289,7 +288,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 		if !startedAt.Valid {
 			if err := s.dbQuerier.UpdateRun(context.Background(), s.pgxPool, db.UpdateRunParams{
 				ID:         runID,
-				Result:     db.RunResultError,
+				Result:     db.NullRunResult{Valid: true, RunResult: db.RunResultError},
 				StartedAt:  sql.NullTime{},
 				FinishedAt: sql.NullTime{},
 			}); err != nil {
@@ -301,7 +300,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 
 			var pgLogs pgtype.JSONB
 			if err := pgLogs.Set(db.RunLog{
-				Type: common.Run_Log_TSTR.String(),
+				Type: commonv1.Run_Log_TSTR.String(),
 				Time: now.Format(time.RFC3339Nano),
 				Data: []byte("failed to start test run"),
 			}); err != nil {
@@ -327,7 +326,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 		if !finishedAt.Valid {
 			if err := s.dbQuerier.UpdateRun(context.Background(), s.pgxPool, db.UpdateRunParams{
 				ID:         runID,
-				Result:     db.RunResultError,
+				Result:     db.NullRunResult{Valid: true, RunResult: db.RunResultError},
 				StartedAt:  startedAt,
 				FinishedAt: sql.NullTime{Valid: true, Time: now},
 			}); err != nil {
@@ -339,7 +338,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 
 			var pgLogs pgtype.JSONB
 			if err := pgLogs.Set(db.RunLog{
-				Type: common.Run_Log_TSTR.String(),
+				Type: commonv1.Run_Log_TSTR.String(),
 				Time: now.Format(time.RFC3339Nano),
 				Data: []byte("failed to finish test run"),
 			}); err != nil {
@@ -365,7 +364,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 		req, err := stream.Recv()
 		if err != nil {
 			if err == io.EOF {
-				return stream.SendAndClose(&runner.SubmitRunResponse{})
+				return stream.SendAndClose(&runnerv1.SubmitRunResponse{})
 			}
 			return err
 		}
@@ -415,7 +414,7 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 
 		if err := s.dbQuerier.UpdateRun(stream.Context(), s.pgxPool, db.UpdateRunParams{
 			ID:         runID,
-			Result:     result,
+			Result:     db.NullRunResult{Valid: true, RunResult: result},
 			StartedAt:  startedAt,
 			FinishedAt: finishedAt,
 		}); err != nil {
@@ -432,7 +431,6 @@ func (s *RunnerServer) SubmitRun(stream runner.RunnerService_SubmitRunServer) er
 					Data: l.Data,
 				})
 			}
-			fmt.Printf("%#v\n", logs)
 
 			var pgLogs pgtype.JSONB
 			if err := pgLogs.Set(logs); err != nil {

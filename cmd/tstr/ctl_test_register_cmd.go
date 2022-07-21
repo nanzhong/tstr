@@ -7,8 +7,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nanzhong/tstr/api/common/v1"
-	"github.com/nanzhong/tstr/api/control/v1"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
+	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -25,11 +25,11 @@ var (
 	ctlTestRegisterEnv     []string
 	ctlTestRegisterCmd     = &cobra.Command{
 		Use:   "register",
-		Short: "Register a new test.",
+		Short: "Register a new test",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			req := &control.RegisterTestRequest{
-				RunConfig: &common.Test_RunConfig{},
+			req := &controlv1.RegisterTestRequest{
+				RunConfig: &commonv1.Test_RunConfig{},
 			}
 
 			if ctlTestRegisterFile != "" {
@@ -94,7 +94,7 @@ var (
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))
 			defer cancel()
 
-			return withControlClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client control.ControlServiceClient) error {
+			return withControlClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client controlv1.ControlServiceClient) error {
 				res, err := client.RegisterTest(ctx, req)
 				if err != nil {
 					return err

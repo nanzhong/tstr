@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	runnerapi "github.com/nanzhong/tstr/api/runner/v1"
+	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/runner"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -19,7 +19,7 @@ import (
 
 var runCmd = &cobra.Command{
 	Use:   "run",
-	Short: "Start a tstr runner for executing test workloads.",
+	Short: "Start a tstr runner for executing test workloads",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
@@ -43,7 +43,7 @@ var runCmd = &cobra.Command{
 			rejectLabelSelectors[parts[0]] = parts[1]
 		}
 
-		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerapi.RunnerServiceClient) error {
+		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
 			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),
@@ -80,7 +80,7 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().String("api-addr", "", "Address of the tstr api to dial.")
+	runCmd.Flags().String("api-addr", "0.0.0.0:9000", "Address of the tstr api to dial.")
 	viper.BindPFlag("run.api-addr", runCmd.Flags().Lookup("api-addr"))
 
 	runCmd.Flags().String("access-token", "", "Runner access token to use.")

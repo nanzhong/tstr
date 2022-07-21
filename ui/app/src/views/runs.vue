@@ -20,8 +20,7 @@ import TestResultBadge from '../components/TestResultBadge.vue'
                 <tbody>
                     <tr v-for="run in runs">
                         <td class="text-left">
-                            <router-link :to="{ name: 'test-details', params: { id: run.test_id } }"> FIXME test_name {{ run.TestName }}
-                            </router-link>
+                            <router-link :to="{ name: 'test-details', params: { id: run.test_id } }">{{ tests[run.test_id].name }}</router-link>
                         </td>
                         <td class="text-left">
                             <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
@@ -34,7 +33,7 @@ import TestResultBadge from '../components/TestResultBadge.vue'
                             <test-result-badge :result="run.result"></test-result-badge>
                         </td>
                         <td class="text-right">
-                            <router-link :to="{ name: 'runner-details', params: { id: run.runner_id } }">TODO runner_name {{run.runner_name}}</router-link>
+                            <router-link :to="{ name: 'runner-details', params: { id: run.runner_id } }">{{ 'runner_id' in run ? run.runner_id : '' }}</router-link>
                         </td>
 
                     </tr>
@@ -50,21 +49,50 @@ import TestResultBadge from '../components/TestResultBadge.vue'
 import tstr from '../tstr'
 
 export default {
-    created() {
-        this.fetchRunners()
-    },
-    data() {
-        return {
-            runs: [],
-        }
-    },
-    methods: {
-        async fetchRunners() {
-            const runs = await tstr.fetchRuns()
-            this.runs = runs
-            console.log("RUNS",this.runs)
-        }
+  created() {
+    this.fetchRuns()
+  },
+  data() {
+    return {
+      runs: [],
+      tests: {},
+      runners: {}
     }
+  },
+  methods: {
+    async fetchRuns() {
+      const testIDs = new Set();
+      const runnerIDs = new Set();
+      const runs = await tstr.fetchRuns();
+      runs.forEach(r => {
+        testIDs.add(r.test_id);
+        if ('runner_id' in r) {
+          runnerIDs.add(r.runner_id);
+        }
+      })
 
+      const tests = await tstr.fetchTests(Array.from(testIDs.values()));
+      const runners = await tstr.fetchRunners(Array.from(runnerIDs.values()));
+
+      let testsByID = {}
+      tests.forEach(t => {
+        testsByID[t.id] = t
+      })
+
+      let runnersByID = {}
+      await runners.forEach(r => {
+        runnersByID[r.id] = r
+      })
+
+      this.runs = runs;
+      this.tests = testsByID;
+      this.runners = runnersByID;
+
+      console.log("RUNS", this.runs);
+      console.log("TESTS", this.tests);
+      console.log("RUNNERS", this.runners);
+    },
+    
+  }
 }
 </script>

@@ -44,14 +44,24 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
 };
 
 export default {
-  fetchTests: async function () {
+  fetchTests: async function (
+    ids: string[] = []
+  ) {
     const url = "/api/data/v1/tests";
-    return await axios.get(url).then(r => r.data.tests)
+    const params = new URLSearchParams();
+    ids.forEach(id => params.append("ids", id));
+
+    return await axios.get(`${url}?${params.toString()}`).then(r => r.data.tests)
   },
 
-  fetchRunners: async function () {
+  fetchRunners: async function (
+    ids: string[] = []
+  ) {
     const url = "/api/data/v1/runners";
-    return await axios.get(url).then(r => APINullableToJs(r.data.runners))
+    const params = new URLSearchParams();
+    ids.forEach(id => params.append("ids", id));
+
+    return await axios.get(`${url}?${params.toString()}`).then(r => APINullableToJs(r.data.runners))
   },
 
   fetchRunDetails: async function (runId: String) {
@@ -65,7 +75,7 @@ export default {
   },
 
   fetchTestDetails: async function (
-    testId: String,
+    testId: string,
     includeRuns: boolean = true
   ) {
     const url = `/api/data/v1/tests/${testId}?runs=${includeRuns ? 100 : 0}`;
@@ -83,7 +93,7 @@ export default {
   },
 
   fetchRunnerDetails: async function (
-    runnerId: String,
+    runnerId: string,
     includeRuns: boolean = true
   ) {
     const url = `/api/data/v1/runners/${runnerId}?runs=${includeRuns ? 100 : 0}`;

@@ -27,5 +27,7 @@ WHERE id = sqlc.arg('id');
 -- name: QueryRunners :many
 SELECT *
 FROM runners
-WHERE (sqlc.narg('last_heartbeat_since')::timestamptz IS NULL) OR last_heartbeat_at > sqlc.narg('last_heartbeat_since')
+WHERE
+  (sqlc.narg('ids')::uuid[] IS NULL OR runners.id = ANY (sqlc.narg('ids')::uuid[])) AND
+  (sqlc.narg('last_heartbeat_since')::timestamptz IS NULL) OR last_heartbeat_at > sqlc.narg('last_heartbeat_since')
 ORDER by name ASC;

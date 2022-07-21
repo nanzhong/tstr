@@ -534,13 +534,25 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 }
 
 func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersRequest) (*datav1.QueryRunnersResponse, error) {
+	var runnerIDs []uuid.UUID
+	for _, rid := range r.Ids {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse runner id")
+		}
+		runnerIDs = append(runnerIDs, id)
+	}
+
 	var lastHeartbeatSince sql.NullTime
 	if r.LastHeartbeatWithin != nil {
 		lastHeartbeatSince.Valid = true
 		lastHeartbeatSince.Time = s.clock.Now().Add(-r.LastHeartbeatWithin.AsDuration())
 	}
 
-	runners, err := s.dbQuerier.QueryRunners(ctx, s.pgxPool, lastHeartbeatSince)
+	runners, err := s.dbQuerier.QueryRunners(ctx, s.pgxPool, db.QueryRunnersParams{
+		Ids:                runnerIDs,
+		LastHeartbeatSince: lastHeartbeatSince,
+	})
 	if err != nil {
 		log.Error().Err(err).Time("last_heartbeat_since", lastHeartbeatSince.Time).Msg("failed to query runners")
 		return nil, status.Error(codes.Internal, "failed to query runners")

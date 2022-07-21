@@ -153,7 +153,10 @@ message GetRunnerResponse {
 }
 
 message QueryRunnersRequest {
-  google.protobuf.Duration last_heartbeat_within = 1;
+  repeated string ids = 1 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+  ];
+  google.protobuf.Duration last_heartbeat_within = 2;
 }
 
 message QueryRunnersResponse {

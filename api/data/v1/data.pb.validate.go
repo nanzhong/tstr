@@ -2195,6 +2195,27 @@ func (m *QueryRunnersRequest) validate(all bool) error {
 
 	var errors []error
 
+	if len(m.GetIds()) > 0 {
+
+		for idx, item := range m.GetIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = QueryRunnersRequestValidationError{
+					field:  fmt.Sprintf("Ids[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
 	if all {
 		switch v := interface{}(m.GetLastHeartbeatWithin()).(type) {
 		case interface{ ValidateAll() error }:
@@ -2226,6 +2247,14 @@ func (m *QueryRunnersRequest) validate(all bool) error {
 
 	if len(errors) > 0 {
 		return QueryRunnersRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *QueryRunnersRequest) _validateUuid(uuid string) error {
+	if matched := _data_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil

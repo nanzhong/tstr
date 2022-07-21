@@ -70,12 +70,19 @@ func (q *Queries) ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.N
 const queryRunners = `-- name: QueryRunners :many
 SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
 FROM runners
-WHERE ($1::timestamptz IS NULL) OR last_heartbeat_at > $1
+WHERE
+  ($1::uuid[] IS NULL OR runners.id = ANY ($1::uuid[])) AND
+  ($2::timestamptz IS NULL) OR last_heartbeat_at > $2
 ORDER by name ASC
 `
 
-func (q *Queries) QueryRunners(ctx context.Context, db DBTX, lastHeartbeatSince sql.NullTime) ([]Runner, error) {
-	rows, err := db.Query(ctx, queryRunners, lastHeartbeatSince)
+type QueryRunnersParams struct {
+	Ids                []uuid.UUID
+	LastHeartbeatSince sql.NullTime
+}
+
+func (q *Queries) QueryRunners(ctx context.Context, db DBTX, arg QueryRunnersParams) ([]Runner, error) {
+	rows, err := db.Query(ctx, queryRunners, arg.Ids, arg.LastHeartbeatSince)
 	if err != nil {
 		return nil, err
 	}

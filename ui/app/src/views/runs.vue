@@ -33,7 +33,7 @@ import TestResultBadge from '../components/TestResultBadge.vue'
                             <test-result-badge :result="run.result"></test-result-badge>
                         </td>
                         <td class="text-right">
-                            <router-link :to="{ name: 'runner-details', params: { id: run.runnerId } }">{{ 'runnerId' in run ? run.runnerId : '' }}</router-link>
+                            <router-link :to="{ name: 'runner-details', params: { id: run.runnerId } }">{{ 'runnerId' in run ? runners[run.runnerId].name : '' }}</router-link>
                         </td>
 
                     </tr>

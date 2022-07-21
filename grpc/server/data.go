@@ -323,26 +323,29 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 			Msg("failed to parse logs")
 		return nil, status.Error(codes.Internal, "failed to format run logs")
 	}
+	pbRun := &commonv1.Run{
+		Id:     run.ID.String(),
+		TestId: run.TestID.String(),
+		TestRunConfig: &commonv1.Test_RunConfig{
+			Id:             run.TestRunConfigID.String(),
+			ContainerImage: run.ContainerImage,
+			Command:        run.Command.String,
+			Args:           run.Args,
+			Env:            env,
+			CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
+		},
+		Result:      types.ToRunResult(run.Result.RunResult),
+		Logs:        types.ToRunLogs(logs),
+		ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
+		StartedAt:   types.ToProtoTimestamp(run.StartedAt),
+		FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
+	}
+	if run.RunnerID.Valid {
+		pbRun.RunnerId = run.RunnerID.UUID.String()
+	}
 
 	return &datav1.GetRunResponse{
-		Run: &commonv1.Run{
-			Id:     run.ID.String(),
-			TestId: run.TestID.String(),
-			TestRunConfig: &commonv1.Test_RunConfig{
-				Id:             run.TestRunConfigID.String(),
-				ContainerImage: run.ContainerImage,
-				Command:        run.Command.String,
-				Args:           run.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
-			},
-			RunnerId:    run.RunnerID.UUID.String(),
-			Result:      types.ToRunResult(run.Result.RunResult),
-			Logs:        types.ToRunLogs(logs),
-			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
-			StartedAt:   types.ToProtoTimestamp(run.StartedAt),
-			FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
-		},
+		Run: pbRun,
 	}, nil
 }
 
@@ -444,8 +447,7 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 				Msg("failed to parse logs")
 			return nil, status.Error(codes.Internal, "failed to format run logs")
 		}
-
-		pbRuns = append(pbRuns, &commonv1.Run{
+		pbRun := &commonv1.Run{
 			Id:     run.ID.String(),
 			TestId: run.TestID.String(),
 			TestRunConfig: &commonv1.Test_RunConfig{
@@ -456,13 +458,16 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 				Env:            env,
 				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
 			},
-			RunnerId:    run.RunnerID.UUID.String(),
 			Result:      types.ToRunResult(run.Result.RunResult),
 			Logs:        types.ToRunLogs(logs),
 			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
 			StartedAt:   types.ToProtoTimestamp(run.StartedAt),
 			FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
-		})
+		}
+		if run.RunnerID.Valid {
+			pbRun.RunnerId = run.RunnerID.UUID.String()
+		}
+		pbRuns = append(pbRuns, pbRun)
 	}
 
 	return &datav1.QueryRunsResponse{

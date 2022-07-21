@@ -107,25 +107,23 @@
             mkShell {
               buildInputs = [
                 buf
-                go_1_18
+                entr
                 go-tools
+                go_1_18
                 gopls
+                grpcurl
+                nodePackages.vls
+                postgresql_14
                 protobuf
                 protoc-gen-go
                 protoc-gen-go-grpc
                 protoc-gen-validate
-
-                entr
-                grpcurl
-
-                postgresql_14
+                yarn
 
                 devTools.sqlc
                 devTools.dbmate
                 devTools.overmind
                 devTools.grpc-gateway
-
-                yarn
               ];
             };
         }

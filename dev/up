@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
 mkdir -p .dev
-overmind start --auto-restart api,ui,db --daemonize
+overmind start --auto-restart api,runner,ui,db --daemonize
 dbmate --wait up

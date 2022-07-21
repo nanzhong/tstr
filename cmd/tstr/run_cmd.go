@@ -80,7 +80,7 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().String("api-addr", "", "Address of the tstr api to dial.")
+	runCmd.Flags().String("api-addr", "0.0.0.0:9000", "Address of the tstr api to dial.")
 	viper.BindPFlag("run.api-addr", runCmd.Flags().Lookup("api-addr"))
 
 	runCmd.Flags().String("access-token", "", "Runner access token to use.")

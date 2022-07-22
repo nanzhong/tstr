@@ -14,7 +14,7 @@ require (
 	github.com/jwreagor/grpc-zerolog v0.0.0-20180425150930-27ca9d023ead
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.26.1
-	github.com/spf13/cobra v1.4.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.11.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	google.golang.org/grpc v1.48.0

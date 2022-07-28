@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -eo pipefail
+
 scripts_path="${BASH_SOURCE%/*}"
 
 # run starts running a named command making sure to format stdout and stderr of
@@ -21,7 +23,7 @@ function prepend() {
     done
 }
 
-options=$(getopt -l "gotags:" -o "-t" -a -- "$@")
+options=$(getopt -l "gotags:" -o "t:" -a -- "$@")
 eval set -- "$options"
 
 gotags=""

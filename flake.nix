@@ -42,6 +42,7 @@
           vendorSha256 = null;
           buildInputs = [ tstr-ui ];
           preBuild = ''
+            rm -rf ui/app/dist
             cp -r "${tstr-ui}/dist" ui/app/dist
           '';
         };

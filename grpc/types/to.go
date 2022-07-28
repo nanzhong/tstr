@@ -19,24 +19,32 @@ func ToUUIDString(uuid pgtype.UUID) string {
 	return uuidString
 }
 
-func ToAccessTokenScope(scope db.AccessTokenScope) commonv1.AccessToken_Scope {
+// ToAccessTokenScope converts db access token scope to the pb type.
+// XXX There is currently a bug preventing enmu arrays from being usable. Using
+// []string until this is resolved.
+// https://github.com/kyleconroy/sqlc/issues/1256
+func ToAccessTokenScope(scope string) commonv1.AccessToken_Scope {
 	switch scope {
-	case db.AccessTokenScopeAdmin:
+	case string(db.AccessTokenScopeAdmin):
 		return commonv1.AccessToken_ADMIN
-	case db.AccessTokenScopeControlR:
+	case string(db.AccessTokenScopeControlR):
 		return commonv1.AccessToken_CONTROL_R
-	case db.AccessTokenScopeControlRw:
+	case string(db.AccessTokenScopeControlRw):
 		return commonv1.AccessToken_CONTROL_RW
-	case db.AccessTokenScopeRunner:
+	case string(db.AccessTokenScopeRunner):
 		return commonv1.AccessToken_RUNNER
-	case db.AccessTokenScopeData:
+	case string(db.AccessTokenScopeData):
 		return commonv1.AccessToken_DATA
 	default:
 		return commonv1.AccessToken_UNKNOWN
 	}
 }
 
-func ToAccessTokenScopes(scopes []db.AccessTokenScope) []commonv1.AccessToken_Scope {
+// ToAccessTokenScopes converts db access token scopes to the pb type.
+// XXX There is currently a bug preventing enmu arrays from being usable. Using
+// []string until this is resolved.
+// https://github.com/kyleconroy/sqlc/issues/1256
+func ToAccessTokenScopes(scopes []string) []commonv1.AccessToken_Scope {
 	var protoScopes []commonv1.AccessToken_Scope
 	for _, s := range scopes {
 		protoScopes = append(protoScopes, ToAccessTokenScope(s))

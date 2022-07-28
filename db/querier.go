@@ -18,9 +18,11 @@ type Querier interface {
 	ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error
 	ArchiveTestSuite(ctx context.Context, db DBTX, id uuid.UUID) error
 	AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (AssignRunRow, error)
+	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
 	CreateTestRunConfig(ctx context.Context, db DBTX, arg CreateTestRunConfigParams) (TestRunConfig, error)
 	DefineTestSuite(ctx context.Context, db DBTX, arg DefineTestSuiteParams) (TestSuite, error)
+	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error)
 	GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow, error)
 	GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner, error)
@@ -28,6 +30,7 @@ type Querier interface {
 	GetTestSuite(ctx context.Context, db DBTX, id uuid.UUID) (TestSuite, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
+	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.NullTime) ([]Runner, error)
 	ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]ListRunsRow, error)

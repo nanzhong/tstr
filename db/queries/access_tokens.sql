@@ -5,6 +5,7 @@ VALUES (sqlc.arg('name'), sqlc.arg('token_hash'), sqlc.arg('scopes')::text[]::ac
 RETURNING id, name, scopes::text[], issued_at, expires_at;
 
 -- name: AuthAccessToken :one
+-- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 SELECT scopes::text[], expires_at
 FROM access_tokens
 WHERE
@@ -12,12 +13,14 @@ WHERE
   (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP);
 
 -- name: GetAccessToken :one
-SELECT id, name, scopes, issued_at, expires_at, revoked_at
+-- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
+SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE id = sqlc.arg('id');
 
 -- name: ListAccessTokens :many
-SELECT id, name, scopes, issued_at, expires_at, revoked_at
+-- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
+SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   CASE WHEN sqlc.arg('include_expired')::bool

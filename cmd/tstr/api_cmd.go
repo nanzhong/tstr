@@ -50,14 +50,14 @@ var apiCmd = &cobra.Command{
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "client-grpc").Logger()))
 
-		pgxPool, err := pgxpool.Connect(context.Background(), viper.GetString("serve.pg-dsn"))
+		pgxPool, err := pgxpool.Connect(context.Background(), viper.GetString("api.pg-dsn"))
 		if err != nil {
 			log.Fatal().Err(err).Msg("failed to connect to pg")
 		}
 		defer pgxPool.Close()
 
-		if viper.GetString("serve.bootstrap-token") != "" {
-			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("serve.bootstrap-token")))
+		if viper.GetString("api.bootstrap-token") != "" {
+			tokenHashBytes := sha512.Sum512([]byte(viper.GetString("api.bootstrap-token")))
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 			var textScopes []string
@@ -77,11 +77,11 @@ var apiCmd = &cobra.Command{
 			}
 		}
 
-		l, err := net.Listen("tcp", viper.GetString("serve.addr"))
+		l, err := net.Listen("tcp", viper.GetString("api.addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
-				Str("addr", viper.GetString("serve.addr")).
+				Str("addr", viper.GetString("api.addr")).
 				Msg("failed to listen on api addr")
 		}
 		cm := cmux.New(l)
@@ -122,7 +122,7 @@ var apiCmd = &cobra.Command{
 			},
 		}))
 		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("serve.addr"), gwOpts)
+		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("api.addr"), gwOpts)
 		grpcgwServer := http.Server{
 			Handler: h2c.NewHandler(hlog.NewHandler(log.Logger)(grpcgwMux), &http2.Server{}),
 		}
@@ -183,7 +183,7 @@ var apiCmd = &cobra.Command{
 		})
 		eg.Go(func() error {
 			log.Info().
-				Str("addr", viper.GetString("serve.addr")).
+				Str("addr", viper.GetString("api.addr")).
 				Msg("serving api mux")
 			return cm.Serve()
 		})
@@ -194,13 +194,13 @@ var apiCmd = &cobra.Command{
 
 func init() {
 	apiCmd.Flags().String("addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
-	viper.BindPFlag("serve.addr", apiCmd.Flags().Lookup("addr"))
+	viper.BindPFlag("api.addr", apiCmd.Flags().Lookup("addr"))
 
 	apiCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")
-	viper.BindPFlag("serve.pg-dsn", apiCmd.Flags().Lookup("pg-dsn"))
+	viper.BindPFlag("api.pg-dsn", apiCmd.Flags().Lookup("pg-dsn"))
 
 	apiCmd.Flags().String("bootstrap-token", "", "Bootstrap with provided access token (note that this token will have admin scope valid for 24h).")
-	viper.BindPFlag("serve.bootstrap-token", apiCmd.Flags().Lookup("bootstrap-token"))
+	viper.BindPFlag("api.bootstrap-token", apiCmd.Flags().Lookup("bootstrap-token"))
 
 	rootCmd.AddCommand(apiCmd)
 }

@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/jwreagor/grpc-zerolog v0.0.0-20180425150930-27ca9d023ead
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/zerolog v1.26.1
+	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -24,6 +24,11 @@ require (
 require github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.0
 
 require github.com/soheilhy/cmux v0.1.5
+
+require (
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+)
 
 require (
 	github.com/Microsoft/go-winio v0.5.2 // indirect

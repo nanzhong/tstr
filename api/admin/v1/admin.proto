@@ -17,7 +17,7 @@ message IssueAccessTokenRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
   repeated tstr.common.v1.AccessToken.Scope scopes = 2
-    [(validate.rules).repeated = {min_items: 1, unique: true, items: {enum: {in: [1,2,3,4]}}}];
+    [(validate.rules).repeated = {min_items: 1, unique: true, items: {enum: {in: [1,2,3,4,5]}}}];
   google.protobuf.Duration valid_duration = 3;
 }
 

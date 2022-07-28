@@ -1,8 +1,3 @@
 resources:
   - deployment.yaml
   - service.yaml
-secretGenerator:
-  - literals:
-    - pg_dsn=...
-    name: tstr
-    type: Opaque

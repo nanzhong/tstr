@@ -104,7 +104,6 @@
             tstr = tstr;
             image = pkgs.dockerTools.buildLayeredImage {
               name = "nanzhong/tstr";
-              tag = tstr.version;
               contents = [ tstr ];
               config = {
                 Cmd = [ "/bin/tstr" ];

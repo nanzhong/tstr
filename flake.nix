@@ -108,6 +108,7 @@
               buildInputs = [
                 buf
                 entr
+                getopt
                 go-tools
                 go_1_18
                 gopls

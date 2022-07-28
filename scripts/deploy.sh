@@ -45,3 +45,4 @@ kustomize edit add secret tstr \
   --from-literal="pg_dsn=$pg_dsn" \
   --from-literal="ui_access_token=$ui_access_token"
 kustomize build | kubectl apply -f -
+kubectl -n "$environment" rollout status deployment/tstr --timeout 60s

@@ -1,0 +1,19 @@
+name: Main Branch Updated
+on:
+  push:
+    branches: [main]
+jobs:
+  test:
+    uses: ./.github/workflows/test.yaml
+    secrets: inherit
+  build:
+    uses: ./.github/workflows/build.yaml
+    needs: [test]
+    secrets: inherit
+  deploy:
+    uses: ./.github/workflows/deploy.yaml
+    needs: [build]
+    secrets: inherit
+    with:
+      environment: demo
+      image_tag: ${{ needs.build.outputs.image_tag }}

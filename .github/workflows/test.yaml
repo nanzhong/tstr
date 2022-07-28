@@ -9,5 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: cachix/install-nix-action@v15
-      - run: nix develop -c go test ./...
+      - uses: cachix/install-nix-action@v17
+      - name: Run go tests
+        run: nix develop -c go test ./...

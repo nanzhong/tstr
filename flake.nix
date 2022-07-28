@@ -133,6 +133,7 @@
                 go_1_18
                 gopls
                 grpcurl
+                kustomize
                 nodePackages.vls
                 postgresql_14
                 protobuf

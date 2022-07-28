@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tstr
+spec:
+  selector:
+    matchLabels:
+      app: tstr
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tstr
+    spec:
+      containers:
+        - name: tstr
+          image: nanzhong/tstr:latest
+          command: [ "tstr", "api" ]
+          env:
+            - name: "API_PG_DSN"
+              valueFrom:
+                secretKeyRef:
+                  name: tstr
+                  key: pg_dsn
+          ports:
+            - name: ui
+              containerPort: 8000
+            - name: api
+              containerPort: 9000

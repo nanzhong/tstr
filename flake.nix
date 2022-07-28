@@ -3,6 +3,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
     sqlc = {
       url = "github:kyleconroy/sqlc";
       flake = false;
@@ -25,20 +26,33 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, sqlc, dbmate, overmind, quicktemplate, grpc-gateway }:
+  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, sqlc, dbmate, overmind, quicktemplate, grpc-gateway }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
+        bp = pkgs.callPackage nix-npm-buildpackage {};
         version = "0.0.1";
-        tstr = pkgs.buildGoModule {
+        tstr = pkgs.buildGo118Module {
           pname = "tstr";
           inherit version;
           src = ./.;
           subPackages = [
             "cmd/tstr"
-            "cmd/tstrctl"
           ];
           vendorSha256 = null;
+          buildInputs = [ tstr-ui ];
+          preBuild = ''
+            cp -r "${tstr-ui}/dist" ui/app/dist
+          '';
+        };
+        tstr-ui = bp.buildYarnPackage {
+          pname = "tstr-ui";
+          inherit version;
+          src = ./ui/app;
+          yarnBuildMore = "yarn vite build";
+          postInstall = ''
+            cp -r dist $out/
+          '';
         };
 
         devTools = {
@@ -88,6 +102,16 @@
         rec {
           packages = flake-utils.lib.flattenTree {
             tstr = tstr;
+            image = pkgs.dockerTools.buildLayeredImage {
+              name = "nanzhong/tstr";
+              tag = tstr.version;
+              contents = [ tstr ];
+              config = {
+                Cmd = [ "/bin/tstr" ];
+              };
+            };
+
+            default = tstr;
           };
           defaultPackage = packages.tstr;
 
@@ -96,18 +120,16 @@
               drv = packages.tstr;
               exePath = "/bin/tstr";
             };
-            tstrctl = flake-utils.lib.mkApp {
-              drv = packages.tstr;
-              exePath = "/bin/tstrctl";
-            };
+
+            default = apps.tstr;
           };
-          defaultApp = apps.tstr;
 
           devShell = with pkgs;
             mkShell {
               buildInputs = [
                 buf
                 entr
+                getopt
                 go-tools
                 go_1_18
                 gopls

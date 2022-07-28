@@ -5,7 +5,7 @@ on:
     branches:
       - main
 jobs:
-  test:
+  build-and-push-image:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,7 +16,9 @@ jobs:
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
       - name: Build container image
-        run: nix build .#image
+        run: |
+          nix build .#image
+          echo image_tag="$(nix eval .#image.imageTag)" >> $GITHUB_ENV
       - name: Load container image
         run: "docker load < result"
       - name: Login to Docker Hub
@@ -25,4 +27,4 @@ jobs:
           username: nanzhong
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
       - name: Push container image
-        run: docker push nanzhong/tstr
+        run: docker push "nanzhong/tstr:${{ env.image_tag }}"

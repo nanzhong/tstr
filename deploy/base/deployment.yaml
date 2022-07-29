@@ -23,8 +23,10 @@ spec:
                   name: tstr
                   key: pg_dsn
           ports:
-            - name: api
+            - name: grpc
               containerPort: 9000
+            - name: json
+              containerPort: 9090
         - name: tstr-ui
           image: nanzhong/tstr:latest
           command: [ "tstr", "ui" ]

@@ -1,16 +1,30 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: tstr-api
+  name: tstr-grpc
   labels:
-    app: tstr-api
+    app: tstr-grpc
 spec:
   ports:
   - port: 9000
-    targetPort: api
+    targetPort: grpc
     protocol: TCP
   selector:
-    app: tstr-api
+    app: tstr
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tstr-json
+  labels:
+    app: tstr-json
+spec:
+  ports:
+  - port: 9090
+    targetPort: json
+    protocol: TCP
+  selector:
+    app: tstr
 ---
 apiVersion: v1
 kind: Service
@@ -24,4 +38,4 @@ spec:
     targetPort: ui
     protocol: TCP
   selector:
-    app: tstr-ui
+    app: tstr

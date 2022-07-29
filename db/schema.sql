@@ -88,14 +88,14 @@ CREATE TABLE public.runners (
 CREATE TABLE public.runs (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     test_id uuid NOT NULL,
-    test_run_config_id uuid NOT NULL,
+    test_run_config jsonb,
     runner_id uuid,
     result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,
+    result_data jsonb DEFAULT '{}'::jsonb,
     scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,
-    finished_at timestamp with time zone,
-    result_data jsonb DEFAULT '{}'::jsonb
+    finished_at timestamp with time zone
 );
 
 
@@ -105,21 +105,6 @@ CREATE TABLE public.runs (
 
 CREATE TABLE public.schema_migrations (
     version character varying(255) NOT NULL
-);
-
-
---
--- Name: test_run_configs; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.test_run_configs (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    test_id uuid,
-    container_image character varying NOT NULL,
-    command character varying,
-    args character varying[],
-    env jsonb,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -144,6 +129,7 @@ CREATE TABLE public.test_suites (
 CREATE TABLE public.tests (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     name character varying NOT NULL,
+    run_config jsonb,
     labels jsonb,
     cron_schedule character varying,
     next_run_at timestamp with time zone,
@@ -183,14 +169,6 @@ ALTER TABLE ONLY public.runs
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: test_run_configs test_run_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_run_configs
-    ADD CONSTRAINT test_run_configs_pkey PRIMARY KEY (id);
 
 
 --
@@ -261,17 +239,10 @@ CREATE INDEX runs_scheduled_at_started_at_finished_at_idx ON public.runs USING b
 
 
 --
--- Name: runs_test_id_test_run_config_id_idx; Type: INDEX; Schema: public; Owner: -
+-- Name: runs_test_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX runs_test_id_test_run_config_id_idx ON public.runs USING btree (test_id, test_run_config_id);
-
-
---
--- Name: test_run_configs_created_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX test_run_configs_created_at_idx ON public.test_run_configs USING btree (created_at);
+CREATE INDEX runs_test_id_idx ON public.runs USING btree (test_id);
 
 
 --
@@ -319,22 +290,6 @@ ALTER TABLE ONLY public.runs
 
 
 --
--- Name: runs runs_test_run_config_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.runs
-    ADD CONSTRAINT runs_test_run_config_id_fkey FOREIGN KEY (test_run_config_id) REFERENCES public.test_run_configs(id);
-
-
---
--- Name: test_run_configs test_run_configs_test_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_run_configs
-    ADD CONSTRAINT test_run_configs_test_id_fkey FOREIGN KEY (test_id) REFERENCES public.tests(id);
-
-
---
 -- PostgreSQL database dump complete
 --
 
@@ -344,5 +299,4 @@ ALTER TABLE ONLY public.test_run_configs
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20220426134459'),
-    ('20220729140707');
+    ('20220426134459');

@@ -388,6 +388,17 @@
       ],
       "default": "UNKNOWN"
     },
+    "MatrixLabelValues": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "RunLog": {
       "type": "object",
       "properties": {
@@ -413,12 +424,20 @@
       ],
       "default": "UNKNOWN"
     },
+    "TestMatrix": {
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/MatrixLabelValues"
+          }
+        }
+      }
+    },
     "TestRunConfig": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "containerImage": {
           "type": "string"
         },
@@ -437,9 +456,8 @@
             "type": "string"
           }
         },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
+        "timeout": {
+          "type": "string"
         }
       }
     },
@@ -611,8 +629,8 @@
         "testId": {
           "type": "string"
         },
-        "testRunConfigId": {
-          "type": "string"
+        "testRunConfig": {
+          "$ref": "#/definitions/TestRunConfig"
         },
         "runnerId": {
           "type": "string"
@@ -680,6 +698,9 @@
         "name": {
           "type": "string"
         },
+        "runConfig": {
+          "$ref": "#/definitions/TestRunConfig"
+        },
         "labels": {
           "type": "object",
           "additionalProperties": {
@@ -693,8 +714,8 @@
           "type": "string",
           "format": "date-time"
         },
-        "runConfig": {
-          "$ref": "#/definitions/TestRunConfig"
+        "matrix": {
+          "$ref": "#/definitions/TestMatrix"
         },
         "registeredAt": {
           "type": "string",

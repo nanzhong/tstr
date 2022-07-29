@@ -2515,16 +2515,33 @@ func (m *RunSummary) validate(all bool) error {
 		errors = append(errors, err)
 	}
 
-	if err := m._validateUuid(m.GetTestRunConfigId()); err != nil {
-		err = RunSummaryValidationError{
-			field:  "TestRunConfigId",
-			reason: "value must be a valid UUID",
-			cause:  err,
+	if all {
+		switch v := interface{}(m.GetTestRunConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RunSummaryValidationError{
+					field:  "TestRunConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RunSummaryValidationError{
+					field:  "TestRunConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
 		}
-		if !all {
-			return err
+	} else if v, ok := interface{}(m.GetTestRunConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RunSummaryValidationError{
+				field:  "TestRunConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
 		}
-		errors = append(errors, err)
 	}
 
 	if m.GetRunnerId() != "" {

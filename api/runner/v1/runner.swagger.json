@@ -55,9 +55,6 @@
     "TestRunConfig": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string"
-        },
         "containerImage": {
           "type": "string"
         },
@@ -76,9 +73,8 @@
             "type": "string"
           }
         },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
+        "timeout": {
+          "type": "string"
         }
       }
     },

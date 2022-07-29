@@ -70,22 +70,17 @@ func (s *Scheduler) Start() error {
 				}
 
 				for _, test := range tests {
-					run, err := s.dbQuerier.ScheduleRun(ctx, tx, db.ScheduleRunParams{
-						TestID:          test.ID,
-						TestRunConfigID: test.TestRunConfigID.UUID,
-					})
+					run, err := s.dbQuerier.ScheduleRun(ctx, tx, test.ID)
 					if err != nil {
 						log.Error().
 							Err(err).
 							Stringer("test_id", test.ID).
-							Stringer("test_run_config_id", test.TestRunConfigID.UUID).
 							Msg("failed to schedule run for test")
 						return err
 					}
 
 					log.Info().
 						Stringer("test_id", test.ID).
-						Stringer("test_run_config_id", test.TestRunConfigID.UUID).
 						Stringer("run_id", run.ID).
 						Msg("scheduled run for test")
 

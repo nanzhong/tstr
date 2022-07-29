@@ -86,7 +86,7 @@ func (q *Queries) UIListRecentRuns(ctx context.Context, db DBTX, limit int32) ([
 }
 
 const uIListTests = `-- name: UIListTests :many
-select id, name, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at from tests
+select id, name, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at, run_config from tests
 `
 
 func (q *Queries) UIListTests(ctx context.Context, db DBTX) ([]Test, error) {
@@ -107,6 +107,7 @@ func (q *Queries) UIListTests(ctx context.Context, db DBTX) ([]Test, error) {
 			&i.RegisteredAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
+			&i.RunConfig,
 		); err != nil {
 			return nil, err
 		}

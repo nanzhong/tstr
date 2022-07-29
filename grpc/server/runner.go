@@ -242,28 +242,21 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		return nil, status.Error(codes.Internal, "failed to assign run to runner")
 	}
 
-	var env map[string]string
-	if err := run.Env.AssignTo(&env); err != nil {
+	var runConfig db.TestRunConfig
+	if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
 		log.Error().
 			Err(err).
 			Stringer("run_id", run.ID).
-			Msg("failed to parse run config env")
-		return nil, status.Error(codes.Internal, "failed to format response")
+			Msg("failed to parse run config")
+		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 	return &runnerv1.NextRunResponse{
 		Run: &commonv1.Run{
-			Id:     run.ID.String(),
-			TestId: run.TestID.String(),
-			TestRunConfig: &commonv1.Test_RunConfig{
-				Id:             run.TestRunConfigID.String(),
-				ContainerImage: run.ContainerImage,
-				Command:        run.Command.String,
-				Args:           run.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
-			},
-			RunnerId:    run.RunnerID.UUID.String(),
-			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
+			Id:            run.ID.String(),
+			TestId:        run.TestID.String(),
+			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			RunnerId:      run.RunnerID.UUID.String(),
+			ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
 		},
 	}, nil
 }

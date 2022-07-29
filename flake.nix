@@ -142,6 +142,7 @@
                 protoc-gen-go-grpc
                 protoc-gen-validate
                 yarn
+                nodejs
 
                 devTools.sqlc
                 devTools.dbmate

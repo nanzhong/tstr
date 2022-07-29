@@ -594,7 +594,7 @@
           "type": "string",
           "format": "date-time"
         },
-        "computedData": {
+        "resultData": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -632,7 +632,7 @@
           "type": "string",
           "format": "date-time"
         },
-        "computedData": {
+        "resultData": {
           "type": "object",
           "additionalProperties": {
             "type": "string"

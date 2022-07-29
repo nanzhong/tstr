@@ -41,7 +41,7 @@ WHERE runs.id = (
   ORDER BY selected_runs.scheduled_at ASC
   LIMIT 1
 ) AND runs.test_run_config_id = test_run_configs.id
-RETURNING runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.computed_data, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+RETURNING runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 `
 
 type AssignRunParams struct {
@@ -56,10 +56,10 @@ type AssignRunRow struct {
 	RunnerID               uuid.NullUUID
 	Result                 NullRunResult
 	Logs                   pgtype.JSONB
-	ComputedData           pgtype.JSONB
 	ScheduledAt            sql.NullTime
 	StartedAt              sql.NullTime
 	FinishedAt             sql.NullTime
+	ResultData             pgtype.JSONB
 	ContainerImage         string
 	Command                sql.NullString
 	Args                   []string
@@ -77,10 +77,10 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 		&i.RunnerID,
 		&i.Result,
 		&i.Logs,
-		&i.ComputedData,
 		&i.ScheduledAt,
 		&i.StartedAt,
 		&i.FinishedAt,
+		&i.ResultData,
 		&i.ContainerImage,
 		&i.Command,
 		&i.Args,
@@ -91,7 +91,7 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 }
 
 const getRun = `-- name: GetRun :one
-SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.computed_data, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
@@ -105,10 +105,10 @@ type GetRunRow struct {
 	RunnerID               uuid.NullUUID
 	Result                 NullRunResult
 	Logs                   pgtype.JSONB
-	ComputedData           pgtype.JSONB
 	ScheduledAt            sql.NullTime
 	StartedAt              sql.NullTime
 	FinishedAt             sql.NullTime
+	ResultData             pgtype.JSONB
 	ContainerImage         string
 	Command                sql.NullString
 	Args                   []string
@@ -126,10 +126,10 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow,
 		&i.RunnerID,
 		&i.Result,
 		&i.Logs,
-		&i.ComputedData,
 		&i.ScheduledAt,
 		&i.StartedAt,
 		&i.FinishedAt,
+		&i.ResultData,
 		&i.ContainerImage,
 		&i.Command,
 		&i.Args,
@@ -140,7 +140,7 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (GetRunRow,
 }
 
 const listRuns = `-- name: ListRuns :many
-SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.computed_data, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at
 FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
@@ -183,10 +183,10 @@ type ListRunsRow struct {
 	RunnerID        uuid.NullUUID
 	Result          NullRunResult
 	Logs            pgtype.JSONB
-	ComputedData    pgtype.JSONB
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
+	ResultData      pgtype.JSONB
 	ContainerImage  string
 	Command         sql.NullString
 	Args            []string
@@ -221,10 +221,10 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]
 			&i.RunnerID,
 			&i.Result,
 			&i.Logs,
-			&i.ComputedData,
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.ResultData,
 			&i.ContainerImage,
 			&i.Command,
 			&i.Args,
@@ -242,7 +242,7 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX, arg ListRunsParams) ([]
 }
 
 const queryRuns = `-- name: QueryRuns :many
-SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.computed_data, runs.scheduled_at, runs.started_at, runs.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 FROM runs
 JOIN test_run_configs
 ON runs.test_run_config_id = test_run_configs.id
@@ -287,10 +287,10 @@ type QueryRunsRow struct {
 	RunnerID               uuid.NullUUID
 	Result                 NullRunResult
 	Logs                   pgtype.JSONB
-	ComputedData           pgtype.JSONB
 	ScheduledAt            sql.NullTime
 	StartedAt              sql.NullTime
 	FinishedAt             sql.NullTime
+	ResultData             pgtype.JSONB
 	ContainerImage         string
 	Command                sql.NullString
 	Args                   []string
@@ -326,10 +326,10 @@ func (q *Queries) QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) (
 			&i.RunnerID,
 			&i.Result,
 			&i.Logs,
-			&i.ComputedData,
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.ResultData,
 			&i.ContainerImage,
 			&i.Command,
 			&i.Args,
@@ -361,7 +361,7 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 }
 
 const runSummaryForRunner = `-- name: RunSummaryForRunner :many
-SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, computed_data
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, result_data
 FROM runs
 WHERE runs.runner_id = $1::uuid
 ORDER by runs.scheduled_at desc
@@ -382,7 +382,7 @@ type RunSummaryForRunnerRow struct {
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
-	ComputedData    pgtype.JSONB
+	ResultData      pgtype.JSONB
 }
 
 func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error) {
@@ -403,7 +403,7 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.ComputedData,
+			&i.ResultData,
 		); err != nil {
 			return nil, err
 		}
@@ -416,7 +416,7 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 }
 
 const runSummaryForTest = `-- name: RunSummaryForTest :many
-SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, computed_data
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, result_data
 FROM runs
 WHERE runs.test_id = $1
 ORDER by runs.scheduled_at desc
@@ -437,7 +437,7 @@ type RunSummaryForTestRow struct {
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
-	ComputedData    pgtype.JSONB
+	ResultData      pgtype.JSONB
 }
 
 func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error) {
@@ -458,7 +458,7 @@ func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummary
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
-			&i.ComputedData,
+			&i.ResultData,
 		); err != nil {
 			return nil, err
 		}
@@ -474,9 +474,9 @@ const scheduleRun = `-- name: ScheduleRun :one
 WITH scheduled_run AS (
   INSERT INTO runs (test_id, test_run_config_id)
   VALUES ($1::uuid, $2::uuid)
-  RETURNING id, test_id, test_run_config_id, runner_id, result, logs, computed_data, scheduled_at, started_at, finished_at
+  RETURNING id, test_id, test_run_config_id, runner_id, result, logs, scheduled_at, started_at, finished_at, result_data
 )
-SELECT scheduled_run.id, scheduled_run.test_id, scheduled_run.test_run_config_id, scheduled_run.runner_id, scheduled_run.result, scheduled_run.logs, scheduled_run.computed_data, scheduled_run.scheduled_at, scheduled_run.started_at, scheduled_run.finished_at, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
+SELECT scheduled_run.id, scheduled_run.test_id, scheduled_run.test_run_config_id, scheduled_run.runner_id, scheduled_run.result, scheduled_run.logs, scheduled_run.scheduled_at, scheduled_run.started_at, scheduled_run.finished_at, scheduled_run.result_data, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at AS test_run_config_created_at
 FROM scheduled_run
 JOIN test_run_configs
 ON scheduled_run.test_run_config_id = test_run_configs.id
@@ -494,10 +494,10 @@ type ScheduleRunRow struct {
 	RunnerID               uuid.NullUUID
 	Result                 NullRunResult
 	Logs                   pgtype.JSONB
-	ComputedData           pgtype.JSONB
 	ScheduledAt            sql.NullTime
 	StartedAt              sql.NullTime
 	FinishedAt             sql.NullTime
+	ResultData             pgtype.JSONB
 	ContainerImage         string
 	Command                sql.NullString
 	Args                   []string
@@ -515,10 +515,10 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 		&i.RunnerID,
 		&i.Result,
 		&i.Logs,
-		&i.ComputedData,
 		&i.ScheduledAt,
 		&i.StartedAt,
 		&i.FinishedAt,
+		&i.ResultData,
 		&i.ContainerImage,
 		&i.Command,
 		&i.Args,
@@ -528,19 +528,19 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 	return i, err
 }
 
-const updateComputedData = `-- name: UpdateComputedData :exec
+const updateResultData = `-- name: UpdateResultData :exec
 UPDATE runs
-SET computed_data = computed_data || $1::jsonb 
+SET result_data = result_data || $1::jsonb 
 WHERE id = $2
 `
 
-type UpdateComputedDataParams struct {
-	ComputedData pgtype.JSONB
-	ID           uuid.UUID
+type UpdateResultDataParams struct {
+	ResultData pgtype.JSONB
+	ID         uuid.UUID
 }
 
-func (q *Queries) UpdateComputedData(ctx context.Context, db DBTX, arg UpdateComputedDataParams) error {
-	_, err := db.Exec(ctx, updateComputedData, arg.ComputedData, arg.ID)
+func (q *Queries) UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error {
+	_, err := db.Exec(ctx, updateResultData, arg.ResultData, arg.ID)
 	return err
 }
 

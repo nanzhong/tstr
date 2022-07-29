@@ -119,10 +119,10 @@ type Run struct {
 	RunnerID        uuid.NullUUID
 	Result          NullRunResult
 	Logs            pgtype.JSONB
-	ComputedData    pgtype.JSONB
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
+	ResultData      pgtype.JSONB
 }
 
 type Runner struct {

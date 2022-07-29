@@ -272,7 +272,7 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 			}
 
 			if len(m) > 0 {
-				srr.ComputedData = m
+				srr.ResultData = m
 			}
 		}
 

@@ -55,7 +55,7 @@ type Querier interface {
 	UIRunsSummary(ctx context.Context, db DBTX, arg UIRunsSummaryParams) ([]UIRunsSummaryRow, error)
 	UITestResults(ctx context.Context, db DBTX) ([]UITestResultsRow, error)
 	UITestsByLabels(ctx context.Context, db DBTX) ([]UITestsByLabelsRow, error)
-	UpdateComputedData(ctx context.Context, db DBTX, arg UpdateComputedDataParams) error
+	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error
 	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error

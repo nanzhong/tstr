@@ -37,8 +37,8 @@ export default {
                         var items = []
 
                         items.push(`result: ${data.result} <br/>`)
-                        if (typeof data.computedData !== 'undefined') {
-                            for (const [k, v] of Object.entries(data.computedData)) {
+                        if (typeof data.resultData !== 'undefined') {
+                            for (const [k, v] of Object.entries(data.resultData)) {
                                 items.push(`${k}: ${v} <br/>`)
                             }
                         }
@@ -75,7 +75,7 @@ export default {
                             y: Interval.fromDateTimes(s.startedAt, s.finishedAt).toDuration(['seconds']).seconds,
                             id: s.id,
                             result: s.result,
-                            computedData: s.computedData,
+                            resultData: s.resultData,
                         }
                     })
                 }

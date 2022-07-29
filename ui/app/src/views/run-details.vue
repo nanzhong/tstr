@@ -50,9 +50,9 @@ import TestLogLine from '../components/TestLogLine.vue'
 
                     <q-item>
                         <q-item-section>
-                            <q-item-label caption>Computed Data</q-item-label>
+                            <q-item-label caption>Result Data</q-item-label>
                             <q-item-label>
-                                <span v-for="(v,k) in run.computedData"> {{ k }}: {{ v}}<br/></span><br/>
+                                <span v-for="(v,k) in run.resultData"> {{ k }}: {{ v}}<br/></span><br/>
                             </q-item-label>
                         </q-item-section>
                     </q-item>

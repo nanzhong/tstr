@@ -28,6 +28,24 @@ export default {
                 xaxis: {
                     type: 'datetime',
                 },
+                tooltip: {
+                    enabled: true,
+                    custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                        const data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+                        let title = w.globals.tooltip.tooltipTitle.outerHTML;
+
+                        var items = []
+
+                        items.push(`result: ${data.result} <br/>`)
+                        if (typeof data.computedData !== 'undefined') {
+                            for (const [k, v] of Object.entries(data.computedData)) {
+                                items.push(`${k}: ${v} <br/>`)
+                            }
+                        }
+
+                        return title + '<div>' + items.join("\n") + '</div>'
+                    }
+                },
                 chart: {
                     height: 350,
                     type: 'scatter',
@@ -56,6 +74,8 @@ export default {
                             x: s.startedAt.ts,
                             y: Interval.fromDateTimes(s.startedAt, s.finishedAt).toDuration(['seconds']).seconds,
                             id: s.id,
+                            result: s.result,
+                            computedData: s.computedData,
                         }
                     })
                 }

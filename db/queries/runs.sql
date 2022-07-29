@@ -65,6 +65,12 @@ UPDATE runs
 SET logs = COALESCE(logs, '[]'::jsonb) || sqlc.arg('logs')
 WHERE id = sqlc.arg('id');
 
+-- name: UpdateComputedData :exec
+UPDATE runs
+SET computed_data = computed_data || sqlc.arg('computed_data')::jsonb 
+WHERE id = sqlc.arg('id');
+
+
 -- name: ResetOrphanedRuns :exec
 UPDATE runs
 SET runner_id = NULL
@@ -74,14 +80,14 @@ WHERE
   scheduled_at < sqlc.arg('before')::timestamptz;
 
 -- name: RunSummaryForTest :many
-SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, computed_data
 FROM runs
 WHERE runs.test_id = sqlc.arg('test_id')
 ORDER by runs.scheduled_at desc
 LIMIT sqlc.arg('limit');
 
 -- name: RunSummaryForRunner :many
-SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at
+SELECT id, test_id, test_run_config_id, runner_id, result, scheduled_at, started_at, finished_at, computed_data
 FROM runs
 WHERE runs.runner_id = sqlc.arg('runner_id')::uuid
 ORDER by runs.scheduled_at desc

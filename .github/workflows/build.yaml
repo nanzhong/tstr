@@ -1,12 +1,16 @@
 name: Build
 on:
   pull_request:
-  push:
-    branches:
-      - main
+  workflow_call:
+    outputs:
+      image_tag:
+        description: The tag for the built and pushed image
+        value: ${{ jobs.build-and-push-image.outputs.image_tag }}
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.build.outputs.image_tag }}
     steps:
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v17
@@ -14,11 +18,11 @@ jobs:
         with:
           name: tstr
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
       - name: Build container image
+        id: build
         run: |
           nix build .#image
-          echo image_tag="$(nix eval .#image.imageTag)" >> $GITHUB_ENV
+          echo "::set-output name=image_tag::$(nix eval --raw .#image.imageTag)"
       - name: Load container image
         run: "docker load < result"
       - name: Login to Docker Hub
@@ -27,4 +31,5 @@ jobs:
           username: nanzhong
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
       - name: Push container image
-        run: docker push "nanzhong/tstr:${{ env.image_tag }}"
+        run: |
+          docker push "nanzhong/tstr:${{ steps.build.outputs.image_tag }}"

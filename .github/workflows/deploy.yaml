@@ -1,0 +1,39 @@
+name: Deploy
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        description: The nanzhong/tstr image tag to deploy
+        required: true
+        type: string
+      environment:
+        description: The environment to deploy to
+        required: true
+        type: string
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency: ${{ inputs.environment }}
+    environment: ${{ inputs.environment }}
+    steps:
+      - run: |
+          echo ${{ secrets.PG_DSN }} | wc -c
+          echo ${{ secrets.UI_ACCESS_TOKEN }} | wc -c
+      - uses: actions/checkout@v3
+      - uses: cachix/install-nix-action@v17
+      - uses: cachix/cachix-action@v10
+        with:
+          name: tstr
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+      - name: Setup doctl
+        uses: digitalocean/action-doctl@v2.1.1
+        with:
+          token: ${{ secrets.DO_ACCESS_TOKEN }}
+      - name: Configure kubectl
+        run: doctl kubernetes cluster kubeconfig save tstr
+      - name: Run DB migrations
+        env:
+          DATABASE_URL: ${{ secrets.PG_DSN }}
+        run: nix develop -c dbmate up
+      - name: Deploy changes
+        run: nix develop -c ./scripts/deploy.sh --environment '${{ inputs.environment }}' --image-tag '${{ inputs.image_tag }}' --pg-dsn '${{ secrets.PG_DSN }}' --ui-access-token '${{ secrets.UI_ACCESS_TOKEN }}'

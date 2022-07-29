@@ -42,6 +42,7 @@
           vendorSha256 = null;
           buildInputs = [ tstr-ui ];
           preBuild = ''
+            rm -rf ui/app/dist
             cp -r "${tstr-ui}/dist" ui/app/dist
           '';
         };
@@ -133,6 +134,7 @@
                 go_1_18
                 gopls
                 grpcurl
+                kustomize
                 nodePackages.vls
                 postgresql_14
                 protobuf

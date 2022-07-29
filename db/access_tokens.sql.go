@@ -25,6 +25,7 @@ type AuthAccessTokenRow struct {
 	ExpiresAt sql.NullTime
 }
 
+// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error) {
 	row := db.QueryRow(ctx, authAccessToken, tokenHash)
 	var i AuthAccessTokenRow
@@ -33,7 +34,7 @@ func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string
 }
 
 const getAccessToken = `-- name: GetAccessToken :one
-SELECT id, name, scopes, issued_at, expires_at, revoked_at
+SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE id = $1
 `
@@ -41,12 +42,13 @@ WHERE id = $1
 type GetAccessTokenRow struct {
 	ID        uuid.UUID
 	Name      string
-	Scopes    []AccessTokenScope
+	Scopes    []string
 	IssuedAt  sql.NullTime
 	ExpiresAt sql.NullTime
 	RevokedAt sql.NullTime
 }
 
+// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 func (q *Queries) GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error) {
 	row := db.QueryRow(ctx, getAccessToken, id)
 	var i GetAccessTokenRow
@@ -102,7 +104,7 @@ func (q *Queries) IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccess
 }
 
 const listAccessTokens = `-- name: ListAccessTokens :many
-SELECT id, name, scopes, issued_at, expires_at, revoked_at
+SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   CASE WHEN $1::bool
@@ -123,12 +125,13 @@ type ListAccessTokensParams struct {
 type ListAccessTokensRow struct {
 	ID        uuid.UUID
 	Name      string
-	Scopes    []AccessTokenScope
+	Scopes    []string
 	IssuedAt  sql.NullTime
 	ExpiresAt sql.NullTime
 	RevokedAt sql.NullTime
 }
 
+// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 func (q *Queries) ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error) {
 	rows, err := db.Query(ctx, listAccessTokens, arg.IncludeExpired, arg.IncludeRevoked)
 	if err != nil {

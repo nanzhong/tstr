@@ -104,7 +104,7 @@ func (m *IssueAccessTokenRequest) validate(all bool) error {
 		if _, ok := _IssueAccessTokenRequest_Scopes_InLookup[item]; !ok {
 			err := IssueAccessTokenRequestValidationError{
 				field:  fmt.Sprintf("Scopes[%v]", idx),
-				reason: "value must be in list [1 2 3 4]",
+				reason: "value must be in list [1 2 3 4 5]",
 			}
 			if !all {
 				return err
@@ -228,6 +228,7 @@ var _IssueAccessTokenRequest_Scopes_InLookup = map[commonv1.AccessToken_Scope]st
 	2: {},
 	3: {},
 	4: {},
+	5: {},
 }
 
 // Validate checks the field values on IssueAccessTokenResponse with the rules

@@ -40,6 +40,8 @@ var (
 					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL_RW)
 				case "runner":
 					req.Scopes = append(req.Scopes, commonv1.AccessToken_RUNNER)
+				case "data":
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_DATA)
 				default:
 					return fmt.Errorf("invalid access token scope %s", s)
 				}

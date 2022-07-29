@@ -39,3 +39,41 @@ spec:
           ports:
             - name: ui
               containerPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tstr-runner
+spec:
+  selector:
+    matchLabels:
+      app: tstr-runner
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: tstr-runner
+    spec:
+      nodeSelector:
+        doks.digitalocean.com/node-pool: runner-basic
+      containers:
+        - name: tstr-run
+          image: nanzhong/tstr:latest
+          command: [ "tstr", "run" ]
+          env:
+            - name: RUN_GRPC_ADDR
+              value: tstr-grpc:9000
+            - name: RUN_INSECURE
+              value: "true"
+            - name: RUN_ACCESS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: tstr
+                  key: run_access_token
+          volumeMounts:
+            - mountPath: /var/run/docker.sock
+              name: docker-sock
+      volumes:
+        - name: docker-sock
+          hostPath:
+              path: /var/run/docker.sock

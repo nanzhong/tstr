@@ -94,7 +94,8 @@ CREATE TABLE public.runs (
     logs jsonb,
     scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,
-    finished_at timestamp with time zone
+    finished_at timestamp with time zone,
+    result_data jsonb DEFAULT '{}'::jsonb
 );
 
 
@@ -343,4 +344,5 @@ ALTER TABLE ONLY public.test_run_configs
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20220426134459');
+    ('20220426134459'),
+    ('20220729140707');

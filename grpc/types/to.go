@@ -90,3 +90,9 @@ func ToRunLogs(logs []db.RunLog) []*commonv1.Run_Log {
 	}
 	return pbLogs
 }
+
+func ToProtoResultData(data pgtype.JSONB) map[string]string {
+	r := map[string]string{}
+	data.AssignTo(&r)
+	return r
+}

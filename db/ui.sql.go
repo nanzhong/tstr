@@ -14,7 +14,7 @@ import (
 )
 
 const uIListRecentRuns = `-- name: UIListRecentRuns :many
-SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, tests.name as test_name, tests.labels, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at, runners.name AS runner_name, (finished_at is NULL)::bool AS is_pending
+SELECT runs.id, runs.test_id, runs.test_run_config_id, runs.runner_id, runs.result, runs.logs, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data, tests.name as test_name, tests.labels, test_run_configs.container_image, test_run_configs.command, test_run_configs.args, test_run_configs.env, test_run_configs.created_at, runners.name AS runner_name, (finished_at is NULL)::bool AS is_pending
 FROM runs
 JOIN test_run_configs ON runs.test_run_config_id = test_run_configs.id
 JOIN runners ON runs.runner_id = runners.id
@@ -33,6 +33,7 @@ type UIListRecentRunsRow struct {
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
+	ResultData      pgtype.JSONB
 	TestName        string
 	Labels          pgtype.JSONB
 	ContainerImage  string
@@ -63,6 +64,7 @@ func (q *Queries) UIListRecentRuns(ctx context.Context, db DBTX, limit int32) ([
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.ResultData,
 			&i.TestName,
 			&i.Labels,
 			&i.ContainerImage,

@@ -38,6 +38,7 @@ export default {
             const testDetails = await tstr.fetchTestDetails(testId)
             this.test = testDetails.test
             this.runSummaries = testDetails.runSummaries
+            console.log(this.runSummaries)
         }
     }
 }

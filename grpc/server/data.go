@@ -104,6 +104,7 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 			ScheduledAt:     types.ToProtoTimestamp(s.ScheduledAt),
 			StartedAt:       types.ToProtoTimestamp(s.StartedAt),
 			FinishedAt:      types.ToProtoTimestamp(s.FinishedAt),
+			ResultData:      types.ToProtoResultData(s.ResultData),
 		})
 	}
 
@@ -339,6 +340,7 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 		ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
 		StartedAt:   types.ToProtoTimestamp(run.StartedAt),
 		FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
+		ResultData:  types.ToProtoResultData(run.ResultData),
 	}
 	if run.RunnerID.Valid {
 		pbRun.RunnerId = run.RunnerID.UUID.String()

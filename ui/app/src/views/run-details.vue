@@ -47,6 +47,15 @@ import TestLogLine from '../components/TestLogLine.vue'
                             </q-item-label>
                         </q-item-section>
                     </q-item>
+
+                    <q-item>
+                        <q-item-section>
+                            <q-item-label caption>Result Data</q-item-label>
+                            <q-item-label>
+                                <span v-for="(v,k) in run.resultData"> {{ k }}: {{ v}}<br/></span><br/>
+                            </q-item-label>
+                        </q-item-section>
+                    </q-item>
                 </div>
             </div>
 

@@ -177,10 +177,12 @@ message RunSummary {
     (validate.rules).string = {ignore_empty: true, uuid: true}
   ];
   tstr.common.v1.Run.Result result = 5;
+  map<string,string> result_data = 6;
 
   google.protobuf.Timestamp scheduled_at = 10 [
     (validate.rules).timestamp.required = true
   ];
   google.protobuf.Timestamp started_at = 11;
   google.protobuf.Timestamp finished_at = 12;
+
 }

@@ -2,6 +2,7 @@ package runner
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -24,6 +25,9 @@ import (
 )
 
 var errRunnerRevoked = errors.New("runner revoked")
+
+var recordStart = []byte("\x1c\x1e")
+var recordEnd = []byte("\x1e\x1c")
 
 type Runner struct {
 	runnerClient runnerv1.RunnerServiceClient
@@ -168,6 +172,9 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 		env = append(env, fmt.Sprintf("%s=%s", k, v))
 	}
 
+	env = append(env, "RECORD_START="+string(recordStart))
+	env = append(env, "RECORD_END="+string(recordEnd))
+
 	var cmd []string
 	if run.TestRunConfig.Command != "" {
 		cmd = append(cmd, run.TestRunConfig.Command)
@@ -236,6 +243,38 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 
 		stdOutStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDOUT, stream)
 		stdErrStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDERR, stream)
+
+		stdOutStreamer.interceptor = func(srr *runnerv1.SubmitRunRequest, line []byte) {
+			m := map[string]string{}
+			i := 0
+
+			for i < len(line) {
+				start := bytes.Index(line[i:], recordStart)
+				if start < 0 {
+					break
+				}
+				i += start + len(recordStart)
+
+				terminator := bytes.Index(line[i:], recordEnd)
+				if terminator < 0 {
+					break
+				}
+
+				record := line[i : terminator+i]
+
+				splitted := strings.SplitN(string(record), ":", 2)
+
+				if len(splitted) == 2 {
+					m[splitted[0]] = splitted[1]
+				}
+
+				i += terminator + len(recordEnd)
+			}
+
+			if len(m) > 0 {
+				srr.ResultData = m
+			}
+		}
 
 		var eg errgroup.Group
 		eg.Go(func() error {
@@ -327,10 +366,11 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 }
 
 type runLogStreamPipe struct {
-	stream     runnerv1.RunnerService_SubmitRunClient
-	outputType commonv1.Run_Log_Output
-	reader     *bufio.Reader
-	writer     io.WriteCloser
+	stream      runnerv1.RunnerService_SubmitRunClient
+	outputType  commonv1.Run_Log_Output
+	reader      *bufio.Reader
+	writer      io.WriteCloser
+	interceptor func(*runnerv1.SubmitRunRequest, []byte)
 }
 
 func newRunLogStreamPipe(outputType commonv1.Run_Log_Output, stream runnerv1.RunnerService_SubmitRunClient) *runLogStreamPipe {
@@ -360,13 +400,22 @@ func (w *runLogStreamPipe) Stream(ctx context.Context) error {
 				// Ignore time if not found
 				time, data = "", time
 			}
-			if err := w.stream.Send(&runnerv1.SubmitRunRequest{
+
+			line := []byte(data)
+
+			submitRunRequest := &runnerv1.SubmitRunRequest{
 				Logs: []*commonv1.Run_Log{{
 					Time:       time,
 					OutputType: w.outputType,
-					Data:       []byte(data),
+					Data:       line,
 				}},
-			}); err != nil {
+			}
+
+			if w.interceptor != nil {
+				w.interceptor(submitRunRequest, line)
+			}
+
+			if err := w.stream.Send(submitRunRequest); err != nil {
 				return fmt.Errorf("streaming log: %w", err)
 			}
 			log.Debug().Str("output_type", w.outputType.String()).Str("line", string(line)).Msg("submitted log line")

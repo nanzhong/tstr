@@ -422,6 +422,23 @@ func (s *RunnerServer) SubmitRun(stream runnerv1.RunnerService_SubmitRunServer) 
 			return status.Error(codes.Internal, "failed to update run")
 		}
 
+		if len(req.ResultData) > 0 {
+			c := pgtype.JSONB{}
+			err := c.Set(req.ResultData)
+			if err != nil {
+				log.Error().Err(err).Msg("failed to format computed data")
+				return status.Error(codes.Internal, "failed to format computed data")
+			} else {
+
+				if err = s.dbQuerier.UpdateResultData(stream.Context(), s.pgxPool, db.UpdateResultDataParams{
+					ResultData: c,
+					ID:         runID,
+				}); err != nil {
+					log.Error().Err(err).Msg("failed to update computed data")
+				}
+			}
+		}
+
 		if len(req.Logs) > 0 {
 			var logs []db.RunLog
 			for _, l := range req.Logs {

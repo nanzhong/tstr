@@ -570,6 +570,8 @@ func (m *Run) validate(all bool) error {
 
 	}
 
+	// no validation rules for ResultData
+
 	if all {
 		switch v := interface{}(m.GetScheduledAt()).(type) {
 		case interface{ ValidateAll() error }:

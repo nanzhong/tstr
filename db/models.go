@@ -122,6 +122,7 @@ type Run struct {
 	ScheduledAt     sql.NullTime
 	StartedAt       sql.NullTime
 	FinishedAt      sql.NullTime
+	ResultData      pgtype.JSONB
 }
 
 type Runner struct {

@@ -629,6 +629,8 @@ func (m *SubmitRunRequest) validate(all bool) error {
 
 	}
 
+	// no validation rules for ResultData
+
 	if all {
 		switch v := interface{}(m.GetStartedAt()).(type) {
 		case interface{ ValidateAll() error }:

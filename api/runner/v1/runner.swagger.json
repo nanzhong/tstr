@@ -149,6 +149,12 @@
             "$ref": "#/definitions/RunLog"
           }
         },
+        "resultData": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "scheduledAt": {
           "type": "string",
           "format": "date-time"

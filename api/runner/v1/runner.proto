@@ -39,11 +39,11 @@ message SubmitRunRequest {
     [(validate.rules).string = {ignore_empty: true, uuid: true}];
   tstr.common.v1.Run.Result result = 3;
   repeated tstr.common.v1.Run.Log logs = 4;
+  map <string,string> result_data = 5;
 
   google.protobuf.Timestamp started_at = 10;
   google.protobuf.Timestamp finished_at = 11;
 
-  map <string,string> result_data = 12;
 }
 
 message SubmitRunResponse {}

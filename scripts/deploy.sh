@@ -4,13 +4,14 @@ set -eo pipefail
 
 deploy_path="${BASH_SOURCE%/*}/../deploy"
 
-options=$(getopt -l "environment:,image-tag:,pg-dsn:,ui-access-token:" -o "e:t:d:u:" -a -- "$@")
+options=$(getopt -l "environment:,image-tag:,pg-dsn:,ui-access-token:,run-access-token:" -o "e:t:d:u:r:" -a -- "$@")
 eval set -- "$options"
 
 environment=""
 image_tag=""
 pg_dsn=""
 ui_access_token=""
+run_access_token=""
 
 while true
 do
@@ -31,6 +32,10 @@ do
       shift
       ui_access_token=$1
       ;;
+    -r|--run-access-token)
+      shift
+      run_access_token=$1
+      ;;
     --)
       shift
       break;;
@@ -43,6 +48,8 @@ cd "$deploy_path/$environment"
 kustomize edit set image "nanzhong/tstr:$image_tag"
 kustomize edit add secret tstr \
   --from-literal="pg_dsn=$pg_dsn" \
-  --from-literal="ui_access_token=$ui_access_token"
+  --from-literal="ui_access_token=$ui_access_token" \
+  --from-literal="run_access_token=$run_access_token"
 kustomize build | kubectl apply -f -
 kubectl -n "$environment" rollout status deployment/tstr --timeout 60s
+kubectl -n "$environment" rollout status deployment/tstr-runner --timeout 60s

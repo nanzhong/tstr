@@ -36,4 +36,4 @@ jobs:
           DATABASE_URL: ${{ secrets.PG_DSN }}
         run: nix develop -c dbmate up
       - name: Deploy changes
-        run: nix develop -c ./scripts/deploy.sh --environment '${{ inputs.environment }}' --image-tag '${{ inputs.image_tag }}' --pg-dsn '${{ secrets.PG_DSN }}' --ui-access-token '${{ secrets.UI_ACCESS_TOKEN }}'
+        run: nix develop -c ./scripts/deploy.sh --environment '${{ inputs.environment }}' --image-tag '${{ inputs.image_tag }}' --pg-dsn '${{ secrets.PG_DSN }}' --ui-access-token '${{ secrets.UI_ACCESS_TOKEN }}' --run-access-token '${{ secrets.RUN_ACCESS_TOKEN }}'

@@ -13,7 +13,7 @@ import RunnerInfo from '../components/RunnerInfo.vue'
         <br />
         <div class="text-h6">Test Runs</div>
 
-        <q-markup-table separator="vertical" flat bordered v-if="runSummaries != null && runSummaries.length > 0">
+        <q-markup-table separator="vertical" flat bordered v-if="typeof runSummaries !== 'undefined' && runSummaries != null && runSummaries.length > 0">
             <thead>
                 <tr>
                     <th class="text-left">Test</th>
@@ -43,7 +43,7 @@ import RunnerInfo from '../components/RunnerInfo.vue'
 
             </tbody>
         </q-markup-table>
-        <div v-if="runSummaries.length == 0">
+        <div v-if="typeof runSummaries === 'undefined' || runSummaries.length == 0">
             <p>
                 This runner doesn't have any test run recorded.
             </p>

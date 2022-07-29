@@ -49,13 +49,13 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		return nil, status.Error(codes.Internal, "failed to get test")
 	}
 
-	var env map[string]string
-	if err := test.Env.AssignTo(&env); err != nil {
+	var runConfig db.TestRunConfig
+	if err := test.RunConfig.AssignTo(&runConfig); err != nil {
 		log.Error().
 			Err(err).
 			Stringer("test_id", test.ID).
-			Msg("failed to parse env")
-		return nil, status.Error(codes.Internal, "failed to format run config env")
+			Msg("failed to parse run config")
+		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 	var labels map[string]string
 	if err := test.Labels.AssignTo(&labels); err != nil {
@@ -70,14 +70,7 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		Name:         test.Name,
 		Labels:       labels,
 		CronSchedule: test.CronSchedule.String,
-		RunConfig: &commonv1.Test_RunConfig{
-			Id:             test.TestRunConfigID.UUID.String(),
-			ContainerImage: test.ContainerImage.String,
-			Command:        test.Command.String,
-			Args:           test.Args,
-			Env:            env,
-			CreatedAt:      types.ToProtoTimestamp(test.CreatedAt),
-		},
+		RunConfig:    types.ToProtoTestRunConfig(runConfig),
 		NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
 		RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
 		UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
@@ -95,16 +88,25 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 	}
 	var pbRunSummaries []*datav1.RunSummary
 	for _, s := range runSummaries {
+		var runConfig db.TestRunConfig
+		if err := test.RunConfig.AssignTo(&runConfig); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", s.ID).
+				Msg("failed to parse run config")
+			return nil, status.Error(codes.Internal, "failed to format run config")
+		}
+
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
-			Id:              s.ID.String(),
-			TestId:          s.TestID.String(),
-			TestRunConfigId: s.TestRunConfigID.String(),
-			RunnerId:        s.RunnerID.UUID.String(),
-			Result:          types.ToRunResult(s.Result.RunResult),
-			ScheduledAt:     types.ToProtoTimestamp(s.ScheduledAt),
-			StartedAt:       types.ToProtoTimestamp(s.StartedAt),
-			FinishedAt:      types.ToProtoTimestamp(s.FinishedAt),
-			ResultData:      types.ToProtoResultData(s.ResultData),
+			Id:            s.ID.String(),
+			TestId:        s.TestID.String(),
+			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			RunnerId:      s.RunnerID.UUID.String(),
+			Result:        types.ToRunResult(s.Result.RunResult),
+			ScheduledAt:   types.ToProtoTimestamp(s.ScheduledAt),
+			StartedAt:     types.ToProtoTimestamp(s.StartedAt),
+			FinishedAt:    types.ToProtoTimestamp(s.FinishedAt),
+			ResultData:    types.ToProtoResultData(s.ResultData),
 		})
 	}
 
@@ -174,27 +176,20 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 				Msg("failed to parse labels")
 			return nil, status.Error(codes.Internal, "failed to format labels")
 		}
-		var env map[string]string
-		if err := test.Env.AssignTo(&env); err != nil {
+		var runConfig db.TestRunConfig
+		if err := test.RunConfig.AssignTo(&runConfig); err != nil {
 			log.Error().
 				Err(err).
 				Stringer("test_id", test.ID).
-				Msg("failed to parse env")
-			return nil, status.Error(codes.Internal, "failed to format run config env")
+				Msg("failed to parse run config")
+			return nil, status.Error(codes.Internal, "failed to format run config")
 		}
 		pbTests = append(pbTests, &commonv1.Test{
 			Id:           test.ID.String(),
 			Name:         test.Name,
 			Labels:       labels,
 			CronSchedule: test.CronSchedule.String,
-			RunConfig: &commonv1.Test_RunConfig{
-				Id:             test.TestRunConfigID.UUID.String(),
-				ContainerImage: test.ContainerImage.String,
-				Command:        test.Command.String,
-				Args:           test.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(test.CreatedAt),
-			},
+			RunConfig:    types.ToProtoTestRunConfig(runConfig),
 			NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
 			RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
 			UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
@@ -307,13 +302,13 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 		return nil, status.Error(codes.Internal, "failed to get run")
 	}
 
-	var env map[string]string
-	if err := run.Env.AssignTo(&env); err != nil {
+	var runConfig db.TestRunConfig
+	if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
 		log.Error().
 			Err(err).
 			Stringer("run_id", run.ID).
-			Msg("failed to parse env")
-		return nil, status.Error(codes.Internal, "failed to format run config env")
+			Msg("failed to parse run config")
+		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 
 	var logs []db.RunLog
@@ -325,22 +320,15 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 		return nil, status.Error(codes.Internal, "failed to format run logs")
 	}
 	pbRun := &commonv1.Run{
-		Id:     run.ID.String(),
-		TestId: run.TestID.String(),
-		TestRunConfig: &commonv1.Test_RunConfig{
-			Id:             run.TestRunConfigID.String(),
-			ContainerImage: run.ContainerImage,
-			Command:        run.Command.String,
-			Args:           run.Args,
-			Env:            env,
-			CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
-		},
-		Result:      types.ToRunResult(run.Result.RunResult),
-		Logs:        types.ToRunLogs(logs),
-		ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
-		StartedAt:   types.ToProtoTimestamp(run.StartedAt),
-		FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
-		ResultData:  types.ToProtoResultData(run.ResultData),
+		Id:            run.ID.String(),
+		TestId:        run.TestID.String(),
+		TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+		Result:        types.ToRunResult(run.Result.RunResult),
+		Logs:          types.ToRunLogs(logs),
+		ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
+		StartedAt:     types.ToProtoTimestamp(run.StartedAt),
+		FinishedAt:    types.ToProtoTimestamp(run.FinishedAt),
+		ResultData:    types.ToProtoResultData(run.ResultData),
 	}
 	if run.RunnerID.Valid {
 		pbRun.RunnerId = run.RunnerID.UUID.String()
@@ -432,13 +420,13 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 
 	var pbRuns []*commonv1.Run
 	for _, run := range runs {
-		var env map[string]string
-		if err := run.Env.AssignTo(&env); err != nil {
+		var runConfig db.TestRunConfig
+		if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
 			log.Error().
 				Err(err).
 				Stringer("run_id", run.ID).
-				Msg("failed to parse env")
-			return nil, status.Error(codes.Internal, "failed to format run config env")
+				Msg("failed to parse run config")
+			return nil, status.Error(codes.Internal, "failed to format run config")
 		}
 
 		var logs []db.RunLog
@@ -450,21 +438,14 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 			return nil, status.Error(codes.Internal, "failed to format run logs")
 		}
 		pbRun := &commonv1.Run{
-			Id:     run.ID.String(),
-			TestId: run.TestID.String(),
-			TestRunConfig: &commonv1.Test_RunConfig{
-				Id:             run.TestRunConfigID.String(),
-				ContainerImage: run.ContainerImage,
-				Command:        run.Command.String,
-				Args:           run.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
-			},
-			Result:      types.ToRunResult(run.Result.RunResult),
-			Logs:        types.ToRunLogs(logs),
-			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
-			StartedAt:   types.ToProtoTimestamp(run.StartedAt),
-			FinishedAt:  types.ToProtoTimestamp(run.FinishedAt),
+			Id:            run.ID.String(),
+			TestId:        run.TestID.String(),
+			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			Result:        types.ToRunResult(run.Result.RunResult),
+			Logs:          types.ToRunLogs(logs),
+			ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
+			StartedAt:     types.ToProtoTimestamp(run.StartedAt),
+			FinishedAt:    types.ToProtoTimestamp(run.FinishedAt),
 		}
 		if run.RunnerID.Valid {
 			pbRun.RunnerId = run.RunnerID.UUID.String()
@@ -522,15 +503,24 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 	}
 	var pbRunSummaries []*datav1.RunSummary
 	for _, s := range runSummaries {
+		var runConfig db.TestRunConfig
+		if err := s.TestRunConfig.AssignTo(&runConfig); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", s.ID).
+				Msg("failed to parse run config")
+			return nil, status.Error(codes.Internal, "failed to format run config")
+		}
+
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
-			Id:              s.ID.String(),
-			TestId:          s.TestID.String(),
-			TestRunConfigId: s.TestRunConfigID.String(),
-			RunnerId:        s.RunnerID.UUID.String(),
-			Result:          types.ToRunResult(s.Result.RunResult),
-			ScheduledAt:     types.ToProtoTimestamp(s.ScheduledAt),
-			StartedAt:       types.ToProtoTimestamp(s.StartedAt),
-			FinishedAt:      types.ToProtoTimestamp(s.FinishedAt),
+			Id:            s.ID.String(),
+			TestId:        s.TestID.String(),
+			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			RunnerId:      s.RunnerID.UUID.String(),
+			Result:        types.ToRunResult(s.Result.RunResult),
+			ScheduledAt:   types.ToProtoTimestamp(s.ScheduledAt),
+			StartedAt:     types.ToProtoTimestamp(s.StartedAt),
+			FinishedAt:    types.ToProtoTimestamp(s.FinishedAt),
 		})
 	}
 

@@ -3,24 +3,30 @@ syntax = "proto3";
 package tstr.common.v1;
 
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 message Test {
   message RunConfig {
-    string id = 1; // required (generated)
     string container_image = 2; // required
     string command = 3;
     repeated string args = 4;
     map<string, string> env = 5;
-
-    google.protobuf.Timestamp created_at = 10; // required
+    google.protobuf.Duration timeout = 6;
+  }
+  message Matrix {
+    message LabelValues {
+      repeated string values = 1;
+    }
+    map<string, LabelValues> labels = 1;
   }
 
   string id = 1; // required (generated)
   string name = 2; // required
-  map<string, string> labels = 3;
-  string cron_schedule = 4;
-  google.protobuf.Timestamp next_run_at = 5;
-  RunConfig run_config = 6; // required
+  RunConfig run_config = 3; // required
+  map<string, string> labels = 4;
+  string cron_schedule = 5;
+  google.protobuf.Timestamp next_run_at = 6;
+  Matrix matrix = 7;
 
   google.protobuf.Timestamp registered_at = 10; // required
   google.protobuf.Timestamp updated_at = 11; // required

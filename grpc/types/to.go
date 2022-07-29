@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgtype"
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -95,4 +96,14 @@ func ToProtoResultData(data pgtype.JSONB) map[string]string {
 	r := map[string]string{}
 	data.AssignTo(&r)
 	return r
+}
+
+func ToProtoTestRunConfig(rc db.TestRunConfig) *commonv1.Test_RunConfig {
+	return &commonv1.Test_RunConfig{
+		ContainerImage: rc.ContainerImage,
+		Command:        rc.Command,
+		Args:           rc.Args,
+		Env:            rc.Env,
+		Timeout:        durationpb.New(time.Duration(rc.TimeoutSeconds) * time.Second),
+	}
 }

@@ -60,6 +60,35 @@ func (m *Test) validate(all bool) error {
 
 	// no validation rules for Name
 
+	if all {
+		switch v := interface{}(m.GetRunConfig()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, TestValidationError{
+					field:  "RunConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, TestValidationError{
+					field:  "RunConfig",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetRunConfig()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return TestValidationError{
+				field:  "RunConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
 	// no validation rules for Labels
 
 	// no validation rules for CronSchedule
@@ -94,11 +123,11 @@ func (m *Test) validate(all bool) error {
 	}
 
 	if all {
-		switch v := interface{}(m.GetRunConfig()).(type) {
+		switch v := interface{}(m.GetMatrix()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, TestValidationError{
-					field:  "RunConfig",
+					field:  "Matrix",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -106,16 +135,16 @@ func (m *Test) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, TestValidationError{
-					field:  "RunConfig",
+					field:  "Matrix",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetRunConfig()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetMatrix()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return TestValidationError{
-				field:  "RunConfig",
+				field:  "Matrix",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1114,8 +1143,6 @@ func (m *Test_RunConfig) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
-
 	// no validation rules for ContainerImage
 
 	// no validation rules for Command
@@ -1123,11 +1150,11 @@ func (m *Test_RunConfig) validate(all bool) error {
 	// no validation rules for Env
 
 	if all {
-		switch v := interface{}(m.GetCreatedAt()).(type) {
+		switch v := interface{}(m.GetTimeout()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, Test_RunConfigValidationError{
-					field:  "CreatedAt",
+					field:  "Timeout",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -1135,16 +1162,16 @@ func (m *Test_RunConfig) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, Test_RunConfigValidationError{
-					field:  "CreatedAt",
+					field:  "Timeout",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetCreatedAt()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetTimeout()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return Test_RunConfigValidationError{
-				field:  "CreatedAt",
+				field:  "Timeout",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -1228,6 +1255,253 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = Test_RunConfigValidationError{}
+
+// Validate checks the field values on Test_Matrix with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Test_Matrix) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Test_Matrix with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in Test_MatrixMultiError, or
+// nil if none found.
+func (m *Test_Matrix) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Test_Matrix) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	{
+		sorted_keys := make([]string, len(m.GetLabels()))
+		i := 0
+		for key := range m.GetLabels() {
+			sorted_keys[i] = key
+			i++
+		}
+		sort.Slice(sorted_keys, func(i, j int) bool { return sorted_keys[i] < sorted_keys[j] })
+		for _, key := range sorted_keys {
+			val := m.GetLabels()[key]
+			_ = val
+
+			// no validation rules for Labels[key]
+
+			if all {
+				switch v := interface{}(val).(type) {
+				case interface{ ValidateAll() error }:
+					if err := v.ValidateAll(); err != nil {
+						errors = append(errors, Test_MatrixValidationError{
+							field:  fmt.Sprintf("Labels[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				case interface{ Validate() error }:
+					if err := v.Validate(); err != nil {
+						errors = append(errors, Test_MatrixValidationError{
+							field:  fmt.Sprintf("Labels[%v]", key),
+							reason: "embedded message failed validation",
+							cause:  err,
+						})
+					}
+				}
+			} else if v, ok := interface{}(val).(interface{ Validate() error }); ok {
+				if err := v.Validate(); err != nil {
+					return Test_MatrixValidationError{
+						field:  fmt.Sprintf("Labels[%v]", key),
+						reason: "embedded message failed validation",
+						cause:  err,
+					}
+				}
+			}
+
+		}
+	}
+
+	if len(errors) > 0 {
+		return Test_MatrixMultiError(errors)
+	}
+
+	return nil
+}
+
+// Test_MatrixMultiError is an error wrapping multiple validation errors
+// returned by Test_Matrix.ValidateAll() if the designated constraints aren't met.
+type Test_MatrixMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m Test_MatrixMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m Test_MatrixMultiError) AllErrors() []error { return m }
+
+// Test_MatrixValidationError is the validation error returned by
+// Test_Matrix.Validate if the designated constraints aren't met.
+type Test_MatrixValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e Test_MatrixValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e Test_MatrixValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e Test_MatrixValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e Test_MatrixValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e Test_MatrixValidationError) ErrorName() string { return "Test_MatrixValidationError" }
+
+// Error satisfies the builtin error interface
+func (e Test_MatrixValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTest_Matrix.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = Test_MatrixValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = Test_MatrixValidationError{}
+
+// Validate checks the field values on Test_Matrix_LabelValues with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *Test_Matrix_LabelValues) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Test_Matrix_LabelValues with the
+// rules defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// Test_Matrix_LabelValuesMultiError, or nil if none found.
+func (m *Test_Matrix_LabelValues) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Test_Matrix_LabelValues) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if len(errors) > 0 {
+		return Test_Matrix_LabelValuesMultiError(errors)
+	}
+
+	return nil
+}
+
+// Test_Matrix_LabelValuesMultiError is an error wrapping multiple validation
+// errors returned by Test_Matrix_LabelValues.ValidateAll() if the designated
+// constraints aren't met.
+type Test_Matrix_LabelValuesMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m Test_Matrix_LabelValuesMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m Test_Matrix_LabelValuesMultiError) AllErrors() []error { return m }
+
+// Test_Matrix_LabelValuesValidationError is the validation error returned by
+// Test_Matrix_LabelValues.Validate if the designated constraints aren't met.
+type Test_Matrix_LabelValuesValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e Test_Matrix_LabelValuesValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e Test_Matrix_LabelValuesValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e Test_Matrix_LabelValuesValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e Test_Matrix_LabelValuesValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e Test_Matrix_LabelValuesValidationError) ErrorName() string {
+	return "Test_Matrix_LabelValuesValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e Test_Matrix_LabelValuesValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sTest_Matrix_LabelValues.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = Test_Matrix_LabelValuesValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = Test_Matrix_LabelValuesValidationError{}
 
 // Validate checks the field values on Run_Log with the rules defined in the
 // proto definition for this message. If any rules are violated, the first

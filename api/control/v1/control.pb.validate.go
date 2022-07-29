@@ -74,8 +74,6 @@ func (m *RegisterTestRequest) validate(all bool) error {
 
 	// no validation rules for Labels
 
-	// no validation rules for CronSchedule
-
 	if m.GetRunConfig() == nil {
 		err := RegisterTestRequestValidationError{
 			field:  "RunConfig",
@@ -110,6 +108,37 @@ func (m *RegisterTestRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return RegisterTestRequestValidationError{
 				field:  "RunConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for CronSchedule
+
+	if all {
+		switch v := interface{}(m.GetMatrix()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, RegisterTestRequestValidationError{
+					field:  "Matrix",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, RegisterTestRequestValidationError{
+					field:  "Matrix",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMatrix()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return RegisterTestRequestValidationError{
+				field:  "Matrix",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}
@@ -382,10 +411,6 @@ func (m *UpdateTestRequest) validate(all bool) error {
 
 	// no validation rules for Name
 
-	// no validation rules for Labels
-
-	// no validation rules for CronSchedule
-
 	if all {
 		switch v := interface{}(m.GetRunConfig()).(type) {
 		case interface{ ValidateAll() error }:
@@ -409,6 +434,39 @@ func (m *UpdateTestRequest) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return UpdateTestRequestValidationError{
 				field:  "RunConfig",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Labels
+
+	// no validation rules for CronSchedule
+
+	if all {
+		switch v := interface{}(m.GetMatrix()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateTestRequestValidationError{
+					field:  "Matrix",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateTestRequestValidationError{
+					field:  "Matrix",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetMatrix()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateTestRequestValidationError{
+				field:  "Matrix",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

@@ -1,6 +1,16 @@
 package db
 
-import "github.com/jackc/pgtype"
+import (
+	"github.com/jackc/pgtype"
+)
+
+type TestRunConfig struct {
+	ContainerImage string            `json:"container_image"`
+	Command        string            `json:"command"`
+	Args           []string          `json:"args"`
+	Env            map[string]string `json:"env"`
+	TimeoutSeconds uint              `json:"timeout_seconds"`
+}
 
 type RunLog struct {
 	Type string `json:"type"`

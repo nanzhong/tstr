@@ -42,10 +42,10 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 		return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
 	}
 
-	env := pgtype.JSONB{}
-	if err := env.Set(r.RunConfig.Env); err != nil {
-		log.Error().Err(err).Msg("failed to parse env")
-		return nil, status.Error(codes.InvalidArgument, "failed to parse env")
+	runConfig := pgtype.JSONB{}
+	if err := runConfig.Set(types.FromProtoTestRunConfig(r.RunConfig)); err != nil {
+		log.Error().Err(err).Msg("failed to parse run config")
+		return nil, status.Error(codes.InvalidArgument, "failed to parse run config")
 	}
 
 	var nextRunAt sql.NullTime
@@ -59,14 +59,11 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 	}
 
 	result, err := s.dbQuerier.RegisterTest(ctx, s.pgxPool, db.RegisterTestParams{
-		Name:           r.Name,
-		Labels:         labels,
-		CronSchedule:   r.CronSchedule,
-		NextRunAt:      nextRunAt,
-		ContainerImage: r.RunConfig.ContainerImage,
-		Command:        r.RunConfig.Command,
-		Args:           r.RunConfig.Args,
-		Env:            env,
+		Name:         r.Name,
+		Labels:       labels,
+		RunConfig:    runConfig,
+		CronSchedule: r.CronSchedule,
+		NextRunAt:    nextRunAt,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to store test")
@@ -78,10 +75,10 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 		log.Error().Err(err).Msg("failed to format stored labels")
 		return nil, status.Error(codes.Internal, "failed to format labels")
 	}
-	var resultEnv map[string]string
-	if err := result.Env.AssignTo(&resultEnv); err != nil {
-		log.Error().Err(err).Msg("failed to format stored env")
-		return nil, status.Error(codes.Internal, "failed to format env")
+	var resultRunConfig db.TestRunConfig
+	if err := result.RunConfig.AssignTo(&resultRunConfig); err != nil {
+		log.Error().Err(err).Msg("failed to format stored run config")
+		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 
 	return &controlv1.RegisterTestResponse{
@@ -91,14 +88,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 			Labels:       resultLabels,
 			CronSchedule: result.CronSchedule.String,
 			NextRunAt:    types.ToProtoTimestamp(result.NextRunAt),
-			RunConfig: &commonv1.Test_RunConfig{
-				Id:             result.TestRunConfigID.String(),
-				ContainerImage: result.ContainerImage,
-				Command:        result.Command.String,
-				Args:           result.Args,
-				Env:            resultEnv,
-				CreatedAt:      types.ToProtoTimestamp(result.TestRunConfigCreatedAt),
-			},
+			RunConfig:    types.ToProtoTestRunConfig(resultRunConfig),
 			RegisteredAt: types.ToProtoTimestamp(result.RegisteredAt),
 			UpdatedAt:    types.ToProtoTimestamp(result.UpdatedAt),
 		},
@@ -116,41 +106,30 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, req *controlv1.Schedule
 		return nil, status.Error(codes.Internal, "failed to lookup test to schedule run for")
 	}
 
-	run, err := s.dbQuerier.ScheduleRun(ctx, s.pgxPool, db.ScheduleRunParams{
-		TestID:          test.ID,
-		TestRunConfigID: test.TestRunConfigID.UUID,
-	})
+	run, err := s.dbQuerier.ScheduleRun(ctx, s.pgxPool, test.ID)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Stringer("test_id", test.ID).
-			Stringer("test_urn_config_id", test.TestRunConfigID.UUID).
 			Msg("failed to schedule run")
 		return nil, status.Error(codes.Internal, "failed to schedule run")
 	}
 
-	var env map[string]string
-	if err := run.Env.AssignTo(&env); err != nil {
+	var runConfig db.TestRunConfig
+	if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
 		log.Error().
 			Err(err).
 			Stringer("run_id", run.ID).
-			Msg("failed to parse env")
-		return nil, status.Error(codes.Internal, "failed to format run config env")
+			Msg("failed to parse run config")
+		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 
 	return &controlv1.ScheduleRunResponse{
 		Run: &commonv1.Run{
-			Id:     run.ID.String(),
-			TestId: run.TestID.String(),
-			TestRunConfig: &commonv1.Test_RunConfig{
-				Id:             run.TestRunConfigID.String(),
-				ContainerImage: run.ContainerImage,
-				Command:        run.Command.String,
-				Args:           run.Args,
-				Env:            env,
-				CreatedAt:      types.ToProtoTimestamp(run.TestRunConfigCreatedAt),
-			},
-			ScheduledAt: types.ToProtoTimestamp(run.ScheduledAt),
+			Id:            run.ID.String(),
+			TestId:        run.TestID.String(),
+			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
 		},
 	}, nil
 }

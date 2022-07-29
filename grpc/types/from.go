@@ -64,3 +64,18 @@ func FromProtoTimestampAsNullTime(ts *timestamppb.Timestamp) sql.NullTime {
 	}
 	return sql.NullTime{Valid: true, Time: ts.AsTime()}
 }
+
+func FromProtoTestRunConfig(rc *commonv1.Test_RunConfig) db.TestRunConfig {
+	//	env := pgtype.JSONB{}
+	//	if err := env.Set(rc.Env); err != nil {
+	//		return nil, fmt.Errorf("parsing env: %w", err)
+	//	}
+
+	return db.TestRunConfig{
+		ContainerImage: rc.ContainerImage,
+		Command:        rc.Command,
+		Args:           rc.Args,
+		Env:            rc.Env,
+		TimeoutSeconds: uint(rc.Timeout.Seconds),
+	}
+}

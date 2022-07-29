@@ -1,3 +1,15 @@
 namespace: demo
-bases:
-  - ../base
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+- ../base
+images:
+- name: nanzhong/tstr
+  newTag: 1xvzqnj35imyg1nxmz9hxw3yy7fvmh21
+secretGenerator:
+- literals:
+  - pg_dsn=postgresql://doadmin:AVNS_ieT9UEhNvusXrpC3_xc@tstr-demo-do-user-11582466-0.b.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+  - ui_access_token=bf6999446388c98a8b5a9d5a88a30b36c7a06a058bedfbf9eaaaa067d3088ff7
+  - run_access_token=338109ac7a5b3b745e759ba7a43334871051095f4f048494f9fe2811549911fb
+  name: tstr
+  type: Opaque

@@ -170,9 +170,7 @@ message RunSummary {
   string test_id = 2 [
     (validate.rules).string.uuid = true
   ];
-  string test_run_config_id = 3 [
-    (validate.rules).string.uuid = true
-  ];
+  tstr.common.v1.Test.RunConfig test_run_config = 3;
   string runner_id = 4 [
     (validate.rules).string = {ignore_empty: true, uuid: true}
   ];

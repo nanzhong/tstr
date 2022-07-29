@@ -33,9 +33,10 @@ message RegisterTestRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
   map<string, string> labels = 2;
-  string cron_schedule = 3;
-  tstr.common.v1.Test.RunConfig run_config = 4
+  tstr.common.v1.Test.RunConfig run_config = 3
     [(validate.rules).message.required = true, json_name="run_config"];
+  string cron_schedule = 4;
+  tstr.common.v1.Test.Matrix matrix = 5;
 }
 
 message RegisterTestResponse {
@@ -47,9 +48,10 @@ message UpdateTestRequest {
 
   string id = 2; // required
   string name = 3;
-  map<string, string> labels = 4;
-  string cron_schedule = 5;
-  tstr.common.v1.Test.RunConfig run_config = 6;
+  tstr.common.v1.Test.RunConfig run_config = 4;
+  map<string, string> labels = 5;
+  string cron_schedule = 6;
+  tstr.common.v1.Test.Matrix matrix = 7;
 }
 
 message GetTestRequest {

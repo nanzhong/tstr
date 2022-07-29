@@ -24,147 +24,55 @@ func (q *Queries) ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error 
 	return err
 }
 
-const createTestRunConfig = `-- name: CreateTestRunConfig :one
-INSERT INTO test_run_configs (container_image, command, args, env)
-VALUES (
-  $1::varchar,
-  $2::varchar,
-  $3::varchar[],
-  $4::jsonb
-)
-RETURNING id, test_id, container_image, command, args, env, created_at
-`
-
-type CreateTestRunConfigParams struct {
-	ContainerImage string
-	Command        string
-	Args           []string
-	Env            pgtype.JSONB
-}
-
-func (q *Queries) CreateTestRunConfig(ctx context.Context, db DBTX, arg CreateTestRunConfigParams) (TestRunConfig, error) {
-	row := db.QueryRow(ctx, createTestRunConfig,
-		arg.ContainerImage,
-		arg.Command,
-		arg.Args,
-		arg.Env,
-	)
-	var i TestRunConfig
-	err := row.Scan(
-		&i.ID,
-		&i.TestID,
-		&i.ContainerImage,
-		&i.Command,
-		&i.Args,
-		&i.Env,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const getTest = `-- name: GetTest :one
-SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
 FROM tests
-JOIN test_run_configs AS latest_configs
-ON tests.id = latest_configs.test_id
-LEFT JOIN test_run_configs
-ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
-WHERE tests.id = $1::uuid
-ORDER BY test_run_configs.created_at DESC
-LIMIT 1
+WHERE tests.id = $1
 `
 
-type GetTestRow struct {
-	ID              uuid.UUID
-	Name            string
-	Labels          pgtype.JSONB
-	CronSchedule    sql.NullString
-	NextRunAt       sql.NullTime
-	RegisteredAt    sql.NullTime
-	UpdatedAt       sql.NullTime
-	ArchivedAt      sql.NullTime
-	TestRunConfigID uuid.NullUUID
-	ContainerImage  sql.NullString
-	Command         sql.NullString
-	Args            []string
-	Env             pgtype.JSONB
-	CreatedAt       sql.NullTime
-}
-
-func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (GetTestRow, error) {
+func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, error) {
 	row := db.QueryRow(ctx, getTest, id)
-	var i GetTestRow
+	var i Test
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.RunConfig,
 		&i.Labels,
 		&i.CronSchedule,
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
 		&i.ArchivedAt,
-		&i.TestRunConfigID,
-		&i.ContainerImage,
-		&i.Command,
-		&i.Args,
-		&i.Env,
-		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const listTests = `-- name: ListTests :many
-SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
 FROM tests
-JOIN test_run_configs AS latest_configs
-ON tests.id = latest_configs.test_id
-LEFT JOIN test_run_configs
-ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
-WHERE test_run_configs IS NULL AND tests.labels @> $1::jsonb
+WHERE archived_at IS NULL
 ORDER BY tests.name ASC
 `
 
-type ListTestsRow struct {
-	ID              uuid.UUID
-	Name            string
-	Labels          pgtype.JSONB
-	CronSchedule    sql.NullString
-	NextRunAt       sql.NullTime
-	RegisteredAt    sql.NullTime
-	UpdatedAt       sql.NullTime
-	ArchivedAt      sql.NullTime
-	TestRunConfigID uuid.NullUUID
-	ContainerImage  sql.NullString
-	Command         sql.NullString
-	Args            []string
-	Env             pgtype.JSONB
-	CreatedAt       sql.NullTime
-}
-
-func (q *Queries) ListTests(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]ListTestsRow, error) {
-	rows, err := db.Query(ctx, listTests, labels)
+func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
+	rows, err := db.Query(ctx, listTests)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTestsRow
+	var items []Test
 	for rows.Next() {
-		var i ListTestsRow
+		var i Test
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.RunConfig,
 			&i.Labels,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
-			&i.TestRunConfigID,
-			&i.ContainerImage,
-			&i.Command,
-			&i.Args,
-			&i.Env,
-			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -215,33 +123,34 @@ func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, ar
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+SELECT tests.id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at, runs.id, test_id, test_run_config, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM tests
-JOIN test_run_configs AS latest_configs
-ON tests.id = latest_configs.test_id
-LEFT JOIN test_run_configs
-ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
-WHERE next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+WHERE tests.next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
 FOR UPDATE OF tests SKIP LOCKED
 `
 
 type ListTestsToScheduleRow struct {
-	ID              uuid.UUID
-	Name            string
-	Labels          pgtype.JSONB
-	CronSchedule    sql.NullString
-	NextRunAt       sql.NullTime
-	RegisteredAt    sql.NullTime
-	UpdatedAt       sql.NullTime
-	ArchivedAt      sql.NullTime
-	TestRunConfigID uuid.NullUUID
-	ContainerImage  sql.NullString
-	Command         sql.NullString
-	Args            []string
-	Env             pgtype.JSONB
-	CreatedAt       sql.NullTime
+	ID            uuid.UUID
+	Name          string
+	RunConfig     pgtype.JSONB
+	Labels        pgtype.JSONB
+	CronSchedule  sql.NullString
+	NextRunAt     sql.NullTime
+	RegisteredAt  sql.NullTime
+	UpdatedAt     sql.NullTime
+	ArchivedAt    sql.NullTime
+	ID_2          uuid.NullUUID
+	TestID        uuid.NullUUID
+	TestRunConfig pgtype.JSONB
+	RunnerID      uuid.NullUUID
+	Result        NullRunResult
+	Logs          pgtype.JSONB
+	ResultData    pgtype.JSONB
+	ScheduledAt   sql.NullTime
+	StartedAt     sql.NullTime
+	FinishedAt    sql.NullTime
 }
 
 func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error) {
@@ -256,18 +165,23 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.RunConfig,
 			&i.Labels,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
-			&i.TestRunConfigID,
-			&i.ContainerImage,
-			&i.Command,
-			&i.Args,
-			&i.Env,
-			&i.CreatedAt,
+			&i.ID_2,
+			&i.TestID,
+			&i.TestRunConfig,
+			&i.RunnerID,
+			&i.Result,
+			&i.Logs,
+			&i.ResultData,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -280,12 +194,8 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 }
 
 const queryTests = `-- name: QueryTests :many
-SELECT tests.id, tests.name, tests.labels, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.archived_at, latest_configs.id AS test_run_config_id, latest_configs.container_image, latest_configs.command, latest_configs.args, latest_configs.env, latest_configs.created_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
 FROM tests
-JOIN test_run_configs AS latest_configs
-ON tests.id = latest_configs.test_id
-LEFT JOIN test_run_configs
-ON test_run_configs.test_id = latest_configs.test_id AND latest_configs.created_at > test_run_configs.created_at
 WHERE
   ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
   ($2::uuid[] IS NULL OR tests.id = ANY (
@@ -305,47 +215,25 @@ type QueryTestsParams struct {
 	Labels       pgtype.JSONB
 }
 
-type QueryTestsRow struct {
-	ID              uuid.UUID
-	Name            string
-	Labels          pgtype.JSONB
-	CronSchedule    sql.NullString
-	NextRunAt       sql.NullTime
-	RegisteredAt    sql.NullTime
-	UpdatedAt       sql.NullTime
-	ArchivedAt      sql.NullTime
-	TestRunConfigID uuid.NullUUID
-	ContainerImage  sql.NullString
-	Command         sql.NullString
-	Args            []string
-	Env             pgtype.JSONB
-	CreatedAt       sql.NullTime
-}
-
-func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]QueryTestsRow, error) {
+func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]Test, error) {
 	rows, err := db.Query(ctx, queryTests, arg.Ids, arg.TestSuiteIds, arg.Labels)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []QueryTestsRow
+	var items []Test
 	for rows.Next() {
-		var i QueryTestsRow
+		var i Test
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.RunConfig,
 			&i.Labels,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
 			&i.ArchivedAt,
-			&i.TestRunConfigID,
-			&i.ContainerImage,
-			&i.Command,
-			&i.Args,
-			&i.Env,
-			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -358,84 +246,44 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 }
 
 const registerTest = `-- name: RegisterTest :one
-WITH data (name, labels, cron_schedule, next_run_at, container_image, command, args, env) AS (
-  VALUES (
-    $1::varchar,
-    $2::jsonb,
-    $3::varchar,
-    $4::timestamptz,
-    $5::varchar,
-    $6::varchar,
-    $7::varchar[],
-    $8::jsonb
-  )
-), test AS (
-  INSERT INTO tests (name, labels, cron_schedule, next_run_at)
-  SELECT name, labels, cron_schedule, next_run_at
-  FROM data
-  RETURNING id, name, labels, cron_schedule, next_run_at, registered_at, updated_at
-), test_run_config AS (
-  INSERT INTO test_run_configs (test_id, container_image, command, args, env)
-  SELECT test.id, container_image, command, args, env
-  FROM data, test
-  RETURNING id AS test_run_config_id, container_image, command, args, env, created_at AS test_run_config_created_at
+INSERT INTO tests (name, labels, run_config, cron_schedule, next_run_at)
+VALUES (
+  $1::varchar,
+  $2::jsonb,
+  $3::jsonb,
+  $4::varchar,
+  $5::timestamptz
 )
-SELECT id, name, labels, cron_schedule, next_run_at, registered_at, updated_at, test_run_config_id, container_image, command, args, env, test_run_config_created_at FROM test, test_run_config
+RETURNING id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
 `
 
 type RegisterTestParams struct {
-	Name           string
-	Labels         pgtype.JSONB
-	CronSchedule   string
-	NextRunAt      sql.NullTime
-	ContainerImage string
-	Command        string
-	Args           []string
-	Env            pgtype.JSONB
+	Name         string
+	Labels       pgtype.JSONB
+	RunConfig    pgtype.JSONB
+	CronSchedule string
+	NextRunAt    sql.NullTime
 }
 
-type RegisterTestRow struct {
-	ID                     uuid.UUID
-	Name                   string
-	Labels                 pgtype.JSONB
-	CronSchedule           sql.NullString
-	NextRunAt              sql.NullTime
-	RegisteredAt           sql.NullTime
-	UpdatedAt              sql.NullTime
-	TestRunConfigID        uuid.UUID
-	ContainerImage         string
-	Command                sql.NullString
-	Args                   []string
-	Env                    pgtype.JSONB
-	TestRunConfigCreatedAt sql.NullTime
-}
-
-func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (RegisterTestRow, error) {
+func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (Test, error) {
 	row := db.QueryRow(ctx, registerTest,
 		arg.Name,
 		arg.Labels,
+		arg.RunConfig,
 		arg.CronSchedule,
 		arg.NextRunAt,
-		arg.ContainerImage,
-		arg.Command,
-		arg.Args,
-		arg.Env,
 	)
-	var i RegisterTestRow
+	var i Test
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.RunConfig,
 		&i.Labels,
 		&i.CronSchedule,
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
-		&i.TestRunConfigID,
-		&i.ContainerImage,
-		&i.Command,
-		&i.Args,
-		&i.Env,
-		&i.TestRunConfigCreatedAt,
+		&i.ArchivedAt,
 	)
 	return i, err
 }
@@ -445,15 +293,17 @@ UPDATE tests
 SET
   name = $1::varchar,
   labels = $2::jsonb,
-  cron_schedule = $3::varchar,
-  next_run_at = $4::timestamptz,
+  run_config = $3::jsonb,
+  cron_schedule = $4::varchar,
+  next_run_at = $5::timestamptz,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = $5::uuid
+WHERE id = $6::uuid
 `
 
 type UpdateTestParams struct {
 	Name         string
 	Labels       pgtype.JSONB
+	RunConfig    pgtype.JSONB
 	CronSchedule string
 	NextRunAt    sql.NullTime
 	ID           uuid.UUID
@@ -463,6 +313,7 @@ func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams)
 	_, err := db.Exec(ctx, updateTest,
 		arg.Name,
 		arg.Labels,
+		arg.RunConfig,
 		arg.CronSchedule,
 		arg.NextRunAt,
 		arg.ID,

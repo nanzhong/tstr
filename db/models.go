@@ -113,16 +113,16 @@ type AccessToken struct {
 }
 
 type Run struct {
-	ID              uuid.UUID
-	TestID          uuid.UUID
-	TestRunConfigID uuid.UUID
-	RunnerID        uuid.NullUUID
-	Result          NullRunResult
-	Logs            pgtype.JSONB
-	ScheduledAt     sql.NullTime
-	StartedAt       sql.NullTime
-	FinishedAt      sql.NullTime
-	ResultData      pgtype.JSONB
+	ID            uuid.UUID
+	TestID        uuid.UUID
+	TestRunConfig pgtype.JSONB
+	RunnerID      uuid.NullUUID
+	Result        NullRunResult
+	Logs          pgtype.JSONB
+	ResultData    pgtype.JSONB
+	ScheduledAt   sql.NullTime
+	StartedAt     sql.NullTime
+	FinishedAt    sql.NullTime
 }
 
 type Runner struct {
@@ -141,22 +141,13 @@ type SchemaMigration struct {
 type Test struct {
 	ID           uuid.UUID
 	Name         string
+	RunConfig    pgtype.JSONB
 	Labels       pgtype.JSONB
 	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 	RegisteredAt sql.NullTime
 	UpdatedAt    sql.NullTime
 	ArchivedAt   sql.NullTime
-}
-
-type TestRunConfig struct {
-	ID             uuid.UUID
-	TestID         uuid.NullUUID
-	ContainerImage string
-	Command        sql.NullString
-	Args           []string
-	Env            pgtype.JSONB
-	CreatedAt      sql.NullTime
 }
 
 type TestSuite struct {

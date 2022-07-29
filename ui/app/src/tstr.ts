@@ -1,5 +1,9 @@
-import { DateTime } from "luxon";
 import axios from 'axios';
+import * as dayjs from 'dayjs'
+import * as duration from 'dayjs/plugin/duration'
+import * as relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(duration)
+dayjs.extend(relativeTime)
 
 const APINullableToJs = function (obj: any, root: boolean = true) {
   if (obj == null) {
@@ -21,7 +25,7 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
     } else {
       Object.keys(obj).map(function (key) {
         if (datetimeFields.has(key)) {
-          obj[key] = obj[key] != null? DateTime.fromISO(obj[key]) : null
+          obj[key] = obj[key] != null? dayjs(obj[key]) : null
         }
       });
       return obj;
@@ -32,7 +36,7 @@ const APINullableToJs = function (obj: any, root: boolean = true) {
 
   if (len == 2 && "Time" in obj && "Valid" in obj) {
     if (!obj.Valid) return null;
-    return DateTime.fromISO(obj.Time);
+    return dayjs(obj.Time);
   }
 
   if (len == 2 && "String" in obj && "Valid" in obj) {

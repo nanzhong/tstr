@@ -1,3 +1,7 @@
+<script setup>
+import HumanDate from '../components/HumanDate.vue'
+</script>
+
 <template>
     <q-list v-if="runner != null">
         <q-item>
@@ -29,13 +33,17 @@
         <q-item>
             <q-item-section>
                 <q-item-label caption>Registered</q-item-label>
-                <q-item-label>{{ $filters.absoluteDate(runner.registeredAt) }}</q-item-label>
+                <q-item-label>
+                    <human-date :date="runner.registeredAt" :relative="false"></human-date>
+                </q-item-label>
             </q-item-section>
         </q-item>
         <q-item>
             <q-item-section>
                 <q-item-label caption>Last Heartbeat</q-item-label>
-                <q-item-label>{{ $filters.relativeDate(runner.lastHeartbeatAt) }}</q-item-label>
+                <q-item-label>
+                    <human-date :date="runner.lastHeartbeatAt" :relative="true"></human-date>
+                </q-item-label>
             </q-item-section>
         </q-item>
     </q-list>

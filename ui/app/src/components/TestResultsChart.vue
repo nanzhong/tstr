@@ -7,7 +7,11 @@
 <script>
 import tstr from '../tstr'
 
-import { Interval, Duration } from 'luxon'
+import * as dayjs from 'dayjs'
+import * as duration from 'dayjs/plugin/duration'
+import * as relativeTime from 'dayjs/plugin/relativeTime'
+dayjs.extend(duration)
+dayjs.extend(relativeTime)
 
 export default {
     created() {
@@ -24,6 +28,9 @@ export default {
                             show: true
                         }
                     }
+                },
+                yaxis: {
+                    decimalsInFloat:1,
                 },
                 xaxis: {
                     type: 'datetime',
@@ -73,8 +80,8 @@ export default {
                     color: colors[result],
                     data: this.runs.filter(s => s.result == result).filter(s => s.startedAt != null).map(s => {
                         return {
-                            x: s.startedAt.ts,
-                            y: Interval.fromDateTimes(s.startedAt, s.finishedAt).toDuration(['seconds']).seconds,
+                            x: s.startedAt,
+                            y: dayjs.duration(s.finishedAt.diff(s.startedAt)).asSeconds(),
                             id: s.id,
                             result: s.result,
                             resultData: s.resultData,

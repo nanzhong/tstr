@@ -1,6 +1,7 @@
 <script setup>
 import TestResultBadge from '../components/TestResultBadge.vue'
 import RunnerInfo from '../components/RunnerInfo.vue'
+import HumanDate from '../components/HumanDate.vue'
 </script>
 
 <template>
@@ -13,7 +14,8 @@ import RunnerInfo from '../components/RunnerInfo.vue'
         <br />
         <div class="text-h6">Test Runs</div>
 
-        <q-markup-table separator="vertical" flat bordered v-if="typeof runSummaries !== 'undefined' && runSummaries != null && runSummaries.length > 0">
+        <q-markup-table separator="vertical" flat bordered
+            v-if="typeof runSummaries !== 'undefined' && runSummaries != null && runSummaries.length > 0">
             <thead>
                 <tr>
                     <th class="text-left">Test</th>
@@ -26,16 +28,20 @@ import RunnerInfo from '../components/RunnerInfo.vue'
             <tbody>
                 <tr v-for="run in runSummaries">
                     <td class="text-left">
-                        <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> TODO:test_name {{ run.test_name }}
+                        <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> TODO:test_name {{
+                                run.test_name
+                        }}
                         </router-link>
                     </td>
                     <td class="text-left">
                         <router-link :to="{ name: 'run-details', params: { id: run.id } }">view run</router-link>
                     </td>
-                    <td class="text-right">{{ run.startedAt != null ? $filters.absoluteDate(run.startedAt) : null }}
+                    <td class="text-right">
+                        <human-date :relative="true" :date="run.startedAt"></human-date>
                     </td>
                     <td class="text-right">
-                        {{ $filters.relativeDate(run.startedAt, run.finishedAt, ['minutes', 'seconds']) }} </td>
+                        <human-date :relative="true" :diff="run.startedAt" :date="run.finishedAt"></human-date>
+                    </td>
                     <td class="text-right">
                         <test-result-badge :result="run.result"></test-result-badge>
                     </td>

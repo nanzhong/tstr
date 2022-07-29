@@ -16,34 +16,8 @@ import Runners from "./views/runners.vue";
 import Runs from "./views/runs.vue";
 import TestDetails from "./views/test-details.vue";
 import Tests from "./views/tests.vue";
-import { DateTime, Interval, Duration } from "luxon";
 
 const app = createApp(App);
-
-app.config.globalProperties.$filters = {
-  relativeDate(
-    date,
-    date2 = null,
-    diffUnits = ["months", "days", "hours", "minutes", "seconds"]
-  ) {
-    if (date == null) {
-      return null;
-    }
-    var i;
-    if (date2 == null) date2 = DateTime.now();
-    if (date2 > date) {
-      i = Interval.fromDateTimes(date, date2);
-    } else {
-      i = Interval.fromDateTimes(date2, date);
-    }
-    return i.toDuration(diffUnits).toHuman({ unitDisplay: "short" });
-  },
-  absoluteDate(date) {
-    if (date == null) return null;
-
-    return date.toHTTP();
-  },
-};
 
 const routes = [
   {

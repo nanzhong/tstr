@@ -3,6 +3,7 @@ import TestResultBadge from '../components/TestResultBadge.vue'
 import RunnerInfo from '../components/RunnerInfo.vue'
 import TestDetails from '../components/TestDetails.vue'
 import TestLogLine from '../components/TestLogLine.vue'
+import HumanDate from '../components/HumanDate.vue'
 </script>
 
 <template>
@@ -25,7 +26,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Started</q-item-label>
                             <q-item-label>
-                                {{ $filters.absoluteDate(run.startedAt) }}
+                                <human-date :date="run.startedAt" :relative="false"></human-date>
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -34,7 +35,7 @@ import TestLogLine from '../components/TestLogLine.vue'
                         <q-item-section>
                             <q-item-label caption>Duration</q-item-label>
                             <q-item-label>
-                                {{ $filters.relativeDate(run.startedAt, run.finishedAt) }}
+                                <human-date :date="run.startedAt" :diff="run.finishedAt" :relative="true"></human-date>
                             </q-item-label>
                         </q-item-section>
                     </q-item>

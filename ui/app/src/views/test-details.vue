@@ -8,7 +8,7 @@ import TestResultsChart from '../components/TestResultsChart.vue'
         <q-tab-panel name="tests" v-if="test != null">
             <div class="row">
                 <div>
-                    <div class="text-h6">Test: {{ test.name }}</div>
+                    <div class="text-h6">Test: {{test.name}}</div>
                     <test-details :test="test"></test-details>
                 </div>
             </div>

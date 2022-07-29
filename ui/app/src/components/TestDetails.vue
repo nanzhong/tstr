@@ -1,5 +1,5 @@
 <script setup>
-import moment from 'moment'
+import HumanDate from '../components/HumanDate.vue'
 </script>
 
 <template>
@@ -7,7 +7,8 @@ import moment from 'moment'
         <q-item>
             <q-item-section>
                 <q-item-label caption>Name</q-item-label>
-                <q-item-label>{{ test.name }}</q-item-label>
+                <q-item-label>
+                    <router-link :to="{name: 'test-details', params: {id: test.id}}">{{ test.name }}</router-link></q-item-label>
             </q-item-section>
         </q-item>
 
@@ -32,11 +33,9 @@ import moment from 'moment'
         <q-item>
             <q-item-section>
                 <q-item-label caption>Args</q-item-label>
-                <q-item-label>
-                    <ul>
+                    <ul style="margin-top: 0; margin-bottom: 0;">
                         <li v-for="arg in test.runConfig.args">{{ arg }}</li>
                     </ul>
-                </q-item-label>
             </q-item-section>
         </q-item>
 
@@ -58,32 +57,24 @@ import moment from 'moment'
             </q-item-section>
         </q-item>
 
-
-        <!-- <q-item>
-            <q-item-section>
-                <q-item-label caption>Created</q-item-label>
-                <q-item-label>{{ $filters.absoluteDate(test.createdAt) }}</q-item-label>
-            </q-item-section>
-        </q-item> -->
-
         <q-item>
             <q-item-section>
                 <q-item-label caption>Registered</q-item-label>
-                <q-item-label>{{ $filters.absoluteDate(test.registeredAt) }}</q-item-label>
+                <q-item-label><human-date :date="test.registerdAt" :relative="false"></human-date></q-item-label>
             </q-item-section>
         </q-item>
 
         <q-item>
             <q-item-section>
                 <q-item-label caption>Next run</q-item-label>
-                <q-item-label>{{ $filters.relativeDate(test.nextRunAt) }}</q-item-label>
+                <q-item-label><human-date :date="test.nextRunAt" :relative="true"></human-date></q-item-label>
             </q-item-section>
         </q-item>
 
         <q-item>
             <q-item-section>
                 <q-item-label caption>Updated</q-item-label>
-                <q-item-label>{{ $filters.absoluteDate(test.updatedAt) }}</q-item-label>
+                <q-item-label><human-date :date="test.updatedAt" :relative="true"></human-date></q-item-label>
             </q-item-section>
         </q-item>
 

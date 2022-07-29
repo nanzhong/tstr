@@ -1,3 +1,6 @@
+<script setup>
+import HumanDate from '../components/HumanDate.vue'
+</script>
 
 <template>
     <q-page>
@@ -30,13 +33,11 @@
                                 {{ lbl }}={{ val }}
                             </q-badge>
                         </td>
-                        <td class="text-right"><span v-if="runner.registeredAt"></span>{{
-                                runner.registeredAt
-                        }}
+                        <td class="text-right">
+                            <human-date :date="runner.registeredAt" :relative="false"></human-date>
                         </td>
-                        <td class="text-right"><span v-if="runner.lastHeartbeatAt"></span>{{
-                                runner.lastHeartbeatAt
-                        }}
+                        <td class="text-right">
+                            <human-date :date="runner.lastHeartbeatAt" :relative="true"></human-date>
                         </td>
                     </tr>
                 </tbody>

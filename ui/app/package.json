@@ -12,7 +12,7 @@
     "@quasar/extras": "^1.15.0",
     "apexcharts": "^3.35.4",
     "axios": "^0.27.2",
-    "luxon": "^3.0.1",
+    "dayjs": "^1.11.4",
     "moment": "^2.29.4",
     "quasar": "^2.7.5",
     "vue": "^3.2.37",

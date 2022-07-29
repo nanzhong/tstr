@@ -50,6 +50,8 @@ export default {
                     height: 350,
                     type: 'scatter',
                     zoom: {
+                        enabled: true,
+                        autoScaleYaxis: true,
                     },
                 }
             }

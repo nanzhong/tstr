@@ -92,10 +92,10 @@ CREATE TABLE public.runs (
     runner_id uuid,
     result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,
-    computed_data jsonb DEFAULT '{}'::jsonb,
     scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,
-    finished_at timestamp with time zone
+    finished_at timestamp with time zone,
+    computed_data jsonb DEFAULT '{}'::jsonb NOT NULL
 );
 
 
@@ -344,4 +344,5 @@ ALTER TABLE ONLY public.test_run_configs
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20220426134459');
+    ('20220426134459'),
+    ('20220729140707');

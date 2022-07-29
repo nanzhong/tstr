@@ -24,6 +24,10 @@ var runCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, _ []string) {
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+		log.Info().
+			Str("name", viper.GetString("run.name")).
+			Msg("starting runner")
+
 		var (
 			acceptLabelSelectors = make(map[string]string)
 			rejectLabelSelectors = make(map[string]string)
@@ -61,20 +65,14 @@ var runCmd = &cobra.Command{
 				<-ctx.Done()
 				ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("run.graceful-shutdown"))
 				defer cancel()
+
 				log.Info().Msg("stopping runner")
 				runner.Stop(ctx)
+
+				log.Info().Msg("runner shutdown gracefully")
 			}()
 
-			log.Info().
-				Str("name", viper.GetString("run.name")).
-				Msg("starting runner")
-			if err := runner.Run(); err != nil {
-				log.Error().Err(err).Msg("runner shutdown with error")
-				return err
-			}
-
-			log.Info().Msg("runner shutdown gracefully")
-			return nil
+			return runner.Run()
 		})
 	},
 }

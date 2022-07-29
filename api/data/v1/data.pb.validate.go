@@ -2545,6 +2545,8 @@ func (m *RunSummary) validate(all bool) error {
 
 	// no validation rules for Result
 
+	// no validation rules for ResultData
+
 	if m.GetScheduledAt() == nil {
 		err := RunSummaryValidationError{
 			field:  "ScheduledAt",
@@ -2613,8 +2615,6 @@ func (m *RunSummary) validate(all bool) error {
 			}
 		}
 	}
-
-	// no validation rules for ResultData
 
 	if len(errors) > 0 {
 		return RunSummaryMultiError(errors)

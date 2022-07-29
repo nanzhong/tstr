@@ -231,6 +231,12 @@
             "$ref": "#/definitions/RunLog"
           }
         },
+        "resultData": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "scheduledAt": {
           "type": "string",
           "format": "date-time"
@@ -242,12 +248,6 @@
         "finishedAt": {
           "type": "string",
           "format": "date-time"
-        },
-        "resultData": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
         }
       }
     },

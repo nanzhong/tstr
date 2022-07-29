@@ -22,7 +22,7 @@ var accessTokenGetCmd = &cobra.Command{
 			Id: args[0],
 		}
 
-		return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
+		return withAdminClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
 			res, err := client.GetAccessToken(ctx, req)
 			if err != nil {
 				return err

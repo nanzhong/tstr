@@ -43,7 +43,7 @@ var runCmd = &cobra.Command{
 			rejectLabelSelectors[parts[0]] = parts[1]
 		}
 
-		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
+		withRunnerClient(context.Background(), viper.GetString("run.grpc-addr"), !viper.GetBool("run.insecure"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
 			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),
@@ -80,8 +80,11 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().String("api-addr", "0.0.0.0:9000", "Address of the tstr api to dial.")
-	viper.BindPFlag("run.api-addr", runCmd.Flags().Lookup("api-addr"))
+	runCmd.Flags().String("grpc-addr", "0.0.0.0:9000", "Address of the tstr grpc api to dial.")
+	viper.BindPFlag("run.grpc-addr", runCmd.Flags().Lookup("grpc-addr"))
+
+	runCmd.PersistentFlags().Bool("insecure", false, "Insecure connection to api.")
+	viper.BindPFlag("run.insecure", ctlCmd.PersistentFlags().Lookup("insecure"))
 
 	runCmd.Flags().String("access-token", "", "Runner access token to use.")
 	viper.BindPFlag("run.access-token", runCmd.Flags().Lookup("access-token"))

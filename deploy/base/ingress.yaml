@@ -1,0 +1,72 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tstr-grpc
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: grpc.demo.tstr.dev
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: tstr-grpc
+              port:
+                number: 9000
+  tls:
+    - hosts:
+      - grpc.demo.tstr.dev
+      secretName: grpc.demo.tstr.dev
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tstr-json
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: json.demo.tstr.dev
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: tstr-json
+              port:
+                number: 9090
+  tls:
+    - hosts:
+      - json.demo.tstr.dev
+      secretName: json.demo.tstr.dev
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tstr-ui
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: demo.tstr.dev
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: tstr-ui
+              port:
+                number: 8000
+  tls:
+    - hosts:
+      - demo.tstr.dev
+      secretName: demo.tstr.dev

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/x509"
 
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
@@ -9,12 +10,21 @@ import (
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-func clientDialOpts(accessToken string) []grpc.DialOption {
-	return []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
+func clientDialOpts(secure bool, accessToken string) []grpc.DialOption {
+	var opts []grpc.DialOption
+	if secure {
+		pool, _ := x509.SystemCertPool()
+		creds := credentials.NewClientTLSFromCert(pool, "")
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+	opts = append(
+		opts,
 		grpc.WithBlock(),
 		grpc.WithChainUnaryInterceptor(
 			grpc_validator.UnaryClientInterceptor(),
@@ -23,13 +33,14 @@ func clientDialOpts(accessToken string) []grpc.DialOption {
 		grpc.WithChainStreamInterceptor(
 			auth.StreamClientInterceptor(accessToken),
 		),
-	}
+	)
+	return opts
 }
 
-func withControlClient(ctx context.Context, apiAddr string, accessToken string, fn func(context.Context, controlv1.ControlServiceClient) error) error {
+func withControlClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, controlv1.ControlServiceClient) error) error {
 	conn, err := grpc.Dial(
 		apiAddr,
-		clientDialOpts(accessToken)...,
+		clientDialOpts(secure, accessToken)...,
 	)
 	if err != nil {
 		return err
@@ -40,10 +51,10 @@ func withControlClient(ctx context.Context, apiAddr string, accessToken string, 
 	return fn(ctx, client)
 }
 
-func withAdminClient(ctx context.Context, apiAddr string, accessToken string, fn func(context.Context, adminv1.AdminServiceClient) error) error {
+func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, adminv1.AdminServiceClient) error) error {
 	conn, err := grpc.Dial(
 		apiAddr,
-		clientDialOpts(accessToken)...,
+		clientDialOpts(secure, accessToken)...,
 	)
 	if err != nil {
 		return err
@@ -54,10 +65,10 @@ func withAdminClient(ctx context.Context, apiAddr string, accessToken string, fn
 	return fn(ctx, client)
 }
 
-func withRunnerClient(ctx context.Context, apiAddr string, accessToken string, fn func(context.Context, runnerv1.RunnerServiceClient) error) error {
+func withRunnerClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, runnerv1.RunnerServiceClient) error) error {
 	conn, err := grpc.Dial(
 		apiAddr,
-		clientDialOpts(accessToken)...,
+		clientDialOpts(secure, accessToken)...,
 	)
 	if err != nil {
 		return err

@@ -27,11 +27,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	"github.com/rs/zerolog/log"
-	"github.com/soheilhy/cmux"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -48,7 +45,7 @@ var apiCmd = &cobra.Command{
 
 		// TODO Use console writer for now for easy development/debugging, perhaps remove and rely on humanlog in the future.
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "client-grpc").Logger()))
+		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "grpc").Logger()))
 
 		pgxPool, err := pgxpool.Connect(context.Background(), viper.GetString("api.pg-dsn"))
 		if err != nil {
@@ -77,16 +74,20 @@ var apiCmd = &cobra.Command{
 			}
 		}
 
-		l, err := net.Listen("tcp", viper.GetString("api.addr"))
+		gl, err := net.Listen("tcp", viper.GetString("api.grpc-addr"))
 		if err != nil {
 			log.Fatal().
 				Err(err).
-				Str("addr", viper.GetString("api.addr")).
-				Msg("failed to listen on api addr")
+				Str("grpc_addr", viper.GetString("api.grpc-addr")).
+				Msg("failed to listen on grpc addr")
 		}
-		cm := cmux.New(l)
-		grpcL := cm.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
-		grpcgwL := cm.Match(cmux.HTTP1Fast())
+		jl, err := net.Listen("tcp", viper.GetString("api.json-addr"))
+		if err != nil {
+			log.Fatal().
+				Err(err).
+				Str("json_addr", viper.GetString("api.json-addr")).
+				Msg("failed to listen on json addr")
+		}
 
 		grpcServer := grpc.NewServer(
 			grpc.ChainUnaryInterceptor(
@@ -122,9 +123,9 @@ var apiCmd = &cobra.Command{
 			},
 		}))
 		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("api.addr"), gwOpts)
+		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("api.grpc-addr"), gwOpts)
 		grpcgwServer := http.Server{
-			Handler: h2c.NewHandler(hlog.NewHandler(log.Logger)(grpcgwMux), &http2.Server{}),
+			Handler: hlog.NewHandler(log.Logger)(grpcgwMux),
 		}
 
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -154,11 +155,6 @@ var apiCmd = &cobra.Command{
 				log.Info().Msg("attempting to shutdown grpc gw proxy")
 				return grpcgwServer.Shutdown(shutdownCtx)
 			})
-			eg.Go(func() error {
-				log.Info().Msg("attempting to close api mux")
-				cm.Close()
-				return nil
-			})
 			err := eg.Wait()
 			if err != nil {
 				log.Error().Err(err).Msg("failed to gracefully shutdown")
@@ -173,19 +169,15 @@ var apiCmd = &cobra.Command{
 		})
 		eg.Go(func() error {
 			log.Info().
+				Str("grpc-addr", viper.GetString("api.grpc-addr")).
 				Msg("serving grpc server")
-			return grpcServer.Serve(grpcL)
+			return grpcServer.Serve(gl)
 		})
 		eg.Go(func() error {
 			log.Info().
+				Str("json-addr", viper.GetString("api.json-addr")).
 				Msg("serving grpc gw proxy")
-			return grpcgwServer.Serve(grpcgwL)
-		})
-		eg.Go(func() error {
-			log.Info().
-				Str("addr", viper.GetString("api.addr")).
-				Msg("serving api mux")
-			return cm.Serve()
+			return grpcgwServer.Serve(jl)
 		})
 		err = eg.Wait()
 		log.Info().Msg("tstr shutdown")
@@ -193,8 +185,11 @@ var apiCmd = &cobra.Command{
 }
 
 func init() {
-	apiCmd.Flags().String("addr", "0.0.0.0:9000", "The address to serve the gRPC and HTTP JSON API on.")
-	viper.BindPFlag("api.addr", apiCmd.Flags().Lookup("addr"))
+	apiCmd.Flags().String("grpc-addr", "0.0.0.0:9000", "The address to serve the gRPC API on.")
+	viper.BindPFlag("api.grpc-addr", apiCmd.Flags().Lookup("grpc-addr"))
+
+	apiCmd.Flags().String("json-addr", "0.0.0.0:9090", "The address to serve the JSON API on.")
+	viper.BindPFlag("api.json-addr", apiCmd.Flags().Lookup("json-addr"))
 
 	apiCmd.Flags().String("pg-dsn", "", "The PostgreSQL DSN to use.")
 	viper.BindPFlag("api.pg-dsn", apiCmd.Flags().Lookup("pg-dsn"))

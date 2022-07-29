@@ -2614,6 +2614,8 @@ func (m *RunSummary) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for ComputedData
+
 	if len(errors) > 0 {
 		return RunSummaryMultiError(errors)
 	}

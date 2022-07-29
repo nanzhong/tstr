@@ -160,6 +160,12 @@
         "finishedAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "computedData": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },

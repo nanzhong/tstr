@@ -657,6 +657,8 @@ func (m *Run) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for ComputedData
+
 	if len(errors) > 0 {
 		return RunMultiError(errors)
 	}

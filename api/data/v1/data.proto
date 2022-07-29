@@ -183,4 +183,6 @@ message RunSummary {
   ];
   google.protobuf.Timestamp started_at = 11;
   google.protobuf.Timestamp finished_at = 12;
+
+  map<string,string> computed_data = 13;
 }

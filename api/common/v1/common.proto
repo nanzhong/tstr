@@ -68,6 +68,8 @@ message Run {
   google.protobuf.Timestamp scheduled_at = 10; // required
   google.protobuf.Timestamp started_at = 11;
   google.protobuf.Timestamp finished_at = 12;
+
+  map <string,string> computed_data = 13;
 }
 
 message Runner {

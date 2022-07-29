@@ -16,6 +16,9 @@ func init() {
 	ctlCmd.PersistentFlags().String("api-addr", "", "Address of the tstr gRPC API to dial.")
 	viper.BindPFlag("ctl.api-addr", ctlCmd.PersistentFlags().Lookup("api-addr"))
 
+	ctlCmd.PersistentFlags().Bool("secure", true, "Secure connection to api.")
+	viper.BindPFlag("ctl.secure", ctlCmd.PersistentFlags().Lookup("secure"))
+
 	ctlCmd.PersistentFlags().Duration("timeout", 15*time.Second, "Amount of time to wait API requests.")
 	viper.BindPFlag("ctl.timeout", ctlCmd.PersistentFlags().Lookup("timeout"))
 

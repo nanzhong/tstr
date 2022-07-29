@@ -43,7 +43,7 @@ var runCmd = &cobra.Command{
 			rejectLabelSelectors[parts[0]] = parts[1]
 		}
 
-		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
+		withRunnerClient(context.Background(), viper.GetString("run.api-addr"), viper.GetBool("ctl.secure"), viper.GetString("run.access-token"), func(ctx context.Context, client runnerv1.RunnerServiceClient) error {
 			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),

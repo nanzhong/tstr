@@ -22,7 +22,7 @@ var ctlAccessTokenRevokeCmd = &cobra.Command{
 			Id: args[0],
 		}
 
-		return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
+		return withAdminClient(ctx, viper.GetString("ctl.api-addr"), viper.GetBool("ctl.secure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
 			res, err := client.RevokeAccessToken(ctx, req)
 			if err != nil {
 				return err

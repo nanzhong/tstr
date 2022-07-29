@@ -73,7 +73,7 @@ func init() {
 	uiCmd.Flags().String("addr", "0.0.0.0:8000", "The address to serve the web ui on")
 	viper.BindPFlag("ui.addr", uiCmd.Flags().Lookup("addr"))
 
-	uiCmd.Flags().String("api-base-url", "http://0.0.0.0:9000", "The base URL of the tstr api to connect to")
+	uiCmd.Flags().String("api-base-url", "http://0.0.0.0:9090", "The base URL of the tstr api to connect to")
 	viper.BindPFlag("ui.api-base-url", uiCmd.Flags().Lookup("api-base-url"))
 
 	uiCmd.Flags().String("access-token", "", "The access token to use when communicating with the tstr api (it must have the data scope)")

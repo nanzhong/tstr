@@ -94,7 +94,7 @@ var (
 			ctx, cancel := context.WithTimeout(context.Background(), viper.GetDuration("ctl.timeout"))
 			defer cancel()
 
-			return withControlClient(ctx, viper.GetString("ctl.api-addr"), viper.GetBool("ctl.secure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client controlv1.ControlServiceClient) error {
+			return withControlClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client controlv1.ControlServiceClient) error {
 				res, err := client.RegisterTest(ctx, req)
 				if err != nil {
 					return err

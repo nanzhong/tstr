@@ -1,5 +1,5 @@
 -- migrate:up
-ALTER TABLE runs ADD computed_data jsonb NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE runs ADD computed_data jsonb DEFAULT '{}'::jsonb;
 
 
 

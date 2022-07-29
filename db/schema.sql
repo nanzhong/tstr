@@ -95,7 +95,7 @@ CREATE TABLE public.runs (
     scheduled_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     started_at timestamp with time zone,
     finished_at timestamp with time zone,
-    computed_data jsonb DEFAULT '{}'::jsonb NOT NULL
+    computed_data jsonb DEFAULT '{}'::jsonb
 );
 
 

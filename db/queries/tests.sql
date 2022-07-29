@@ -48,7 +48,7 @@ ORDER BY tests.name ASC;
 SELECT tests.id, tests.labels
 FROM tests
 WHERE
-  tests.labels ?& sqlc.arg('include_label_keys')::varchar[] AND
+  tests.labels ?& COALESCE(sqlc.arg('include_label_keys')::varchar[], '{}') AND
   NOT tests.labels ?| COALESCE(sqlc.arg('filter_label_keys')::varchar[], '{}')::varchar[];
 
 -- name: UpdateTest :exec

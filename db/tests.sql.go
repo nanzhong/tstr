@@ -180,7 +180,7 @@ const listTestsIDsMatchingLabelKeys = `-- name: ListTestsIDsMatchingLabelKeys :m
 SELECT tests.id, tests.labels
 FROM tests
 WHERE
-  tests.labels ?& $1::varchar[] AND
+  tests.labels ?& COALESCE($1::varchar[], '{}') AND
   NOT tests.labels ?| COALESCE($2::varchar[], '{}')::varchar[]
 `
 

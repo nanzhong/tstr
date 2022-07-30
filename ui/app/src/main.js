@@ -5,8 +5,6 @@ import { createRouter, createWebHashHistory } from "vue-router";
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/src/css/index.sass";
 
-import VueApexCharts from "vue3-apexcharts";
-
 // import './style.css'
 import App from "./App.vue";
 
@@ -61,8 +59,6 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes,
 });
-
-app.use(VueApexCharts);
 
 app.use(router);
 

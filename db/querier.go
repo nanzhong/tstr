@@ -45,6 +45,7 @@ type Querier interface {
 	RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error)
 	RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error)
 	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error)
+	TimeoutRuns(ctx context.Context, db DBTX, arg TimeoutRunsParams) error
 	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error

@@ -366,6 +366,28 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 	return i, err
 }
 
+const timeoutRuns = `-- name: TimeoutRuns :exec
+UPDATE runs
+SET
+  result = 'error',
+  finished_at = CURRENT_TIMESTAMP,
+  logs = COALESCE(logs, '[]'::jsonb) || $1
+WHERE
+  result = 'unknown' AND
+  runner_id IS NOT NULL AND
+  CURRENT_TIMESTAMP > started_at + make_interval(secs => COALESCE(test_run_config['timeout_seconds']::int, $2::int))
+`
+
+type TimeoutRunsParams struct {
+	TimeoutLog     pgtype.JSONB
+	DefaultTimeout int32
+}
+
+func (q *Queries) TimeoutRuns(ctx context.Context, db DBTX, arg TimeoutRunsParams) error {
+	_, err := db.Exec(ctx, timeoutRuns, arg.TimeoutLog, arg.DefaultTimeout)
+	return err
+}
+
 const updateResultData = `-- name: UpdateResultData :exec
 UPDATE runs
 SET result_data = result_data || $1::jsonb 

@@ -6,12 +6,16 @@ import (
 	"time"
 
 	"github.com/benbjohnson/clock"
+	"github.com/jackc/pgtype"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog/log"
 )
+
+const defaultRunTimeout = 5 * time.Minute
 
 type Scheduler struct {
 	pgxPool      *pgxpool.Pool
@@ -51,12 +55,31 @@ func (s *Scheduler) Start() error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-s.clock.After(s.clock.Until(s.nextSchedule)):
-			log.Info().Msg("starting schedule pass")
+			log.Debug().Msg("starting schedule pass")
 
 			// First, reset orphaned runs.
 			orphanThreshold := s.clock.Now().Add(-5 * time.Second)
 			if err := s.dbQuerier.ResetOrphanedRuns(ctx, s.pgxPool, orphanThreshold); err != nil {
 				log.Error().Err(err).Msg("failed to reset orphaned runs")
+			}
+
+			// Next, mark timeout tests as having errored.
+			var timeoutLog pgtype.JSONB
+			if err := timeoutLog.Set(db.RunLog{
+				Type: commonv1.Run_Log_TSTR.String(),
+				Time: s.clock.Now().Format(time.RFC3339Nano),
+				Data: []byte("run timed out"),
+			}); err != nil {
+				log.Error().
+					Err(err).
+					Msg("failed to format timeout error log for run")
+			} else {
+				if err := s.dbQuerier.TimeoutRuns(ctx, s.pgxPool, db.TimeoutRunsParams{
+					TimeoutLog:     timeoutLog,
+					DefaultTimeout: int32(defaultRunTimeout.Seconds()),
+				}); err != nil {
+					log.Error().Err(err).Msg("failed to time out runs")
+				}
 			}
 
 			// Next, schedule new runs.
@@ -126,7 +149,7 @@ func (s *Scheduler) Start() error {
 					Msg("failed to schedule runs, retrying next pass")
 				s.nextSchedule = s.clock.Now().Add(s.retryDelay)
 			} else {
-				log.Info().Msg("finished schedule pass")
+				log.Debug().Msg("finished schedule pass")
 				s.nextSchedule = minNextRunAt
 			}
 		}

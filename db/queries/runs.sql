@@ -52,6 +52,17 @@ WHERE
   started_at IS NULL AND
   scheduled_at < sqlc.arg('before')::timestamptz;
 
+-- name: TimeoutRuns :exec
+UPDATE runs
+SET
+  result = 'error',
+  finished_at = CURRENT_TIMESTAMP,
+  logs = COALESCE(logs, '[]'::jsonb) || sqlc.arg('timeout_log')
+WHERE
+  result = 'unknown' AND
+  runner_id IS NOT NULL AND
+  CURRENT_TIMESTAMP > started_at + make_interval(secs => COALESCE(test_run_config['timeout_seconds']::int, sqlc.arg('default_timeout')::int));
+
 -- name: RunSummaryForTest :many
 SELECT id, test_id, test_run_config, runner_id, result, scheduled_at, started_at, finished_at, result_data
 FROM runs

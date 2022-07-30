@@ -1,11 +1,11 @@
 import axios from 'axios';
-import * as dayjs from 'dayjs'
-import * as duration from 'dayjs/plugin/duration'
-import * as relativeTime from 'dayjs/plugin/relativeTime'
+import dayjs from 'dayjs'
+import duration from 'dayjs/plugin/duration';
+import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
-const APINullableToJs = function (obj: any, root: boolean = true) {
+const APINullableToJs = function (obj: any, root: boolean = true) : any {
   if (obj == null) {
     return null;
   }
@@ -106,7 +106,7 @@ export default {
     data.runner = APINullableToJs(data.runner);
 
     if (data.runSummaries != null) {
-      data.runSummaries = data.runSummaries.map(function (run) {
+      data.runSummaries = data.runSummaries.map(function (run:any) {
         run = APINullableToJs(run);
         return run;
       });

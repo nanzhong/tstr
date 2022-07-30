@@ -7,7 +7,11 @@ import HumanDate from '../components/HumanDate.vue'
         <q-item>
             <q-item-section>
                 <q-item-label caption>Name</q-item-label>
-                <q-item-label>{{ runner.name }}</q-item-label>
+                <q-item-label>
+                    <router-link :to="{ name: 'runner-details', params: { id: runner.id } }">
+                        {{ runner.name }}
+                    </router-link>
+                </q-item-label>
             </q-item-section>
         </q-item>
         <q-item>

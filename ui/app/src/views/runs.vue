@@ -5,7 +5,10 @@ import HumanDate from '../components/HumanDate.vue'
 
 <template>
   <q-page>
-    <q-tab-panel name="runs">
+    <q-inner-loading :showing="isLoading">
+        <q-spinner-gears size="50px" color="primary" />
+    </q-inner-loading>
+    <q-tab-panel name="runs" v-if="isLoading == false">
       <div class="text-h6">Latest runs</div>
       <q-markup-table separator="horizontal" flat bordered>
         <thead>
@@ -62,7 +65,8 @@ export default {
     return {
       runs: [],
       tests: {},
-      runners: {}
+      runners: {},
+      isLoading: true
     }
   },
   methods: {
@@ -97,6 +101,7 @@ export default {
       console.log("RUNS", this.runs);
       console.log("TESTS", this.tests);
       console.log("RUNNERS", this.runners);
+      this.isLoading = false
     },
 
   }

@@ -8,7 +8,10 @@ import HumanDate from '../components/HumanDate.vue'
 
 <template>
     <q-page>
-        <q-tab-panel name="run" v-if="runner != null && test != null">
+        <q-inner-loading :showing="isLoading">
+            <q-spinner-gears size="50px" color="primary" />
+        </q-inner-loading>
+        <q-tab-panel name="run" v-if="isLoading == false">
 
             <div class="row inline">
 
@@ -53,7 +56,7 @@ import HumanDate from '../components/HumanDate.vue'
                         <q-item-section>
                             <q-item-label caption>Result Data</q-item-label>
                             <q-item-label>
-                                <span v-for="(v,k) in run.resultData"> {{ k }}: {{ v}}<br/></span><br/>
+                                <span v-for="(v, k) in run.resultData"> {{ k }}: {{ v }}<br /></span><br />
                             </q-item-label>
                         </q-item-section>
                     </q-item>
@@ -83,22 +86,24 @@ export default {
             run: null,
             runner: null,
             test: null,
+            isLoading: true,
         }
     },
     methods: {
         async fetchRunDetails(runId) {
             const runDetails = await tstr.fetchRunDetails(runId)
             this.run = runDetails
-            console.log("RUN",this.run)
+            console.log("RUN", this.run)
 
             const runnerDetails = await tstr.fetchRunnerDetails(this.run.runnerId, false)
             this.runner = runnerDetails.runner
-            console.log("RUNNER",this.runner)
+            console.log("RUNNER", this.runner)
 
             const testDetails = await tstr.fetchTestDetails(this.run.testId, false)
             this.test = testDetails.test
 
-            console.log("TEST",this.test)
+            console.log("TEST", this.test)
+            this.isLoading = false;
 
         }
     }

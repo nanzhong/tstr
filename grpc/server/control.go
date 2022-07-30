@@ -197,11 +197,12 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 	}
 
 	err = s.dbQuerier.UpdateTest(ctx, s.pgxPool, db.UpdateTestParams{
-		ID:           id,
 		Name:         test.Name,
 		Labels:       test.Labels,
 		RunConfig:    test.RunConfig,
 		CronSchedule: test.CronSchedule,
+		NextRunAt:    test.NextRunAt,
+		ID:           id,
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to update test")

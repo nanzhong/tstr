@@ -89,6 +89,7 @@ CREATE TABLE public.runs (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     test_id uuid NOT NULL,
     test_run_config jsonb,
+    labels jsonb,
     runner_id uuid,
     result public.run_result DEFAULT 'unknown'::public.run_result,
     logs jsonb,
@@ -117,8 +118,7 @@ CREATE TABLE public.test_suites (
     name character varying NOT NULL,
     labels jsonb,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    archived_at timestamp with time zone
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -134,8 +134,7 @@ CREATE TABLE public.tests (
     cron_schedule character varying,
     next_run_at timestamp with time zone,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    archived_at timestamp with time zone
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -246,31 +245,10 @@ CREATE INDEX runs_test_id_idx ON public.runs USING btree (test_id);
 
 
 --
--- Name: test_suites_archived_at_idx; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX test_suites_archived_at_idx ON public.test_suites USING btree (archived_at);
-
-
---
--- Name: test_suites_unique_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX test_suites_unique_name ON public.test_suites USING btree (name) WHERE (archived_at IS NULL);
-
-
---
 -- Name: tests_labels_idx; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX tests_labels_idx ON public.tests USING gin (labels);
-
-
---
--- Name: tests_unique_name; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX tests_unique_name ON public.tests USING btree (name) WHERE (archived_at IS NULL);
 
 
 --

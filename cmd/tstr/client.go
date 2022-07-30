@@ -9,6 +9,7 @@ import (
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -77,4 +78,11 @@ func withRunnerClient(ctx context.Context, apiAddr string, secure bool, accessTo
 
 	client := runnerv1.NewRunnerServiceClient(conn)
 	return fn(ctx, client)
+}
+
+func withCtlControlClient(ctx context.Context, fn func(context.Context, controlv1.ControlServiceClient) error) error {
+	ctx, cancel := context.WithTimeout(ctx, viper.GetDuration("ctl.timeout"))
+	defer cancel()
+
+	return withControlClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), fn)
 }

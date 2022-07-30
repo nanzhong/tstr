@@ -1,11 +1,11 @@
 -- name: RegisterTest :one
 INSERT INTO tests (name, labels, run_config, cron_schedule, next_run_at)
 VALUES (
-  sqlc.arg('name')::varchar,
-  sqlc.arg('labels')::jsonb,
-  sqlc.arg('run_config')::jsonb,
-  sqlc.arg('cron_schedule')::varchar,
-  sqlc.narg('next_run_at')::timestamptz
+  sqlc.arg('name'),
+  sqlc.arg('labels'),
+  sqlc.arg('run_config'),
+  sqlc.narg('cron_schedule'),
+  sqlc.arg('next_run_at')
 )
 RETURNING *;
 
@@ -17,7 +17,6 @@ WHERE tests.id = sqlc.arg('id');
 -- name: ListTests :many
 SELECT *
 FROM tests
-WHERE archived_at IS NULL
 ORDER BY tests.name ASC;
 
 -- name: ListTestsIDsMatchingLabelKeys :many
@@ -33,14 +32,9 @@ SET
   name = sqlc.arg('name')::varchar,
   labels = sqlc.arg('labels')::jsonb,
   run_config = sqlc.arg('run_config')::jsonb,
-  cron_schedule = sqlc.arg('cron_schedule')::varchar,
+  cron_schedule = sqlc.narg('cron_schedule')::varchar,
   next_run_at = sqlc.narg('next_run_at')::timestamptz,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = sqlc.arg('id')::uuid;
-
--- name: ArchiveTest :exec
-UPDATE tests
-SET archived_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid;
 
 -- name: ListTestsToSchedule :many

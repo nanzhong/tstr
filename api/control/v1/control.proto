@@ -54,6 +54,8 @@ message UpdateTestRequest {
   tstr.common.v1.Test.Matrix matrix = 7;
 }
 
+message UpdateTestResponse {}
+
 message GetTestRequest {
   string id = 1; // required
 }
@@ -63,14 +65,11 @@ message GetTestResponse {
 }
 
 message ListTestsRequest {
-  map<string, string> labels = 1;
 }
 
 message ListTestsResponse {
   repeated tstr.common.v1.Test tests = 1; // required
 }
-
-message UpdateTestResponse {}
 
 message ArchiveTestRequest {
   string id = 1; // required
@@ -144,6 +143,7 @@ message ListRunsResponse {
 
 message ScheduleRunRequest {
   string test_id = 1; // required
+  map<string, string> labels = 2;
 }
 
 message ScheduleRunResponse {
@@ -159,7 +159,6 @@ message GetRunnerResponse {
 }
 
 message ListRunnersRequest {
-  bool include_revoked = 1;
 }
 
 message ListRunnersResponse {

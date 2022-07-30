@@ -36,12 +36,11 @@ func (q *Queries) GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner,
 const listRunners = `-- name: ListRunners :many
 SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
 FROM runners
-WHERE last_heartbeat_at > $1
 ORDER by last_heartbeat_at DESC, registered_at
 `
 
-func (q *Queries) ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.NullTime) ([]Runner, error) {
-	rows, err := db.Query(ctx, listRunners, heartbeatSince)
+func (q *Queries) ListRunners(ctx context.Context, db DBTX) ([]Runner, error) {
+	rows, err := db.Query(ctx, listRunners)
 	if err != nil {
 		return nil, err
 	}

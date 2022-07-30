@@ -8,9 +8,12 @@
   "run_config": {
     "container_image": "alpine:3",
     "command": "date",
-    "args": ["--debug"],
+    "args": [
+      "--debug"
+    ],
     "env": {
       "TZ": "America/Toronto"
-    }
+    },
+    "timeout": "15s"
   }
 }

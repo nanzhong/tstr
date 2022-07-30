@@ -8,13 +8,10 @@ SELECT *
 FROM runs;
 
 -- name: ScheduleRun :one
-WITH latest_run_config AS (
-  SELECT run_config
-  FROM tests
-  WHERE tests.id = sqlc.arg('test_id')
-)
-INSERT INTO runs (test_id, test_run_config)
-VALUES (sqlc.arg('test_id'), latest_run_config)
+INSERT INTO runs (test_id, test_run_config, labels)
+SELECT tests.id, tests.run_config, sqlc.arg('labels')
+FROM tests
+WHERE tests.id = sqlc.arg('test_id')
 RETURNING *;
 
 -- name: AssignRun :one

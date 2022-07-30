@@ -22,11 +22,6 @@ FROM test_suites
 WHERE labels @> sqlc.arg('labels')
 ORDER BY name ASC;
 
--- name: ArchiveTestSuite :exec
-UPDATE test_suites
-SET archived_at = CURRENT_TIMESTAMP
-WHERE id = sqlc.arg('id');
-
 -- name: QueryTestSuites :many
 SELECT *
 FROM test_suites

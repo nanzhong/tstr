@@ -116,6 +116,7 @@ type Run struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
 	TestRunConfig pgtype.JSONB
+	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	Logs          pgtype.JSONB
@@ -147,14 +148,12 @@ type Test struct {
 	NextRunAt    sql.NullTime
 	RegisteredAt sql.NullTime
 	UpdatedAt    sql.NullTime
-	ArchivedAt   sql.NullTime
 }
 
 type TestSuite struct {
-	ID         uuid.UUID
-	Name       string
-	Labels     pgtype.JSONB
-	CreatedAt  sql.NullTime
-	UpdatedAt  sql.NullTime
-	ArchivedAt sql.NullTime
+	ID        uuid.UUID
+	Name      string
+	Labels    pgtype.JSONB
+	CreatedAt sql.NullTime
+	UpdatedAt sql.NullTime
 }

@@ -10,14 +10,14 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.15.0",
-    "apexcharts": "^3.35.4",
     "axios": "^0.27.2",
     "dayjs": "^1.11.4",
     "moment": "^2.29.4",
+    "plotly.js-dist": "^2.13.3",
     "quasar": "^2.7.5",
     "vue": "^3.2.37",
-    "vue-router": "4",
-    "vue3-apexcharts": "^1.4.1"
+    "vue-property-decorator": "^9.1.2",
+    "vue-router": "4"
   },
   "devDependencies": {
     "@quasar/vite-plugin": "^1.0.10",

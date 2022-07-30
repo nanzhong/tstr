@@ -1,4 +1,4 @@
-<script setup>
+<script lang="ts" setup>
 import TestResultBadge from '../components/TestResultBadge.vue'
 import RunnerInfo from '../components/RunnerInfo.vue'
 import HumanDate from '../components/HumanDate.vue'
@@ -10,7 +10,7 @@ import HumanDate from '../components/HumanDate.vue'
         <q-spinner-gears size="50px" color="primary" />
     </q-inner-loading>
     <q-tab-panel name="runners" v-if="isLoading == false">
-        <div class="text-h6">Runner: {{ runner.name }}</div>
+        <div class="text-h6">Runner: {{ runner?.name }}</div>
 
         <runner-info :runner="runner"></runner-info>
 
@@ -32,7 +32,7 @@ import HumanDate from '../components/HumanDate.vue'
                 <tr v-for="run in runSummaries">
                     <td class="text-left">
                         <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> {{
-                                testsByID[run.testId].name
+                            testsByID.get(run.testId as string)?.name
                         }}
                         </router-link>
                     </td>
@@ -60,34 +60,44 @@ import HumanDate from '../components/HumanDate.vue'
     </q-tab-panel>
 </template>
 
-<script>
+<script lang="ts">
 
-import tstr from '../tstr'
+import { DataService, RunSummary } from '../api/data/v1/data.pb';
+import { InitReq } from '../api/fetch.pb';
+import { Runner, Test } from '../api/common/v1/common.pb';
+import { defineComponent } from 'vue';
 
-export default {
-    created() {
-        this.fetchRunnerDetails(this.$route.params.id)
-    },
+const initReq: InitReq = {
+    pathPrefix: '/api'
+}
+
+export default defineComponent({
     data() {
         return {
-            runner: {},
-            runSummaries: [],
-            testsByID: {},
             isLoading: true,
+            runner: undefined as (Runner | undefined),
+            runSummaries: undefined as (RunSummary[] | undefined),
+            testsByID: new Map<string,Test>(),
         }
     },
+    created() {
+        this.fetchRunnerDetails(this.$route.params.id as string)
+    },
     methods: {
-        async fetchRunnerDetails(runnerId) {
-            const runnerDetails = await tstr.fetchRunnerDetails(runnerId)
+        async fetchRunnerDetails(runnerId: string) {
+            const runnerDetails = await DataService.GetRunner({id: runnerId}, initReq)
             this.runner = runnerDetails.runner
             this.runSummaries = runnerDetails.runSummaries
-            console.log("RUNNER", this.runner)
-            console.log("RUN_SUMMARIES", this.runSummaries)
-            const testIDs = new Set(this.runSummaries.map(r => r.testId))
-            this.testsByID = (await tstr.fetchTests(testIDs)).reduce((m, test) => { m[test.id] = test; return m; }, {})
-            this.isLoading = false
+            const testIDs: Set<string> = new Set(runnerDetails.runSummaries?.map( r => r.testId as string))
+            const tests = await DataService.QueryTests({ids: Array.from(testIDs)},initReq)
+            this.testsByID = (tests.tests?.filter(t => t) as Test[]).reduce((acc,test) => {
+                acc.set(test.id as string, test)
+                return acc
+            }, new Map<string,Test>())
 
+            this.isLoading = false
         }
     }
-}
+})
+
 </script>

@@ -112,6 +112,23 @@
         "type": "github"
       }
     },
+    "protoc-gen-grpc-gateway-ts": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1655849046,
+        "narHash": "sha256-Io9oSOxGkuHZdgdsOcB8onpKfq+2lmV6VumdKwTRhsY=",
+        "owner": "grpc-ecosystem",
+        "repo": "protoc-gen-grpc-gateway-ts",
+        "rev": "36143bb34a4710d2da3b1aefdcd6cd9aa29b30b0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "grpc-ecosystem",
+        "ref": "v1.1.2",
+        "repo": "protoc-gen-grpc-gateway-ts",
+        "type": "github"
+      }
+    },
     "quicktemplate": {
       "flake": false,
       "locked": {
@@ -136,6 +153,7 @@
         "nix-npm-buildpackage": "nix-npm-buildpackage",
         "nixpkgs": "nixpkgs_2",
         "overmind": "overmind",
+        "protoc-gen-grpc-gateway-ts": "protoc-gen-grpc-gateway-ts",
         "quicktemplate": "quicktemplate",
         "sqlc": "sqlc"
       }

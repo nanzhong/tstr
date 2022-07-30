@@ -70,7 +70,10 @@ func (s *Scheduler) Start() error {
 				}
 
 				for _, test := range tests {
-					run, err := s.dbQuerier.ScheduleRun(ctx, tx, test.ID)
+					run, err := s.dbQuerier.ScheduleRun(ctx, tx, db.ScheduleRunParams{
+						Labels: test.Labels,
+						TestID: test.ID,
+					})
 					if err != nil {
 						log.Error().
 							Err(err).
@@ -103,7 +106,8 @@ func (s *Scheduler) Start() error {
 						ID:           test.ID,
 						Name:         test.Name,
 						Labels:       test.Labels,
-						CronSchedule: test.CronSchedule.String,
+						RunConfig:    test.RunConfig,
+						CronSchedule: test.CronSchedule,
 						NextRunAt:    sql.NullTime{Valid: true, Time: nextRunAt},
 					})
 					if err != nil {

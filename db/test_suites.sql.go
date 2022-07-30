@@ -12,21 +12,10 @@ import (
 	"github.com/jackc/pgtype"
 )
 
-const archiveTestSuite = `-- name: ArchiveTestSuite :exec
-UPDATE test_suites
-SET archived_at = CURRENT_TIMESTAMP
-WHERE id = $1
-`
-
-func (q *Queries) ArchiveTestSuite(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, archiveTestSuite, id)
-	return err
-}
-
 const defineTestSuite = `-- name: DefineTestSuite :one
 INSERT INTO test_suites (name, labels)
 VALUES ($1, $2)
-RETURNING id, name, labels, created_at, updated_at, archived_at
+RETURNING id, name, labels, created_at, updated_at
 `
 
 type DefineTestSuiteParams struct {
@@ -43,13 +32,12 @@ func (q *Queries) DefineTestSuite(ctx context.Context, db DBTX, arg DefineTestSu
 		&i.Labels,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.ArchivedAt,
 	)
 	return i, err
 }
 
 const getTestSuite = `-- name: GetTestSuite :one
-SELECT id, name, labels, created_at, updated_at, archived_at
+SELECT id, name, labels, created_at, updated_at
 FROM test_suites
 WHERE id = $1::uuid
 `
@@ -63,13 +51,12 @@ func (q *Queries) GetTestSuite(ctx context.Context, db DBTX, id uuid.UUID) (Test
 		&i.Labels,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.ArchivedAt,
 	)
 	return i, err
 }
 
 const listTestSuites = `-- name: ListTestSuites :many
-SELECT id, name, labels, created_at, updated_at, archived_at
+SELECT id, name, labels, created_at, updated_at
 FROM test_suites
 WHERE labels @> $1
 ORDER BY name ASC
@@ -90,7 +77,6 @@ func (q *Queries) ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSO
 			&i.Labels,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.ArchivedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -103,7 +89,7 @@ func (q *Queries) ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSO
 }
 
 const queryTestSuites = `-- name: QueryTestSuites :many
-SELECT id, name, labels, created_at, updated_at, archived_at
+SELECT id, name, labels, created_at, updated_at
 FROM test_suites
 WHERE
   ($1::uuid[] IS NULL OR id = ANY ($1::uuid[])) AND
@@ -131,7 +117,6 @@ func (q *Queries) QueryTestSuites(ctx context.Context, db DBTX, arg QueryTestSui
 			&i.Labels,
 			&i.CreatedAt,
 			&i.UpdatedAt,
-			&i.ArchivedAt,
 		); err != nil {
 			return nil, err
 		}

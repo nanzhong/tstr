@@ -13,19 +13,8 @@ import (
 	"github.com/jackc/pgtype"
 )
 
-const archiveTest = `-- name: ArchiveTest :exec
-UPDATE tests
-SET archived_at = CURRENT_TIMESTAMP
-WHERE id = $1::uuid
-`
-
-func (q *Queries) ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, archiveTest, id)
-	return err
-}
-
 const getTest = `-- name: GetTest :one
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
 WHERE tests.id = $1
 `
@@ -42,15 +31,13 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, err
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
-		&i.ArchivedAt,
 	)
 	return i, err
 }
 
 const listTests = `-- name: ListTests :many
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
-WHERE archived_at IS NULL
 ORDER BY tests.name ASC
 `
 
@@ -72,7 +59,6 @@ func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
-			&i.ArchivedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -123,7 +109,7 @@ func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, ar
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at, runs.id, test_id, test_run_config, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT tests.id, name, run_config, tests.labels, cron_schedule, next_run_at, registered_at, updated_at, runs.id, test_id, test_run_config, runs.labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
@@ -140,10 +126,10 @@ type ListTestsToScheduleRow struct {
 	NextRunAt     sql.NullTime
 	RegisteredAt  sql.NullTime
 	UpdatedAt     sql.NullTime
-	ArchivedAt    sql.NullTime
 	ID_2          uuid.NullUUID
 	TestID        uuid.NullUUID
 	TestRunConfig pgtype.JSONB
+	Labels_2      pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	Logs          pgtype.JSONB
@@ -171,10 +157,10 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
-			&i.ArchivedAt,
 			&i.ID_2,
 			&i.TestID,
 			&i.TestRunConfig,
+			&i.Labels_2,
 			&i.RunnerID,
 			&i.Result,
 			&i.Logs,
@@ -194,7 +180,7 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 }
 
 const queryTests = `-- name: QueryTests :many
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
+SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
 WHERE
   ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
@@ -233,7 +219,6 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
-			&i.ArchivedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -248,20 +233,20 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 const registerTest = `-- name: RegisterTest :one
 INSERT INTO tests (name, labels, run_config, cron_schedule, next_run_at)
 VALUES (
-  $1::varchar,
-  $2::jsonb,
-  $3::jsonb,
-  $4::varchar,
-  $5::timestamptz
+  $1,
+  $2,
+  $3,
+  $4,
+  $5
 )
-RETURNING id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at, archived_at
+RETURNING id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
 `
 
 type RegisterTestParams struct {
 	Name         string
 	Labels       pgtype.JSONB
 	RunConfig    pgtype.JSONB
-	CronSchedule string
+	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 }
 
@@ -283,7 +268,6 @@ func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestPar
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
-		&i.ArchivedAt,
 	)
 	return i, err
 }
@@ -304,7 +288,7 @@ type UpdateTestParams struct {
 	Name         string
 	Labels       pgtype.JSONB
 	RunConfig    pgtype.JSONB
-	CronSchedule string
+	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 	ID           uuid.UUID
 }

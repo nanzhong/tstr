@@ -724,10 +724,6 @@
         "updatedAt": {
           "type": "string",
           "format": "date-time"
-        },
-        "archivedAt": {
-          "type": "string",
-          "format": "date-time"
         }
       }
     },
@@ -751,10 +747,6 @@
           "format": "date-time"
         },
         "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "archivedAt": {
           "type": "string",
           "format": "date-time"
         }

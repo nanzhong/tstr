@@ -6,25 +6,20 @@ CREATE TABLE tests (
   name varchar NOT NULL UNIQUE,
   run_config jsonb,
   labels jsonb,
-  cron_schedule varchar,
+  cron_schedule varchar DEFAULT NULL,
   next_run_at timestamptz,
   registered_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-  archived_at timestamptz
+  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX ON tests USING GIN (labels);
-CREATE UNIQUE INDEX tests_unique_name ON tests(name) WHERE archived_at IS NULL;
 
 CREATE TABLE test_suites (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   name varchar NOT NULL UNIQUE,
   labels jsonb,
   created_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP,
-  archived_at timestamptz
+  updated_at timestamptz DEFAULT CURRENT_TIMESTAMP
 );
-CREATE INDEX ON test_suites(archived_at);
-CREATE UNIQUE INDEX test_suites_unique_name ON test_suites(name) WHERE archived_at IS NULL;
 
 CREATE TABLE runners (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -41,6 +36,7 @@ CREATE TABLE runs (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   test_id uuid REFERENCES tests(id) NOT NULL,
   test_run_config jsonb,
+  labels jsonb,
   runner_id uuid REFERENCES runners(id),
   result run_result DEFAULT 'unknown'::run_result,
   logs jsonb,

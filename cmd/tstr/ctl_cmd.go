@@ -13,7 +13,7 @@ var ctlCmd = &cobra.Command{
 }
 
 func init() {
-	ctlCmd.PersistentFlags().String("grpc-addr", "", "Address of the tstr gRPC API to dial.")
+	ctlCmd.PersistentFlags().String("grpc-addr", "localhost:9000", "Address of the tstr gRPC API to dial.")
 	viper.BindPFlag("ctl.grpc-addr", ctlCmd.PersistentFlags().Lookup("grpc-addr"))
 
 	ctlCmd.PersistentFlags().Bool("insecure", false, "Insecure connection to api.")

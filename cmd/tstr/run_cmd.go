@@ -78,11 +78,11 @@ var runCmd = &cobra.Command{
 }
 
 func init() {
-	runCmd.Flags().String("grpc-addr", "0.0.0.0:9000", "Address of the tstr grpc api to dial.")
+	runCmd.Flags().String("grpc-addr", "localhost:9000", "Address of the tstr grpc api to dial.")
 	viper.BindPFlag("run.grpc-addr", runCmd.Flags().Lookup("grpc-addr"))
 
 	runCmd.PersistentFlags().Bool("insecure", false, "Insecure connection to api.")
-	viper.BindPFlag("run.insecure", ctlCmd.PersistentFlags().Lookup("insecure"))
+	viper.BindPFlag("run.insecure", runCmd.PersistentFlags().Lookup("insecure"))
 
 	runCmd.Flags().String("access-token", "", "Runner access token to use.")
 	viper.BindPFlag("run.access-token", runCmd.Flags().Lookup("access-token"))

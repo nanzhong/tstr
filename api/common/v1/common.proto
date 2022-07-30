@@ -30,7 +30,6 @@ message Test {
 
   google.protobuf.Timestamp registered_at = 10; // required
   google.protobuf.Timestamp updated_at = 11; // required
-  google.protobuf.Timestamp archived_at = 12;
 }
 
 message TestSuite {
@@ -40,7 +39,6 @@ message TestSuite {
 
   google.protobuf.Timestamp created_at = 10; // required
   google.protobuf.Timestamp updated_at = 11; // required
-  google.protobuf.Timestamp archived_at = 12;
 }
 
 message Run {

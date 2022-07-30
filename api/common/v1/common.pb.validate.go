@@ -209,35 +209,6 @@ func (m *Test) validate(all bool) error {
 		}
 	}
 
-	if all {
-		switch v := interface{}(m.GetArchivedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, TestValidationError{
-					field:  "ArchivedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, TestValidationError{
-					field:  "ArchivedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetArchivedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return TestValidationError{
-				field:  "ArchivedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
 	if len(errors) > 0 {
 		return TestMultiError(errors)
 	}
@@ -395,35 +366,6 @@ func (m *TestSuite) validate(all bool) error {
 		if err := v.Validate(); err != nil {
 			return TestSuiteValidationError{
 				field:  "UpdatedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetArchivedAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, TestSuiteValidationError{
-					field:  "ArchivedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, TestSuiteValidationError{
-					field:  "ArchivedAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetArchivedAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return TestSuiteValidationError{
-				field:  "ArchivedAt",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

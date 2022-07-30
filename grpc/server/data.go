@@ -74,7 +74,6 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
 		RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
 		UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
-		ArchivedAt:   types.ToProtoTimestamp(test.ArchivedAt),
 	}
 
 	runSummaries, err := s.dbQuerier.RunSummaryForTest(ctx, s.pgxPool, db.RunSummaryForTestParams{

@@ -2,6 +2,7 @@ package types
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgtype"
@@ -106,4 +107,77 @@ func ToProtoTestRunConfig(rc db.TestRunConfig) *commonv1.Test_RunConfig {
 		Env:            rc.Env,
 		Timeout:        durationpb.New(time.Duration(rc.TimeoutSeconds) * time.Second),
 	}
+}
+
+func ToProtoTest(t *db.Test) (*commonv1.Test, error) {
+	var runConfig db.TestRunConfig
+	if err := t.RunConfig.AssignTo(&runConfig); err != nil {
+		return nil, fmt.Errorf("formatting run config: %w", err)
+	}
+	var labels map[string]string
+	if err := t.Labels.AssignTo(&labels); err != nil {
+		return nil, fmt.Errorf("formatting labels: %w", err)
+	}
+
+	return &commonv1.Test{
+		Id:           t.ID.String(),
+		Name:         t.Name,
+		Labels:       labels,
+		CronSchedule: t.CronSchedule.String,
+		RunConfig:    ToProtoTestRunConfig(runConfig),
+		NextRunAt:    ToProtoTimestamp(t.NextRunAt),
+		RegisteredAt: ToProtoTimestamp(t.RegisteredAt),
+		UpdatedAt:    ToProtoTimestamp(t.UpdatedAt),
+	}, nil
+}
+
+func ToProtoRun(r *db.Run) (*commonv1.Run, error) {
+	var runConfig db.TestRunConfig
+	if err := r.TestRunConfig.AssignTo(&runConfig); err != nil {
+		return nil, fmt.Errorf("formatting run config: %w", err)
+	}
+
+	var runLogs []db.RunLog
+	if err := r.Logs.AssignTo(&runLogs); err != nil {
+		return nil, fmt.Errorf("formatting run logs: %w", err)
+	}
+
+	var resultData map[string]string
+	if err := r.ResultData.AssignTo(&resultData); err != nil {
+		return nil, fmt.Errorf("formatting result data: %w", err)
+	}
+
+	return &commonv1.Run{
+		Id:            r.ID.String(),
+		TestId:        r.TestID.String(),
+		TestRunConfig: ToProtoTestRunConfig(runConfig),
+		RunnerId:      r.RunnerID.UUID.String(),
+		Result:        ToRunResult(r.Result.RunResult),
+		Logs:          ToRunLogs(runLogs),
+		ResultData:    resultData,
+		ScheduledAt:   ToProtoTimestamp(r.ScheduledAt),
+		StartedAt:     ToProtoTimestamp(r.StartedAt),
+		FinishedAt:    ToProtoTimestamp(r.FinishedAt),
+	}, nil
+}
+
+func ToProtoRunner(r *db.Runner) (*commonv1.Runner, error) {
+	var acceptSelectors map[string]string
+	if err := r.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
+		return nil, fmt.Errorf("formatting accept test label selectors: %w", err)
+	}
+
+	var rejectSelectors map[string]string
+	if err := r.RejectTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
+		return nil, fmt.Errorf("formatting reject test label selectors: %w", err)
+	}
+
+	return &commonv1.Runner{
+		Id:                       r.ID.String(),
+		Name:                     r.Name,
+		AcceptTestLabelSelectors: acceptSelectors,
+		RejectTestLabelSelectors: rejectSelectors,
+		RegisteredAt:             ToProtoTimestamp(r.RegisteredAt),
+		LastHeartbeatAt:          ToProtoTimestamp(r.LastHeartbeatAt),
+	}, nil
 }

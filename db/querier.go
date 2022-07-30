@@ -6,7 +6,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,8 +14,6 @@ import (
 
 type Querier interface {
 	AppendLogsToRun(ctx context.Context, db DBTX, arg AppendLogsToRunParams) error
-	ArchiveTest(ctx context.Context, db DBTX, id uuid.UUID) error
-	ArchiveTestSuite(ctx context.Context, db DBTX, id uuid.UUID) error
 	AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (Run, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
@@ -31,7 +28,7 @@ type Querier interface {
 	IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
-	ListRunners(ctx context.Context, db DBTX, heartbeatSince sql.NullTime) ([]Runner, error)
+	ListRunners(ctx context.Context, db DBTX) ([]Runner, error)
 	ListRuns(ctx context.Context, db DBTX) ([]Run, error)
 	ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]TestSuite, error)
 	ListTests(ctx context.Context, db DBTX) ([]Test, error)
@@ -47,7 +44,7 @@ type Querier interface {
 	RevokeAccessToken(ctx context.Context, db DBTX, id uuid.UUID) error
 	RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error)
 	RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error)
-	ScheduleRun(ctx context.Context, db DBTX, testID uuid.UUID) (Run, error)
+	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error)
 	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error

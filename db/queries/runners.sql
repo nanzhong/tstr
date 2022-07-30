@@ -16,7 +16,6 @@ WHERE id = sqlc.arg('id');
 -- name: ListRunners :many
 SELECT *
 FROM runners
-WHERE last_heartbeat_at > sqlc.arg('heartbeat_since')
 ORDER by last_heartbeat_at DESC, registered_at;
 
 -- name: UpdateRunnerHeartbeat :exec

@@ -6,7 +6,10 @@ import HumanDate from '../components/HumanDate.vue'
 
 <template>
 
-    <q-tab-panel name="runners" v-if="runner != null">
+    <q-inner-loading :showing="isLoading">
+        <q-spinner-gears size="50px" color="primary" />
+    </q-inner-loading>
+    <q-tab-panel name="runners" v-if="isLoading == false">
         <div class="text-h6">Runner: {{ runner.name }}</div>
 
         <runner-info :runner="runner"></runner-info>
@@ -15,7 +18,7 @@ import HumanDate from '../components/HumanDate.vue'
         <div class="text-h6">Test Runs</div>
 
         <q-markup-table separator="vertical" flat bordered
-            v-if="typeof runSummaries !== 'undefined' && runSummaries != null && runSummaries.length > 0">
+            v-if="isLoading == false && typeof runSummaries !== 'undefined' && runSummaries != null && runSummaries.length > 0">
             <thead>
                 <tr>
                     <th class="text-left">Test</th>
@@ -28,8 +31,8 @@ import HumanDate from '../components/HumanDate.vue'
             <tbody>
                 <tr v-for="run in runSummaries">
                     <td class="text-left">
-                        <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> TODO:test_name {{
-                                run.test_name
+                        <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> {{
+                                testsByID[run.testId].name
                         }}
                         </router-link>
                     </td>
@@ -67,8 +70,10 @@ export default {
     },
     data() {
         return {
-            runner: null,
-            runSummaries: null,
+            runner: {},
+            runSummaries: [],
+            testsByID: {},
+            isLoading: true,
         }
     },
     methods: {
@@ -78,6 +83,10 @@ export default {
             this.runSummaries = runnerDetails.runSummaries
             console.log("RUNNER", this.runner)
             console.log("RUN_SUMMARIES", this.runSummaries)
+            const testIDs = new Set(this.runSummaries.map(r => r.testId))
+            this.testsByID = (await tstr.fetchTests(testIDs)).reduce((m, test) => { m[test.id] = test; return m; }, {})
+            this.isLoading = false
+
         }
     }
 }

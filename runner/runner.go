@@ -368,7 +368,7 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 type runLogStreamPipe struct {
 	stream      runnerv1.RunnerService_SubmitRunClient
 	outputType  commonv1.Run_Log_Output
-	reader      *bufio.Reader
+	scanner     *bufio.Scanner
 	writer      io.WriteCloser
 	interceptor func(*runnerv1.SubmitRunRequest, []byte)
 }
@@ -378,7 +378,7 @@ func newRunLogStreamPipe(outputType commonv1.Run_Log_Output, stream runnerv1.Run
 	return &runLogStreamPipe{
 		stream:     stream,
 		outputType: outputType,
-		reader:     bufio.NewReader(r),
+		scanner:    bufio.NewScanner(r),
 		writer:     w,
 	}
 }
@@ -392,39 +392,33 @@ func (w *runLogStreamPipe) Close() error {
 }
 
 func (w *runLogStreamPipe) Stream(ctx context.Context) error {
-	for {
-		line, err := w.reader.ReadString('\n')
-		if len(line) > 0 {
-			time, data, found := strings.Cut(line, " ")
-			if !found {
-				// Ignore time if not found
-				time, data = "", time
-			}
+	for w.scanner.Scan() {
+		line := w.scanner.Bytes()
 
-			line := []byte(data)
-
-			submitRunRequest := &runnerv1.SubmitRunRequest{
-				Logs: []*commonv1.Run_Log{{
-					Time:       time,
-					OutputType: w.outputType,
-					Data:       line,
-				}},
-			}
-
-			if w.interceptor != nil {
-				w.interceptor(submitRunRequest, line)
-			}
-
-			if err := w.stream.Send(submitRunRequest); err != nil {
-				return fmt.Errorf("streaming log: %w", err)
-			}
-			log.Debug().Str("output_type", w.outputType.String()).Str("line", string(line)).Msg("submitted log line")
+		time, data, found := bytes.Cut(line, []byte(" "))
+		if !found {
+			// Ignore time if not found
+			time, data = []byte(""), time
 		}
-		if err != nil {
-			if err == io.EOF {
-				return nil
-			}
-			return fmt.Errorf("reading from %s: %w", w.outputType.String(), err)
+
+		submitRunRequest := &runnerv1.SubmitRunRequest{
+			Logs: []*commonv1.Run_Log{{
+				Time:       string(time),
+				OutputType: w.outputType,
+				Data:       data,
+			}},
+		}
+
+		if w.interceptor != nil {
+			w.interceptor(submitRunRequest, line)
+		}
+
+		if err := w.stream.Send(submitRunRequest); err != nil {
+			return fmt.Errorf("streaming log: %w", err)
 		}
 	}
+	if err := w.scanner.Err(); err != nil {
+		return fmt.Errorf("reading from %s: %w", w.outputType.String(), err)
+	}
+	return nil
 }

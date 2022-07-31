@@ -14,7 +14,7 @@ import (
 )
 
 const getTest = `-- name: GetTest :one
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
 WHERE tests.id = $1
 `
@@ -27,6 +27,7 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, err
 		&i.Name,
 		&i.RunConfig,
 		&i.Labels,
+		&i.Matrix,
 		&i.CronSchedule,
 		&i.NextRunAt,
 		&i.RegisteredAt,
@@ -36,7 +37,7 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, err
 }
 
 const listTests = `-- name: ListTests :many
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
 ORDER BY tests.name ASC
 `
@@ -55,6 +56,7 @@ func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
 			&i.Name,
 			&i.RunConfig,
 			&i.Labels,
+			&i.Matrix,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
@@ -109,7 +111,7 @@ func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, ar
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, name, run_config, tests.labels, cron_schedule, next_run_at, registered_at, updated_at, runs.id, test_id, test_run_config, runs.labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT tests.id, name, run_config, tests.labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, runs.id, test_id, test_run_config, runs.labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
@@ -122,6 +124,7 @@ type ListTestsToScheduleRow struct {
 	Name          string
 	RunConfig     pgtype.JSONB
 	Labels        pgtype.JSONB
+	Matrix        pgtype.JSONB
 	CronSchedule  sql.NullString
 	NextRunAt     sql.NullTime
 	RegisteredAt  sql.NullTime
@@ -153,6 +156,7 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 			&i.Name,
 			&i.RunConfig,
 			&i.Labels,
+			&i.Matrix,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
@@ -180,7 +184,7 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 }
 
 const queryTests = `-- name: QueryTests :many
-SELECT id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests
 WHERE
   ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
@@ -215,6 +219,7 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 			&i.Name,
 			&i.RunConfig,
 			&i.Labels,
+			&i.Matrix,
 			&i.CronSchedule,
 			&i.NextRunAt,
 			&i.RegisteredAt,
@@ -231,21 +236,23 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 }
 
 const registerTest = `-- name: RegisterTest :one
-INSERT INTO tests (name, labels, run_config, cron_schedule, next_run_at)
+INSERT INTO tests (name, run_config, labels, matrix, cron_schedule, next_run_at)
 VALUES (
   $1,
   $2,
   $3,
   $4,
-  $5
+  $5,
+  $6
 )
-RETURNING id, name, run_config, labels, cron_schedule, next_run_at, registered_at, updated_at
+RETURNING id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
 `
 
 type RegisterTestParams struct {
 	Name         string
-	Labels       pgtype.JSONB
 	RunConfig    pgtype.JSONB
+	Labels       pgtype.JSONB
+	Matrix       pgtype.JSONB
 	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 }
@@ -253,8 +260,9 @@ type RegisterTestParams struct {
 func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (Test, error) {
 	row := db.QueryRow(ctx, registerTest,
 		arg.Name,
-		arg.Labels,
 		arg.RunConfig,
+		arg.Labels,
+		arg.Matrix,
 		arg.CronSchedule,
 		arg.NextRunAt,
 	)
@@ -264,6 +272,7 @@ func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestPar
 		&i.Name,
 		&i.RunConfig,
 		&i.Labels,
+		&i.Matrix,
 		&i.CronSchedule,
 		&i.NextRunAt,
 		&i.RegisteredAt,
@@ -276,18 +285,20 @@ const updateTest = `-- name: UpdateTest :exec
 UPDATE tests
 SET
   name = $1::varchar,
-  labels = $2::jsonb,
-  run_config = $3::jsonb,
-  cron_schedule = $4::varchar,
-  next_run_at = $5::timestamptz,
+  run_config = $2::jsonb,
+  labels = $3::jsonb,
+  matrix = $4::jsonb,
+  cron_schedule = $5::varchar,
+  next_run_at = $6::timestamptz,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = $6::uuid
+WHERE id = $7::uuid
 `
 
 type UpdateTestParams struct {
 	Name         string
-	Labels       pgtype.JSONB
 	RunConfig    pgtype.JSONB
+	Labels       pgtype.JSONB
+	Matrix       pgtype.JSONB
 	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 	ID           uuid.UUID
@@ -296,8 +307,9 @@ type UpdateTestParams struct {
 func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error {
 	_, err := db.Exec(ctx, updateTest,
 		arg.Name,
-		arg.Labels,
 		arg.RunConfig,
+		arg.Labels,
+		arg.Matrix,
 		arg.CronSchedule,
 		arg.NextRunAt,
 		arg.ID,

@@ -12,6 +12,10 @@ type TestRunConfig struct {
 	TimeoutSeconds uint              `json:"timeout_seconds"`
 }
 
+type TestMatrix struct {
+	Labels map[string][]string `json:"labels"`
+}
+
 type RunLog struct {
 	Type string `json:"type"`
 	Time string `json:"time"`

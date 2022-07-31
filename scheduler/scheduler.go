@@ -83,7 +83,6 @@ func (s *Scheduler) Start() error {
 			}
 
 			// Next, schedule new runs.
-
 			minNextRunAt := s.clock.Now().Add(time.Minute)
 			err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 				tests, err := s.dbQuerier.ListTestsToSchedule(ctx, tx)
@@ -93,6 +92,19 @@ func (s *Scheduler) Start() error {
 				}
 
 				for _, test := range tests {
+					var runConfig db.TestRunConfig
+					if err := test.RunConfig.AssignTo(&runConfig); err != nil {
+						log.Error().
+							Err(err).
+							Stringer("test_id", test.ID).
+							Msg("failed to parse run config")
+						return err
+					}
+
+					// var labelSets []map[string]string
+					// for label, values := range test.Matrix.Labels {
+
+					// }
 					run, err := s.dbQuerier.ScheduleRun(ctx, tx, db.ScheduleRunParams{
 						Labels: test.Labels,
 						TestID: test.ID,
@@ -129,6 +141,7 @@ func (s *Scheduler) Start() error {
 						ID:           test.ID,
 						Name:         test.Name,
 						Labels:       test.Labels,
+						Matrix:       test.Matrix,
 						RunConfig:    test.RunConfig,
 						CronSchedule: test.CronSchedule,
 						NextRunAt:    sql.NullTime{Valid: true, Time: nextRunAt},

@@ -43,6 +43,12 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 		return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
 	}
 
+	matrix := pgtype.JSONB{}
+	if err := matrix.Set(types.FromProtoTestMatrix(r.Matrix)); err != nil {
+		log.Error().Err(err).Msg("failed to parse test matrix")
+		return nil, status.Error(codes.InvalidArgument, "failed to parse matrix")
+	}
+
 	runConfig := pgtype.JSONB{}
 	if err := runConfig.Set(types.FromProtoTestRunConfig(r.RunConfig)); err != nil {
 		log.Error().Err(err).Msg("failed to parse run config")
@@ -62,6 +68,7 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 	test, err := s.dbQuerier.RegisterTest(ctx, s.pgxPool, db.RegisterTestParams{
 		Name:         r.Name,
 		Labels:       labels,
+		Matrix:       matrix,
 		RunConfig:    runConfig,
 		CronSchedule: sql.NullString{Valid: r.CronSchedule != "", String: r.CronSchedule},
 		NextRunAt:    nextRunAt,
@@ -174,6 +181,15 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 					Msg("failed to format labels")
 				return nil, status.Error(codes.Internal, "failed to format labels")
 			}
+		case "matrix":
+			if err := test.Matrix.Set(types.FromProtoTestMatrix(r.Matrix)); err != nil {
+				log.Error().
+					Err(err).
+					Str("matrix", r.Matrix.String()).
+					Msg("failed to format matrix")
+				return nil, status.Error(codes.Internal, "failed to format matrix")
+
+			}
 		case "run_config.container_image":
 			runConfig.ContainerImage = r.RunConfig.ContainerImage
 		case "run_config.command":
@@ -199,6 +215,7 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 	err = s.dbQuerier.UpdateTest(ctx, s.pgxPool, db.UpdateTestParams{
 		Name:         test.Name,
 		Labels:       test.Labels,
+		Matrix:       test.Matrix,
 		RunConfig:    test.RunConfig,
 		CronSchedule: test.CronSchedule,
 		NextRunAt:    test.NextRunAt,

@@ -1,9 +1,10 @@
 -- name: RegisterTest :one
-INSERT INTO tests (name, labels, run_config, cron_schedule, next_run_at)
+INSERT INTO tests (name, run_config, labels, matrix, cron_schedule, next_run_at)
 VALUES (
   sqlc.arg('name'),
-  sqlc.arg('labels'),
   sqlc.arg('run_config'),
+  sqlc.arg('labels'),
+  sqlc.arg('matrix'),
   sqlc.narg('cron_schedule'),
   sqlc.arg('next_run_at')
 )
@@ -30,8 +31,9 @@ WHERE
 UPDATE tests
 SET
   name = sqlc.arg('name')::varchar,
-  labels = sqlc.arg('labels')::jsonb,
   run_config = sqlc.arg('run_config')::jsonb,
+  labels = sqlc.arg('labels')::jsonb,
+  matrix = sqlc.arg('matrix')::jsonb,
   cron_schedule = sqlc.narg('cron_schedule')::varchar,
   next_run_at = sqlc.narg('next_run_at')::timestamptz,
   updated_at = CURRENT_TIMESTAMP

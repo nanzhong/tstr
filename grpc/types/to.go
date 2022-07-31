@@ -118,11 +118,16 @@ func ToProtoTest(t *db.Test) (*commonv1.Test, error) {
 	if err := t.Labels.AssignTo(&labels); err != nil {
 		return nil, fmt.Errorf("formatting labels: %w", err)
 	}
+	var matrix db.TestMatrix
+	if err := t.Matrix.AssignTo(&matrix); err != nil {
+		return nil, fmt.Errorf("formatting matrix: %w", err)
+	}
 
 	return &commonv1.Test{
 		Id:           t.ID.String(),
 		Name:         t.Name,
 		Labels:       labels,
+		Matrix:       ToProtoTestMatrix(matrix),
 		CronSchedule: t.CronSchedule.String,
 		RunConfig:    ToProtoTestRunConfig(runConfig),
 		NextRunAt:    ToProtoTimestamp(t.NextRunAt),
@@ -180,4 +185,14 @@ func ToProtoRunner(r *db.Runner) (*commonv1.Runner, error) {
 		RegisteredAt:             ToProtoTimestamp(r.RegisteredAt),
 		LastHeartbeatAt:          ToProtoTimestamp(r.LastHeartbeatAt),
 	}, nil
+}
+
+func ToProtoTestMatrix(m db.TestMatrix) *commonv1.Test_Matrix {
+	labels := make(map[string]*commonv1.Test_Matrix_LabelValues)
+	for k, vs := range m.Labels {
+		labels[k] = &commonv1.Test_Matrix_LabelValues{Values: vs}
+	}
+	return &commonv1.Test_Matrix{
+		Labels: labels,
+	}
 }

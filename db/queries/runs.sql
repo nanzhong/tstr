@@ -97,6 +97,5 @@ WHERE
   (sqlc.narg('started_before')::timestamptz IS NULL OR started_at < sqlc.narg('started_before')::timestamptz) AND
   (sqlc.narg('started_after')::timestamptz IS NULL OR started_at > sqlc.narg('started_after')::timestamptz) AND
   (sqlc.narg('finished_before')::timestamptz IS NULL OR finished_at < sqlc.narg('finished_before')::timestamptz) AND
-  (sqlc.narg('finished_after')::timestamptz IS NULL OR finished_at > sqlc.narg('finished_after')::timestamptz);
-
-
+  (sqlc.narg('finished_after')::timestamptz IS NULL OR finished_at > sqlc.narg('finished_after')::timestamptz)
+ORDER BY scheduled_at DESC;

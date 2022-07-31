@@ -150,6 +150,7 @@ WHERE
   ($9::timestamptz IS NULL OR started_at > $9::timestamptz) AND
   ($10::timestamptz IS NULL OR finished_at < $10::timestamptz) AND
   ($11::timestamptz IS NULL OR finished_at > $11::timestamptz)
+ORDER BY scheduled_at DESC
 `
 
 type QueryRunsParams struct {

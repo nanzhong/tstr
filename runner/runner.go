@@ -232,14 +232,12 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 			Timestamps: true,
 			Follow:     true,
 			Tail:       "all",
-			Details:    false,
 		})
 		if err != nil {
 			logErrCh <- err
 			return
 		}
 		defer logs.Close()
-		runLogger.Debug().Msg("started getting logs")
 
 		stdOutStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDOUT, stream)
 		stdErrStreamer := newRunLogStreamPipe(commonv1.Run_Log_STDERR, stream)
@@ -284,8 +282,19 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 			return stdErrStreamer.Stream(stream.Context())
 		})
 		eg.Go(func() error {
-			_, err := stdcopy.StdCopy(stdOutStreamer, stdErrStreamer, logs)
-			if err != nil {
+			// NOTE There's something wrong with stdcopy.StdCopy. Trying to copy the
+			// logs directly using it into the stream pipe writer will intermittently
+			// hang. Passing it through an io.Pipe seems to fix this.
+			// TODO figure out why and get rid of the use of the extra pipe here.
+			r, w := io.Pipe()
+			go func() {
+				defer w.Close()
+				if _, err := io.Copy(w, logs); err != nil {
+					runLogger.Error().Err(err).Msg("failed to close logs pipe writer")
+				}
+			}()
+
+			if _, err = stdcopy.StdCopy(stdOutStreamer, stdErrStreamer, r); err != nil {
 				return err
 			}
 			if err := stdOutStreamer.Close(); err != nil {

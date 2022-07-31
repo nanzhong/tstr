@@ -16,17 +16,18 @@ import (
 )
 
 var (
-	ctlTestRegisterFile    string
-	ctlTestRegisterID      string
-	ctlTestRegisterName    string
-	ctlTestRegisterLabels  []string
-	ctlTestRegisterCron    string
-	ctlTestRegisterImage   string
-	ctlTestRegisterCommand string
-	ctlTestRegisterArgs    []string
-	ctlTestRegisterEnv     []string
-	ctlTestRegisterTimeout time.Duration
-	ctlTestRegisterCmd     = &cobra.Command{
+	ctlTestRegisterFile         string
+	ctlTestRegisterID           string
+	ctlTestRegisterName         string
+	ctlTestRegisterLabels       []string
+	ctlTestRegisterMatrixLabels []string
+	ctlTestRegisterCron         string
+	ctlTestRegisterImage        string
+	ctlTestRegisterCommand      string
+	ctlTestRegisterArgs         []string
+	ctlTestRegisterEnv          []string
+	ctlTestRegisterTimeout      time.Duration
+	ctlTestRegisterCmd          = &cobra.Command{
 		Use:   "register",
 		Short: "Register a new test",
 		Args:  cobra.ExactArgs(0),
@@ -69,6 +70,26 @@ var (
 						test.Labels = make(map[string]string)
 					}
 					test.Labels[kv[0]] = kv[1]
+				}
+			}
+
+			if len(ctlTestRegisterMatrixLabels) > 0 {
+				fieldMask.Paths = append(fieldMask.Paths, "matrix")
+				for _, label := range ctlTestRegisterMatrixLabels {
+					kv := strings.Split(label, "=")
+					if len(kv) != 2 {
+						continue
+					}
+
+					if test.Matrix == nil {
+						test.Matrix = &commonv1.Test_Matrix{
+							Labels: make(map[string]*commonv1.Test_Matrix_LabelValues),
+						}
+					}
+					if test.Matrix.Labels[kv[0]] == nil {
+						test.Matrix.Labels[kv[0]] = &commonv1.Test_Matrix_LabelValues{}
+					}
+					test.Matrix.Labels[kv[0]].Values = append(test.Matrix.Labels[kv[0]].Values, kv[1])
 				}
 			}
 
@@ -119,6 +140,7 @@ var (
 					res, err := client.RegisterTest(ctx, &controlv1.RegisterTestRequest{
 						Name:         test.Name,
 						Labels:       test.Labels,
+						Matrix:       test.Matrix,
 						RunConfig:    test.RunConfig,
 						CronSchedule: test.CronSchedule,
 					})
@@ -133,8 +155,9 @@ var (
 						FieldMask:    &fieldMask,
 						Id:           test.Id,
 						Name:         test.Name,
-						RunConfig:    test.RunConfig,
 						Labels:       test.Labels,
+						Matrix:       test.Matrix,
+						RunConfig:    test.RunConfig,
 						CronSchedule: test.CronSchedule,
 					})
 					if err != nil {
@@ -153,6 +176,7 @@ func init() {
 	ctlTestRegisterCmd.Flags().StringVar(&ctlTestRegisterID, "id", "", "ID of the test.")
 	ctlTestRegisterCmd.Flags().StringVar(&ctlTestRegisterName, "name", "", "Name of the test.")
 	ctlTestRegisterCmd.Flags().StringArrayVar(&ctlTestRegisterLabels, "labels", nil, "Labels for the test in key value pairs (e.g. key=value).")
+	ctlTestRegisterCmd.Flags().StringArrayVar(&ctlTestRegisterMatrixLabels, "matrix-labels", nil, "Test matrix label set (e.g. key=value).")
 	ctlTestRegisterCmd.Flags().StringVar(&ctlTestRegisterCron, "cron", "", "Cron schedule the test should run at.")
 	ctlTestRegisterCmd.Flags().StringVar(&ctlTestRegisterImage, "image", "", "Container image for the test.")
 	ctlTestRegisterCmd.Flags().StringVar(&ctlTestRegisterCommand, "command", "", "Command to run in the container.")

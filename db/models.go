@@ -144,6 +144,7 @@ type Test struct {
 	Name         string
 	RunConfig    pgtype.JSONB
 	Labels       pgtype.JSONB
+	Matrix       pgtype.JSONB
 	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 	RegisteredAt sql.NullTime

@@ -66,16 +66,24 @@ func FromProtoTimestampAsNullTime(ts *timestamppb.Timestamp) sql.NullTime {
 }
 
 func FromProtoTestRunConfig(rc *commonv1.Test_RunConfig) db.TestRunConfig {
-	//	env := pgtype.JSONB{}
-	//	if err := env.Set(rc.Env); err != nil {
-	//		return nil, fmt.Errorf("parsing env: %w", err)
-	//	}
-
 	return db.TestRunConfig{
 		ContainerImage: rc.ContainerImage,
 		Command:        rc.Command,
 		Args:           rc.Args,
 		Env:            rc.Env,
 		TimeoutSeconds: uint(rc.Timeout.Seconds),
+	}
+}
+
+func FromProtoTestMatrix(m *commonv1.Test_Matrix) db.TestMatrix {
+	if m == nil {
+		return db.TestMatrix{}
+	}
+	labels := make(map[string][]string)
+	for key, values := range m.Labels {
+		labels[key] = append(labels[key], values.Values...)
+	}
+	return db.TestMatrix{
+		Labels: labels,
 	}
 }

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import TestResultBadge from '../components/TestResultBadge.vue'
-import RunnerInfo from '../components/RunnerInfo.vue'
-import TestDetails from '../components/TestDetails.vue'
-import TestLogLine from '../components/TestLogLine.vue'
-import HumanDate from '../components/HumanDate.vue'
+import { defineAsyncComponent } from 'vue';
+const TestResultBadge = defineAsyncComponent(() => import('../components/TestResultBadge.vue'))
+const RunnerInfo = defineAsyncComponent(() => import('../components/RunnerInfo.vue'))
+const TestDetails = defineAsyncComponent(() => import('../components/TestDetails.vue'))
+const TestLogLine = defineAsyncComponent(() => import('../components/TestLogLine.vue'))
+const HumanDate = defineAsyncComponent(() => import('../components/HumanDate.vue'))
 </script>
 
 <template>
@@ -88,7 +89,7 @@ export default {
 
             const runner = await DataService.GetRunner({ id: run.run?.runnerId }, this.$initReq)
 
-            const test = await DataService.GetTest({id: run.run?.testId}, this.$initReq )
+            const test = await DataService.GetTest({ id: run.run?.testId }, this.$initReq)
 
             this.run = run.run
             this.runner = runner.runner
@@ -102,8 +103,8 @@ export default {
     data() {
         return {
             run: undefined as (Run | undefined),
-            runner: undefined as ( Runner | undefined ),
-            test: undefined as ( Test | undefined ),
+            runner: undefined as (Runner | undefined),
+            test: undefined as (Test | undefined),
             isLoading: true,
         }
     },

@@ -1,25 +1,22 @@
-import { createApp, VueElement } from "vue";
+import { createApp, defineAsyncComponent, VueElement } from "vue";
 import { Quasar } from "quasar";
 import { createRouter, createWebHashHistory } from "vue-router";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "quasar/src/css/index.sass";
 
-// import './style.css'
-import App from "./App.vue";
-
-import RunDetails from "./views/run-details.vue";
-import RunnerDetails from "./views/runner-details.vue";
-import Runners from "./views/runners.vue";
-import Runs from "./views/runs.vue";
-import TestDetails from "./views/test-details.vue";
-import Tests from "./views/tests.vue";
-
+const App = defineAsyncComponent(() => import("./App.vue"));
+const RunDetails = defineAsyncComponent( () => import("./views/run-details.vue"));
+const RunnerDetails = defineAsyncComponent( () => import("./views/runner-details.vue"));
+const Runners = defineAsyncComponent(() => import("./views/runners.vue"));
+const Runs = defineAsyncComponent(() => import("./views/runs.vue"));
+const TestDetails = defineAsyncComponent( () => import("./views/test-details.vue"));
+const Tests = defineAsyncComponent(() => import("./views/tests.vue"));
 const app = createApp(App);
 
 app.config.globalProperties.$initReq = {
-  pathPrefix: '/api'
-}
+  pathPrefix: "/api",
+};
 
 const routes = [
   {

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import TestDetails from '../components/TestDetails.vue'
-import TestResultsChart from '../components/TestResultsChart.vue'
+import { defineAsyncComponent } from 'vue'
+
+const TestDetails = defineAsyncComponent(() => import('../components/TestDetails.vue'))
+const TestResultsChart = defineAsyncComponent(() => import('../components/TestResultsChart.vue'))
 </script>
 
 <template>

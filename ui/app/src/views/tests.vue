@@ -10,7 +10,10 @@
 </template>
 
 <script lang="ts" setup>
-import TestSummary from '../components/TestSummary.vue'
+
+import { defineAsyncComponent } from 'vue'
+const TestSummary = defineAsyncComponent(() => import('../components/TestSummary.vue'))
+
 </script>
 
 <script lang="ts">

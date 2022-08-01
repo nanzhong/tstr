@@ -1,5 +1,6 @@
 <script setup>
-import HumanDate from '../components/HumanDate.vue'
+import { defineAsyncComponent } from 'vue';
+const HumanDate = defineAsyncComponent(() => import('../components/HumanDate.vue'))
 </script>
 
 <template>

@@ -1,7 +1,8 @@
 <script lang="ts" setup>
-import TestResultBadge from '../components/TestResultBadge.vue'
-import RunnerInfo from '../components/RunnerInfo.vue'
-import HumanDate from '../components/HumanDate.vue'
+import { defineAsyncComponent } from 'vue'
+const HumanDate = defineAsyncComponent(() => import('../components/HumanDate.vue'))
+const RunnerInfo = defineAsyncComponent(() => import('../components/RunnerInfo.vue'))
+const TestResultBadge = defineAsyncComponent(() => import('../components/TestResultBadge.vue'))
 </script>
 
 <template>

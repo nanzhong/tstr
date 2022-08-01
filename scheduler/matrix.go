@@ -60,7 +60,6 @@ func generateMatrixLabelSet(b map[string]string, ml map[string][]string) []map[s
 			for _, rk := range keys {
 				labels[rk] = ml[rk][kIdx[rk]]
 			}
-			fmt.Println(labels)
 			labelSets = append(labelSets, labels)
 
 			next := -1

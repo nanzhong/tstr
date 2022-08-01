@@ -1,8 +1,11 @@
 package scheduler
 
 import (
-	"reflect"
+	"fmt"
+	"sort"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_generateLabelSet(t *testing.T) {
@@ -47,7 +50,16 @@ func Test_generateLabelSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			labelSet := generateMatrixLabelSet(tt.baseLabels, tt.matrixLabels)
-			if !reflect.DeepEqual(labelSet, tt.labelSet) {
+
+			trans := cmp.Transformer("Sort", func(in []int) []int {
+				out := append([]int(nil), in...) // Copy input to avoid mutating it
+				sort.Slice(out, func(i, j int) bool {
+					return fmt.Sprintf("%v", out[i]) < fmt.Sprintf("%v", out[j])
+				})
+				return out
+			})
+
+			if !cmp.Equal(labelSet, tt.labelSet, trans) {
 				t.Errorf("incorrect label set\nexpected:\t%v\ngot:\t%v", tt.labelSet, labelSet)
 			}
 		})

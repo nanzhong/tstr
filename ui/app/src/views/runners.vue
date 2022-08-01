@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import HumanDate from '../components/HumanDate.vue'
 </script>
 
@@ -47,22 +47,29 @@ import HumanDate from '../components/HumanDate.vue'
 </template>
 
 
-<script>
-import tstr from '../tstr'
+<script lang="ts">
+import { Runner } from '../api/common/v1/common.pb';
+import { DataService } from '../api/data/v1/data.pb';
+import { InitReq } from '../api/fetch.pb';
+
+const initReq: InitReq = {
+    pathPrefix: '/api'
+}
 
 export default {
     created() {
-        this.fetchRunners()
+        (async () => {
+            const runnersResponse = await DataService.QueryRunners({}, initReq);
+            if (runnersResponse.runners) {
+                this.runners = runnersResponse.runners
+            }
+
+        })();
     },
     data() {
         return {
-            runners: null,
+            runners: [] as Runner[],
         }
     },
-    methods: {
-        async fetchRunners() {
-            this.runners = await tstr.fetchRunners()
-        }
-    }
 }
 </script>

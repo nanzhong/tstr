@@ -1,9 +1,17 @@
-<script setup>
+<script setup lang="ts">
+import { defineComponent } from 'vue';
+import { Test } from '../api/common/v1/common.pb';
 import HumanDate from '../components/HumanDate.vue'
+
+const props = defineProps<{
+    test?: Test
+
+}>()
+
 </script>
 
 <template>
-    <q-list v-if="test != null">
+    <q-list v-if="test">
         <q-item>
             <q-item-section>
                 <q-item-label caption>Name</q-item-label>
@@ -81,8 +89,8 @@ import HumanDate from '../components/HumanDate.vue'
     </q-list>
 </template>
 
-<script>
-export default {
-    props: ['test'],
-}
+<script lang="ts">
+export default defineComponent({
+
+})
 </script>

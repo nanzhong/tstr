@@ -1,4 +1,4 @@
-import { createApp } from "vue";
+import { createApp, VueElement } from "vue";
 import { Quasar } from "quasar";
 import { createRouter, createWebHashHistory } from "vue-router";
 
@@ -16,6 +16,10 @@ import TestDetails from "./views/test-details.vue";
 import Tests from "./views/tests.vue";
 
 const app = createApp(App);
+
+app.config.globalProperties.$initReq = {
+  pathPrefix: '/api'
+}
 
 const routes = [
   {

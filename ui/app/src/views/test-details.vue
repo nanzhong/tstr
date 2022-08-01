@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import TestDetails from '../components/TestDetails.vue'
 import TestResultsChart from '../components/TestResultsChart.vue'
 </script>
@@ -8,7 +8,7 @@ import TestResultsChart from '../components/TestResultsChart.vue'
         <q-tab-panel name="tests" v-if="test != null">
             <div class="row">
                 <div>
-                    <div class="text-h6">Test: {{test.name}}</div>
+                    <div class="text-h6">Test: {{ test.name }}</div>
                     <test-details :test="test"></test-details>
                 </div>
             </div>
@@ -20,27 +20,32 @@ import TestResultsChart from '../components/TestResultsChart.vue'
 </template>
 
 
-<script>
-import tstr from '../tstr'
+<script lang="ts">
+
+import { Test } from '../api/common/v1/common.pb';
+import { DataService, RunSummary } from '../api/data/v1/data.pb';
 
 export default {
     created() {
-        this.fetchTestDetails(this.$route.params.id)
+        (async () => {
+            const testDetails = (await DataService.GetTest({ id: this.$route.params.id as string }, this.$initReq))
+            if (testDetails.test) {
+                this.test = testDetails.test
+                console.log(this.test)
+            }
+
+            if (testDetails.runSummaries) {
+                this.runSummaries = testDetails.runSummaries
+            }
+        })()
+
     },
     data() {
         return {
-            test: null,
-            runSummaries: null,
+            test: undefined as Test | undefined,
+            runSummaries: [] as RunSummary[],
         }
     },
-    methods: {
-        async fetchTestDetails(testId) {
-            const testDetails = await tstr.fetchTestDetails(testId)
-            this.test = testDetails.test
-            this.runSummaries = testDetails.runSummaries
-            console.log(this.runSummaries)
-        }
-    }
 }
 
 </script>

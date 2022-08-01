@@ -5,6 +5,14 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(duration)
 dayjs.extend(relativeTime)
 
+import  './api/data/v1/data.pb';
+import { DataService, GetRunnerRequest } from './api/data/v1/data.pb';
+import { InitReq } from './api/fetch.pb';
+
+const initReq : InitReq = {
+  pathPrefix: '/api'
+}
+
 const APINullableToJs = function (obj: any, root: boolean = true) : any {
   if (obj == null) {
     return null;
@@ -105,6 +113,9 @@ export default {
 
     data.runner = APINullableToJs(data.runner);
 
+    let z = await DataService.GetRunner({id: runnerId},initReq)
+    console.log(z)
+
     if (data.runSummaries != null) {
       data.runSummaries = data.runSummaries.map(function (run:any) {
         run = APINullableToJs(run);
@@ -114,3 +125,4 @@ export default {
     return data;
   },
 };
+

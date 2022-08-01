@@ -1,11 +1,17 @@
-<template>
+<script setup lang="ts">
+const props = defineProps<{
+    date?: string | object,
+    relative: boolean,
+    diff?: string | object,
+}>()
+</script>
 
+<template>
     <span v-if="date">{{ humanDuration }}
         <q-tooltip>
             {{ tooltip }}
         </q-tooltip>
     </span>
-
 </template>
 
 
@@ -23,17 +29,6 @@ export default defineComponent({
     created() {
 
     },
-    props: ['date','relative','diff'],
-    // props: {
-    //     date: {
-    //         type: [dayjs.Dayjs, String],
-    //         required: true,
-    //     },
-    //     relative: Boolean,
-    //     diff: {
-    //         type: [dayjs.Dayjs, String],
-    //     }
-    // },
     methods: {
         nDate() {
             return dayjs(this.date)
@@ -44,6 +39,9 @@ export default defineComponent({
     },
     computed: {
         humanDuration(): string {
+            if (!this.date) {
+                return ""
+            }
             if (this.relative) {
                 if (this.nDiff()) {
                     return this.nDate().from(this.nDiff())
@@ -54,6 +52,9 @@ export default defineComponent({
         },
 
         tooltip(): string {
+            if (!this.date) {
+                return ""
+            }
             if (this.relative) {
                 return this.nDate().toString()
             }

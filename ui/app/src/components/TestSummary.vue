@@ -1,5 +1,7 @@
 <script setup>
-import TestResultsChart from '../components/TestResultsChart.vue'
+import { defineAsyncComponent } from 'vue';
+
+const TestResultsChart = defineAsyncComponent(() => import('../components/TestResultsChart.vue'))
 </script>
 
 

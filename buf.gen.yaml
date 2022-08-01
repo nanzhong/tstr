@@ -25,3 +25,8 @@ plugins:
       - paths=source_relative
   - name: openapiv2
     out: api
+  - name: grpc-gateway-ts
+    out: ui/app/src/api
+    opt:
+      - paths=source_relative
+

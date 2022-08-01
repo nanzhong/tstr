@@ -1,9 +1,10 @@
-<script setup>
-import TestResultBadge from '../components/TestResultBadge.vue'
-import RunnerInfo from '../components/RunnerInfo.vue'
-import TestDetails from '../components/TestDetails.vue'
-import TestLogLine from '../components/TestLogLine.vue'
-import HumanDate from '../components/HumanDate.vue'
+<script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
+const TestResultBadge = defineAsyncComponent(() => import('../components/TestResultBadge.vue'))
+const RunnerInfo = defineAsyncComponent(() => import('../components/RunnerInfo.vue'))
+const TestDetails = defineAsyncComponent(() => import('../components/TestDetails.vue'))
+const TestLogLine = defineAsyncComponent(() => import('../components/TestLogLine.vue'))
+const HumanDate = defineAsyncComponent(() => import('../components/HumanDate.vue'))
 </script>
 
 <template>
@@ -73,42 +74,40 @@ import HumanDate from '../components/HumanDate.vue'
 
 
 
-<script>
+<script lang="ts">
 
 import tstr from '../tstr'
+import { DataService } from '../api/data/v1/data.pb'
+import { Run, Runner, Test } from '../api/common/v1/common.pb'
 
 export default {
     created() {
-        this.fetchRunDetails(this.$route.params.id)
+        // this.fetchRunDetails(this.$route.params.id)
+        (async () => {
+
+            const run = await DataService.GetRun({ id: this.$route.params.id as string }, this.$initReq)
+
+            const runner = await DataService.GetRunner({ id: run.run?.runnerId }, this.$initReq)
+
+            const test = await DataService.GetTest({ id: run.run?.testId }, this.$initReq)
+
+            this.run = run.run
+            this.runner = runner.runner
+            this.test = test.test
+
+            console.log(this.run)
+
+            this.isLoading = false
+        })()
     },
     data() {
         return {
-            run: null,
-            runner: null,
-            test: null,
+            run: undefined as (Run | undefined),
+            runner: undefined as (Runner | undefined),
+            test: undefined as (Test | undefined),
             isLoading: true,
         }
     },
-    methods: {
-        async fetchRunDetails(runId) {
-            const runDetails = await tstr.fetchRunDetails(runId)
-            this.run = runDetails
-            console.log("RUN", this.run)
-
-            const runnerDetails = await tstr.fetchRunnerDetails(this.run.runnerId, false)
-            this.runner = runnerDetails.runner
-            console.log("RUNNER", this.runner)
-
-            const testDetails = await tstr.fetchTestDetails(this.run.testId, false)
-            this.test = testDetails.test
-
-            console.log("TEST", this.test)
-            this.isLoading = false;
-
-        }
-    }
-
-
 }
 
 </script>

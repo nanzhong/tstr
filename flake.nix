@@ -24,9 +24,13 @@
       url = "github:grpc-ecosystem/grpc-gateway/v2.10.3";
       flake = false;
     };
+    protoc-gen-grpc-gateway-ts = {
+      url = "github:grpc-ecosystem/protoc-gen-grpc-gateway-ts/v1.1.2";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, sqlc, dbmate, overmind, quicktemplate, grpc-gateway }:
+  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, sqlc, dbmate, overmind, quicktemplate, grpc-gateway, protoc-gen-grpc-gateway-ts }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -98,6 +102,12 @@
             ];
             vendorSha256 = "sha256-FhiTU9VmDZNCPBWrmCqmQo/kPdDe8Da1T2E06CVN2kw=";
           };
+          protoc-gen-grpc-gateway-ts = pkgs.buildGoModule {
+            name = "protoc-gen-grpc-gateway-ts";
+            src = protoc-gen-grpc-gateway-ts;
+            doCheck = false;
+            vendorSha256 = "sha256-2Kytwh7jQulrrsYqHAsQPNFWFe3zIXuS4kza3mnkyDs=";
+          };
         };
       in
         rec {
@@ -148,6 +158,7 @@
                 devTools.dbmate
                 devTools.overmind
                 devTools.grpc-gateway
+                devTools.protoc-gen-grpc-gateway-ts
               ];
             };
         }

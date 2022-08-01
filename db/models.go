@@ -116,6 +116,7 @@ type Run struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
 	TestRunConfig pgtype.JSONB
+	TestMatrixID  uuid.NullUUID
 	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult

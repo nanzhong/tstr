@@ -111,7 +111,7 @@ func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, ar
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, name, run_config, tests.labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, runs.id, test_id, test_run_config, runs.labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT tests.id, tests.name, tests.run_config, tests.labels, tests.matrix, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at
 FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
@@ -119,38 +119,15 @@ WHERE tests.next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
 FOR UPDATE OF tests SKIP LOCKED
 `
 
-type ListTestsToScheduleRow struct {
-	ID            uuid.UUID
-	Name          string
-	RunConfig     pgtype.JSONB
-	Labels        pgtype.JSONB
-	Matrix        pgtype.JSONB
-	CronSchedule  sql.NullString
-	NextRunAt     sql.NullTime
-	RegisteredAt  sql.NullTime
-	UpdatedAt     sql.NullTime
-	ID_2          uuid.NullUUID
-	TestID        uuid.NullUUID
-	TestRunConfig pgtype.JSONB
-	Labels_2      pgtype.JSONB
-	RunnerID      uuid.NullUUID
-	Result        NullRunResult
-	Logs          pgtype.JSONB
-	ResultData    pgtype.JSONB
-	ScheduledAt   sql.NullTime
-	StartedAt     sql.NullTime
-	FinishedAt    sql.NullTime
-}
-
-func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTestsToScheduleRow, error) {
+func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]Test, error) {
 	rows, err := db.Query(ctx, listTestsToSchedule)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListTestsToScheduleRow
+	var items []Test
 	for rows.Next() {
-		var i ListTestsToScheduleRow
+		var i Test
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -161,17 +138,6 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]ListTests
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
-			&i.ID_2,
-			&i.TestID,
-			&i.TestRunConfig,
-			&i.Labels_2,
-			&i.RunnerID,
-			&i.Result,
-			&i.Logs,
-			&i.ResultData,
-			&i.ScheduledAt,
-			&i.StartedAt,
-			&i.FinishedAt,
 		); err != nil {
 			return nil, err
 		}

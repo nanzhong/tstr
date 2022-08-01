@@ -144,10 +144,11 @@ message ListRunsResponse {
 message ScheduleRunRequest {
   string test_id = 1; // required
   map<string, string> labels = 2;
+  tstr.common.v1.Test.Matrix test_matrix = 3;
 }
 
 message ScheduleRunResponse {
-  tstr.common.v1.Run run = 1; // required
+  repeated tstr.common.v1.Run runs = 1; // required
 }
 
 message GetRunnerRequest {

@@ -133,6 +133,15 @@
         "testRunConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },
+        "testMatrixId": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "runnerId": {
           "type": "string"
         },

@@ -237,6 +237,15 @@
         "testRunConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },
+        "testMatrixId": {
+          "type": "string"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "runnerId": {
           "type": "string"
         },
@@ -303,8 +312,11 @@
     "v1ScheduleRunResponse": {
       "type": "object",
       "properties": {
-        "run": {
-          "$ref": "#/definitions/v1Run"
+        "runs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1Run"
+          }
         }
       }
     },

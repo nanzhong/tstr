@@ -8,8 +8,8 @@ SELECT *
 FROM runs;
 
 -- name: ScheduleRun :one
-INSERT INTO runs (test_id, test_run_config, labels)
-SELECT tests.id, tests.run_config, sqlc.arg('labels')
+INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
+SELECT tests.id, tests.run_config, sqlc.arg('labels'), sqlc.narg('test_matrix_id')
 FROM tests
 WHERE tests.id = sqlc.arg('test_id')
 RETURNING *;

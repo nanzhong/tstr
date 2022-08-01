@@ -142,6 +142,11 @@ func ToProtoRun(r *db.Run) (*commonv1.Run, error) {
 		return nil, fmt.Errorf("formatting run config: %w", err)
 	}
 
+	var labels map[string]string
+	if err := r.Labels.AssignTo(&labels); err != nil {
+		return nil, fmt.Errorf("formatting labels: %w", err)
+	}
+
 	var runLogs []db.RunLog
 	if err := r.Logs.AssignTo(&runLogs); err != nil {
 		return nil, fmt.Errorf("formatting run logs: %w", err)
@@ -156,6 +161,8 @@ func ToProtoRun(r *db.Run) (*commonv1.Run, error) {
 		Id:            r.ID.String(),
 		TestId:        r.TestID.String(),
 		TestRunConfig: ToProtoTestRunConfig(runConfig),
+		TestMatrixId:  r.TestMatrixID.UUID.String(),
+		Labels:        labels,
 		RunnerId:      r.RunnerID.UUID.String(),
 		Result:        ToRunResult(r.Result.RunResult),
 		Logs:          ToRunLogs(runLogs),

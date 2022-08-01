@@ -37,6 +37,7 @@ CREATE TABLE runs (
   id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
   test_id uuid REFERENCES tests(id) NOT NULL,
   test_run_config jsonb,
+  test_matrix_id uuid,
   labels jsonb,
   runner_id uuid REFERENCES runners(id),
   result run_result DEFAULT 'unknown'::run_result,

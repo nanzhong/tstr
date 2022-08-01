@@ -40,7 +40,7 @@ SET
 WHERE id = sqlc.arg('id')::uuid;
 
 -- name: ListTestsToSchedule :many
-SELECT *
+SELECT tests.*
 FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL

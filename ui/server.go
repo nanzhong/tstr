@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-//go:embed app/dist/*
+//go:embed all:app/dist
 var appDist embed.FS
 
 func NewUIServer() http.Handler {

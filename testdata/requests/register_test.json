@@ -1,15 +1,37 @@
 {
   "name": "test",
-  "labels": {
-    "label_1": "value_1",
-    "label_2": "value_3"
-  },
   "cron_schedule": "* * * * *",
+  "labels": {
+    "type": "integration",
+    "region": "nyc",
+    "network": "public"
+  },
+  "matrix": {
+    "labels": {
+      "region": {
+        "values": [
+          "nyc",
+          "sfo",
+          "lon",
+          "blr",
+          "sgp"
+        ]
+      },
+      "network": {
+        "values": [
+          "public",
+          "private"
+        ]
+      }
+    }
+  },
   "run_config": {
-    "container_image": "alpine:3",
-    "command": "date",
+    "container_image": "busybox:latest",
+    "command": "ping",
     "args": [
-      "--debug"
+      "-c",
+      "5",
+      "google.ca"
     ],
     "env": {
       "TZ": "America/Toronto"

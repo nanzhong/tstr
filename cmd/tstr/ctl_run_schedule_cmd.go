@@ -11,7 +11,7 @@ import (
 )
 
 var ctlRunScheduleCmd = &cobra.Command{
-	Use:   "schedule",
+	Use:   "schedule <test id>",
 	Short: "Schedule a test run",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

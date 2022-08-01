@@ -503,6 +503,10 @@ func (m *Run) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for TestMatrixId
+
+	// no validation rules for Labels
+
 	// no validation rules for RunnerId
 
 	// no validation rules for Result

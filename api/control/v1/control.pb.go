@@ -1287,8 +1287,9 @@ type ScheduleRunRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	TestId string            `protobuf:"bytes,1,opt,name=test_id,json=testId,proto3" json:"test_id,omitempty"` // required
-	Labels map[string]string `protobuf:"bytes,2,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	TestId     string            `protobuf:"bytes,1,opt,name=test_id,json=testId,proto3" json:"test_id,omitempty"` // required
+	Labels     map[string]string `protobuf:"bytes,2,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	TestMatrix *v1.Test_Matrix   `protobuf:"bytes,3,opt,name=test_matrix,json=testMatrix,proto3" json:"test_matrix,omitempty"`
 }
 
 func (x *ScheduleRunRequest) Reset() {
@@ -1337,12 +1338,19 @@ func (x *ScheduleRunRequest) GetLabels() map[string]string {
 	return nil
 }
 
+func (x *ScheduleRunRequest) GetTestMatrix() *v1.Test_Matrix {
+	if x != nil {
+		return x.TestMatrix
+	}
+	return nil
+}
+
 type ScheduleRunResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Run *v1.Run `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"` // required
+	Runs []*v1.Run `protobuf:"bytes,1,rep,name=runs,proto3" json:"runs,omitempty"` // required
 }
 
 func (x *ScheduleRunResponse) Reset() {
@@ -1377,9 +1385,9 @@ func (*ScheduleRunResponse) Descriptor() ([]byte, []int) {
 	return file_control_v1_control_proto_rawDescGZIP(), []int{25}
 }
 
-func (x *ScheduleRunResponse) GetRun() *v1.Run {
+func (x *ScheduleRunResponse) GetRuns() []*v1.Run {
 	if x != nil {
-		return x.Run
+		return x.Runs
 	}
 	return nil
 }
@@ -1742,7 +1750,7 @@ var file_control_v1_control_proto_rawDesc = []byte{
 	0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x75, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x72, 0x75, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x13, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76,
-	0x31, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x04, 0x72, 0x75, 0x6e, 0x73, 0x22, 0xb1, 0x01, 0x0a, 0x12,
+	0x31, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x04, 0x72, 0x75, 0x6e, 0x73, 0x22, 0xef, 0x01, 0x0a, 0x12,
 	0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x75, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x17, 0x0a, 0x07, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x06, 0x74, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x47, 0x0a, 0x06, 0x6c,
@@ -1750,14 +1758,18 @@ var file_control_v1_control_proto_rawDesc = []byte{
 	0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6e, 0x74, 0x72, 0x6f, 0x6c, 0x2e, 0x76, 0x31, 0x2e, 0x53, 0x63,
 	0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x75, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x2e, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x06, 0x6c, 0x61,
-	0x62, 0x65, 0x6c, 0x73, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e,
-	0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22,
-	0x3c, 0x0a, 0x13, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x75, 0x6e, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x03, 0x72, 0x75, 0x6e, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f,
-	0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x03, 0x72, 0x75, 0x6e, 0x22, 0x22, 0x0a,
+	0x62, 0x65, 0x6c, 0x73, 0x12, 0x3c, 0x0a, 0x0b, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x6d, 0x61, 0x74,
+	0x72, 0x69, 0x78, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x74, 0x73, 0x74, 0x72,
+	0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x65, 0x73, 0x74, 0x2e,
+	0x4d, 0x61, 0x74, 0x72, 0x69, 0x78, 0x52, 0x0a, 0x74, 0x65, 0x73, 0x74, 0x4d, 0x61, 0x74, 0x72,
+	0x69, 0x78, 0x1a, 0x39, 0x0a, 0x0b, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x73, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x3e, 0x0a,
+	0x13, 0x53, 0x63, 0x68, 0x65, 0x64, 0x75, 0x6c, 0x65, 0x52, 0x75, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x04, 0x72, 0x75, 0x6e, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x74, 0x73, 0x74, 0x72, 0x2e, 0x63, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e,
+	0x2e, 0x76, 0x31, 0x2e, 0x52, 0x75, 0x6e, 0x52, 0x04, 0x72, 0x75, 0x6e, 0x73, 0x22, 0x22, 0x0a,
 	0x10, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69,
 	0x64, 0x22, 0x43, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x52, 0x75, 0x6e, 0x6e, 0x65, 0x72, 0x52, 0x65,
@@ -1956,44 +1968,45 @@ var file_control_v1_control_proto_depIdxs = []int32{
 	42, // 23: tstr.control.v1.ListRunsRequest.finished_after:type_name -> google.protobuf.Timestamp
 	40, // 24: tstr.control.v1.ListRunsResponse.runs:type_name -> tstr.common.v1.Run
 	34, // 25: tstr.control.v1.ScheduleRunRequest.labels:type_name -> tstr.control.v1.ScheduleRunRequest.LabelsEntry
-	40, // 26: tstr.control.v1.ScheduleRunResponse.run:type_name -> tstr.common.v1.Run
-	43, // 27: tstr.control.v1.GetRunnerResponse.runner:type_name -> tstr.common.v1.Runner
-	43, // 28: tstr.control.v1.ListRunnersResponse.runners:type_name -> tstr.common.v1.Runner
-	0,  // 29: tstr.control.v1.ControlService.RegisterTest:input_type -> tstr.control.v1.RegisterTestRequest
-	2,  // 30: tstr.control.v1.ControlService.UpdateTest:input_type -> tstr.control.v1.UpdateTestRequest
-	4,  // 31: tstr.control.v1.ControlService.GetTest:input_type -> tstr.control.v1.GetTestRequest
-	6,  // 32: tstr.control.v1.ControlService.ListTests:input_type -> tstr.control.v1.ListTestsRequest
-	8,  // 33: tstr.control.v1.ControlService.ArchiveTest:input_type -> tstr.control.v1.ArchiveTestRequest
-	10, // 34: tstr.control.v1.ControlService.DefineTestSuite:input_type -> tstr.control.v1.DefineTestSuiteRequest
-	12, // 35: tstr.control.v1.ControlService.UpdateTestSuite:input_type -> tstr.control.v1.UpdateTestSuiteRequest
-	14, // 36: tstr.control.v1.ControlService.GetTestSuite:input_type -> tstr.control.v1.GetTestSuiteRequest
-	16, // 37: tstr.control.v1.ControlService.ListTestSuites:input_type -> tstr.control.v1.ListTestSuitesRequest
-	18, // 38: tstr.control.v1.ControlService.ArchiveTestSuite:input_type -> tstr.control.v1.ArchiveTestSuiteRequest
-	20, // 39: tstr.control.v1.ControlService.GetRun:input_type -> tstr.control.v1.GetRunRequest
-	22, // 40: tstr.control.v1.ControlService.ListRuns:input_type -> tstr.control.v1.ListRunsRequest
-	24, // 41: tstr.control.v1.ControlService.ScheduleRun:input_type -> tstr.control.v1.ScheduleRunRequest
-	26, // 42: tstr.control.v1.ControlService.GetRunner:input_type -> tstr.control.v1.GetRunnerRequest
-	28, // 43: tstr.control.v1.ControlService.ListRunners:input_type -> tstr.control.v1.ListRunnersRequest
-	1,  // 44: tstr.control.v1.ControlService.RegisterTest:output_type -> tstr.control.v1.RegisterTestResponse
-	3,  // 45: tstr.control.v1.ControlService.UpdateTest:output_type -> tstr.control.v1.UpdateTestResponse
-	5,  // 46: tstr.control.v1.ControlService.GetTest:output_type -> tstr.control.v1.GetTestResponse
-	7,  // 47: tstr.control.v1.ControlService.ListTests:output_type -> tstr.control.v1.ListTestsResponse
-	9,  // 48: tstr.control.v1.ControlService.ArchiveTest:output_type -> tstr.control.v1.ArchiveTestResponse
-	11, // 49: tstr.control.v1.ControlService.DefineTestSuite:output_type -> tstr.control.v1.DefineTestSuiteResponse
-	13, // 50: tstr.control.v1.ControlService.UpdateTestSuite:output_type -> tstr.control.v1.UpdateTestSuiteResponse
-	15, // 51: tstr.control.v1.ControlService.GetTestSuite:output_type -> tstr.control.v1.GetTestSuiteResponse
-	17, // 52: tstr.control.v1.ControlService.ListTestSuites:output_type -> tstr.control.v1.ListTestSuitesResponse
-	19, // 53: tstr.control.v1.ControlService.ArchiveTestSuite:output_type -> tstr.control.v1.ArchiveTestSuiteResponse
-	21, // 54: tstr.control.v1.ControlService.GetRun:output_type -> tstr.control.v1.GetRunResponse
-	23, // 55: tstr.control.v1.ControlService.ListRuns:output_type -> tstr.control.v1.ListRunsResponse
-	25, // 56: tstr.control.v1.ControlService.ScheduleRun:output_type -> tstr.control.v1.ScheduleRunResponse
-	27, // 57: tstr.control.v1.ControlService.GetRunner:output_type -> tstr.control.v1.GetRunnerResponse
-	29, // 58: tstr.control.v1.ControlService.ListRunners:output_type -> tstr.control.v1.ListRunnersResponse
-	44, // [44:59] is the sub-list for method output_type
-	29, // [29:44] is the sub-list for method input_type
-	29, // [29:29] is the sub-list for extension type_name
-	29, // [29:29] is the sub-list for extension extendee
-	0,  // [0:29] is the sub-list for field type_name
+	36, // 26: tstr.control.v1.ScheduleRunRequest.test_matrix:type_name -> tstr.common.v1.Test.Matrix
+	40, // 27: tstr.control.v1.ScheduleRunResponse.runs:type_name -> tstr.common.v1.Run
+	43, // 28: tstr.control.v1.GetRunnerResponse.runner:type_name -> tstr.common.v1.Runner
+	43, // 29: tstr.control.v1.ListRunnersResponse.runners:type_name -> tstr.common.v1.Runner
+	0,  // 30: tstr.control.v1.ControlService.RegisterTest:input_type -> tstr.control.v1.RegisterTestRequest
+	2,  // 31: tstr.control.v1.ControlService.UpdateTest:input_type -> tstr.control.v1.UpdateTestRequest
+	4,  // 32: tstr.control.v1.ControlService.GetTest:input_type -> tstr.control.v1.GetTestRequest
+	6,  // 33: tstr.control.v1.ControlService.ListTests:input_type -> tstr.control.v1.ListTestsRequest
+	8,  // 34: tstr.control.v1.ControlService.ArchiveTest:input_type -> tstr.control.v1.ArchiveTestRequest
+	10, // 35: tstr.control.v1.ControlService.DefineTestSuite:input_type -> tstr.control.v1.DefineTestSuiteRequest
+	12, // 36: tstr.control.v1.ControlService.UpdateTestSuite:input_type -> tstr.control.v1.UpdateTestSuiteRequest
+	14, // 37: tstr.control.v1.ControlService.GetTestSuite:input_type -> tstr.control.v1.GetTestSuiteRequest
+	16, // 38: tstr.control.v1.ControlService.ListTestSuites:input_type -> tstr.control.v1.ListTestSuitesRequest
+	18, // 39: tstr.control.v1.ControlService.ArchiveTestSuite:input_type -> tstr.control.v1.ArchiveTestSuiteRequest
+	20, // 40: tstr.control.v1.ControlService.GetRun:input_type -> tstr.control.v1.GetRunRequest
+	22, // 41: tstr.control.v1.ControlService.ListRuns:input_type -> tstr.control.v1.ListRunsRequest
+	24, // 42: tstr.control.v1.ControlService.ScheduleRun:input_type -> tstr.control.v1.ScheduleRunRequest
+	26, // 43: tstr.control.v1.ControlService.GetRunner:input_type -> tstr.control.v1.GetRunnerRequest
+	28, // 44: tstr.control.v1.ControlService.ListRunners:input_type -> tstr.control.v1.ListRunnersRequest
+	1,  // 45: tstr.control.v1.ControlService.RegisterTest:output_type -> tstr.control.v1.RegisterTestResponse
+	3,  // 46: tstr.control.v1.ControlService.UpdateTest:output_type -> tstr.control.v1.UpdateTestResponse
+	5,  // 47: tstr.control.v1.ControlService.GetTest:output_type -> tstr.control.v1.GetTestResponse
+	7,  // 48: tstr.control.v1.ControlService.ListTests:output_type -> tstr.control.v1.ListTestsResponse
+	9,  // 49: tstr.control.v1.ControlService.ArchiveTest:output_type -> tstr.control.v1.ArchiveTestResponse
+	11, // 50: tstr.control.v1.ControlService.DefineTestSuite:output_type -> tstr.control.v1.DefineTestSuiteResponse
+	13, // 51: tstr.control.v1.ControlService.UpdateTestSuite:output_type -> tstr.control.v1.UpdateTestSuiteResponse
+	15, // 52: tstr.control.v1.ControlService.GetTestSuite:output_type -> tstr.control.v1.GetTestSuiteResponse
+	17, // 53: tstr.control.v1.ControlService.ListTestSuites:output_type -> tstr.control.v1.ListTestSuitesResponse
+	19, // 54: tstr.control.v1.ControlService.ArchiveTestSuite:output_type -> tstr.control.v1.ArchiveTestSuiteResponse
+	21, // 55: tstr.control.v1.ControlService.GetRun:output_type -> tstr.control.v1.GetRunResponse
+	23, // 56: tstr.control.v1.ControlService.ListRuns:output_type -> tstr.control.v1.ListRunsResponse
+	25, // 57: tstr.control.v1.ControlService.ScheduleRun:output_type -> tstr.control.v1.ScheduleRunResponse
+	27, // 58: tstr.control.v1.ControlService.GetRunner:output_type -> tstr.control.v1.GetRunnerResponse
+	29, // 59: tstr.control.v1.ControlService.ListRunners:output_type -> tstr.control.v1.ListRunnersResponse
+	45, // [45:60] is the sub-list for method output_type
+	30, // [30:45] is the sub-list for method input_type
+	30, // [30:30] is the sub-list for extension type_name
+	30, // [30:30] is the sub-list for extension extendee
+	0,  // [0:30] is the sub-list for field type_name
 }
 
 func init() { file_control_v1_control_proto_init() }

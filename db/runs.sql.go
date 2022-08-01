@@ -40,7 +40,7 @@ WHERE runs.id = (
   ORDER BY selected_runs.scheduled_at ASC
   LIMIT 1
 )
-RETURNING runs.id, runs.test_id, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
+RETURNING runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
 `
 
 type AssignRunParams struct {
@@ -55,6 +55,7 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 		&i.ID,
 		&i.TestID,
 		&i.TestRunConfig,
+		&i.TestMatrixID,
 		&i.Labels,
 		&i.RunnerID,
 		&i.Result,
@@ -68,7 +69,7 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 }
 
 const getRun = `-- name: GetRun :one
-SELECT id, test_id, test_run_config, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM runs
 WHERE runs.id = $1
 `
@@ -80,6 +81,7 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error
 		&i.ID,
 		&i.TestID,
 		&i.TestRunConfig,
+		&i.TestMatrixID,
 		&i.Labels,
 		&i.RunnerID,
 		&i.Result,
@@ -93,7 +95,7 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error
 }
 
 const listRuns = `-- name: ListRuns :many
-SELECT id, test_id, test_run_config, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM runs
 `
 
@@ -110,6 +112,7 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX) ([]Run, error) {
 			&i.ID,
 			&i.TestID,
 			&i.TestRunConfig,
+			&i.TestMatrixID,
 			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
@@ -130,7 +133,7 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX) ([]Run, error) {
 }
 
 const queryRuns = `-- name: QueryRuns :many
-SELECT id, test_id, test_run_config, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM runs
 WHERE
   ($1::uuid[] IS NULL OR runs.id = ANY ($1::uuid[])) AND
@@ -192,6 +195,7 @@ func (q *Queries) QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) (
 			&i.ID,
 			&i.TestID,
 			&i.TestRunConfig,
+			&i.TestMatrixID,
 			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
@@ -336,25 +340,27 @@ func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummary
 }
 
 const scheduleRun = `-- name: ScheduleRun :one
-INSERT INTO runs (test_id, test_run_config, labels)
-SELECT tests.id, tests.run_config, $1
+INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
+SELECT tests.id, tests.run_config, $1, $2
 FROM tests
-WHERE tests.id = $2
-RETURNING id, test_id, test_run_config, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+WHERE tests.id = $3
+RETURNING id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 `
 
 type ScheduleRunParams struct {
-	Labels pgtype.JSONB
-	TestID uuid.UUID
+	Labels       pgtype.JSONB
+	TestMatrixID uuid.NullUUID
+	TestID       uuid.UUID
 }
 
 func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error) {
-	row := db.QueryRow(ctx, scheduleRun, arg.Labels, arg.TestID)
+	row := db.QueryRow(ctx, scheduleRun, arg.Labels, arg.TestMatrixID, arg.TestID)
 	var i Run
 	err := row.Scan(
 		&i.ID,
 		&i.TestID,
 		&i.TestRunConfig,
+		&i.TestMatrixID,
 		&i.Labels,
 		&i.RunnerID,
 		&i.Result,

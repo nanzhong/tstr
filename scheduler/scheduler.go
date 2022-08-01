@@ -92,35 +92,27 @@ func (s *Scheduler) Start() error {
 				}
 
 				for _, test := range tests {
-					var runConfig db.TestRunConfig
-					if err := test.RunConfig.AssignTo(&runConfig); err != nil {
-						log.Error().
-							Err(err).
-							Stringer("test_id", test.ID).
-							Msg("failed to parse run config")
-						return err
-					}
-
-					// var labelSets []map[string]string
-					// for label, values := range test.Matrix.Labels {
-
-					// }
-					run, err := s.dbQuerier.ScheduleRun(ctx, tx, db.ScheduleRunParams{
-						Labels: test.Labels,
-						TestID: test.ID,
-					})
+					runParams, err := RunsForTest(test)
 					if err != nil {
-						log.Error().
-							Err(err).
-							Stringer("test_id", test.ID).
-							Msg("failed to schedule run for test")
+						log.Error().Err(err).Stringer("test_id", test.ID).Msg("generating runs to schedule")
 						return err
 					}
-
-					log.Info().
-						Stringer("test_id", test.ID).
-						Stringer("run_id", run.ID).
-						Msg("scheduled run for test")
+					for _, runParam := range runParams {
+						run, err := s.dbQuerier.ScheduleRun(ctx, tx, runParam)
+						if err != nil {
+							log.Error().
+								Err(err).
+								Stringer("test_id", test.ID).
+								Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
+								Msg("failed to schedule run for test")
+							return err
+						}
+						log.Info().
+							Stringer("test_id", runParam.TestID).
+							Stringer("run_id", run.ID).
+							Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
+							Msg("scheduled run for test")
+					}
 
 					schedule, err := s.cronParser.Parse(test.CronSchedule.String)
 					if err != nil {
@@ -179,4 +171,16 @@ func (s *Scheduler) Stop(ctx context.Context) {
 			s.stopCancelFn()
 		}
 	}
+}
+
+func copyLabels(l map[string]string) map[string]string {
+	if l == nil {
+		return nil
+	}
+
+	c := make(map[string]string)
+	for k, v := range l {
+		c[k] = v
+	}
+	return c
 }

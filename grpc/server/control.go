@@ -7,11 +7,13 @@ import (
 	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/types"
+	"github.com/nanzhong/tstr/scheduler"
 	"github.com/robfig/cron/v3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -296,7 +298,7 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, r *controlv1.ScheduleRu
 
 	var labels pgtype.JSONB
 	if len(r.Labels) > 0 {
-		if err := labels.Set(&labels); err != nil {
+		if err := labels.Set(&r.Labels); err != nil {
 			log.Error().
 				Err(err).
 				Dict("labels", zerolog.Dict().Fields(r.Labels)).
@@ -306,30 +308,66 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, r *controlv1.ScheduleRu
 	} else {
 		labels = test.Labels
 	}
+	var matrix pgtype.JSONB
+	if r.TestMatrix != nil {
+		if err := matrix.Set(&r.TestMatrix); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("test_matrix", r.TestMatrix).
+				Msg("failed to format test matrix")
+			return nil, status.Error(codes.Internal, "failed to format test matrix")
+		}
+	}
 
-	run, err := s.dbQuerier.ScheduleRun(ctx, s.pgxPool, db.ScheduleRunParams{
-		Labels: labels,
-		TestID: testID,
-	})
+	var runs []db.Run
+	runParams, err := scheduler.RunsForTest(test)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Stringer("test_id", test.ID).
-			Msg("failed to schedule run")
-		return nil, status.Error(codes.Internal, "failed to schedule run")
+			Msg("failed to generate runs for test")
+		return nil, status.Error(codes.Internal, "failed to generate runs for test")
 	}
 
-	pbRun, err := types.ToProtoRun(&run)
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		for _, runParam := range runParams {
+			run, err := s.dbQuerier.ScheduleRun(ctx, tx, runParam)
+			if err != nil {
+				log.Error().
+					Err(err).
+					Stringer("test_id", test.ID).
+					Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
+					Msg("failed to schedule run for test")
+				return err
+			}
+			runs = append(runs, run)
+			log.Info().
+				Stringer("test_id", runParam.TestID).
+				Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
+				Msg("scheduled run for test")
+		}
+		return nil
+	})
 	if err != nil {
-		log.Error().
-			Err(err).
-			Stringer("run_id", run.ID).
-			Msg("failed to format run")
-		return nil, status.Error(codes.Internal, "failed to format run")
+		log.Error().Err(err).Msg("failed to begin transaction")
+		return nil, status.Error(codes.Internal, "failed to schedule runs for test")
+	}
+
+	var pbRuns []*commonv1.Run
+	for _, run := range runs {
+		pbRun, err := types.ToProtoRun(&run)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", run.ID).
+				Msg("failed to format run")
+			return nil, status.Error(codes.Internal, "failed to format run")
+		}
+		pbRuns = append(pbRuns, pbRun)
 	}
 
 	return &controlv1.ScheduleRunResponse{
-		Run: pbRun,
+		Runs: pbRuns,
 	}, nil
 }
 

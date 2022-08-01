@@ -32,7 +32,7 @@ import HumanDate from '../components/HumanDate.vue'
                 <tr v-for="run in runSummaries">
                     <td class="text-left">
                         <router-link :to="{ name: 'test-details', params: { id: run.testId } }"> {{
-                            testsByID.get(run.testId as string)?.name
+                                testsByID.get(run.testId as string)?.name
                         }}
                         </router-link>
                     </td>
@@ -63,13 +63,9 @@ import HumanDate from '../components/HumanDate.vue'
 <script lang="ts">
 
 import { DataService, RunSummary } from '../api/data/v1/data.pb';
-import { InitReq } from '../api/fetch.pb';
 import { Runner, Test } from '../api/common/v1/common.pb';
 import { defineComponent } from 'vue';
 
-const initReq: InitReq = {
-    pathPrefix: '/api'
-}
 
 export default defineComponent({
     data() {
@@ -77,7 +73,7 @@ export default defineComponent({
             isLoading: true,
             runner: undefined as (Runner | undefined),
             runSummaries: undefined as (RunSummary[] | undefined),
-            testsByID: new Map<string,Test>(),
+            testsByID: new Map<string, Test>(),
         }
     },
     created() {
@@ -85,15 +81,15 @@ export default defineComponent({
     },
     methods: {
         async fetchRunnerDetails(runnerId: string) {
-            const runnerDetails = await DataService.GetRunner({id: runnerId}, initReq)
+            const runnerDetails = await DataService.GetRunner({ id: runnerId }, this.$initReq)
             this.runner = runnerDetails.runner
             this.runSummaries = runnerDetails.runSummaries
-            const testIDs: Set<string> = new Set(runnerDetails.runSummaries?.map( r => r.testId as string))
-            const tests = await DataService.QueryTests({ids: Array.from(testIDs)},initReq)
-            this.testsByID = (tests.tests?.filter(t => t) as Test[]).reduce((acc,test) => {
+            const testIDs: Set<string> = new Set(runnerDetails.runSummaries?.map(r => r.testId as string))
+            const tests = await DataService.QueryTests({ ids: Array.from(testIDs) }, this.$initReq)
+            this.testsByID = (tests.tests?.filter(t => t) as Test[]).reduce((acc, test) => {
                 acc.set(test.id as string, test)
                 return acc
-            }, new Map<string,Test>())
+            }, new Map<string, Test>())
 
             this.isLoading = false
         }

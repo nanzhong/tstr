@@ -11,8 +11,9 @@ import * as GoogleProtobufTimestamp from "../../google/protobuf/timestamp.pb"
 export type RegisterTestRequest = {
   name?: string
   labels?: {[key: string]: string}
-  cronSchedule?: string
   runConfig?: TstrCommonV1Common.TestRunConfig
+  cronSchedule?: string
+  matrix?: TstrCommonV1Common.TestMatrix
 }
 
 export type RegisterTestResponse = {
@@ -23,9 +24,13 @@ export type UpdateTestRequest = {
   fieldMask?: GoogleProtobufField_mask.FieldMask
   id?: string
   name?: string
+  runConfig?: TstrCommonV1Common.TestRunConfig
   labels?: {[key: string]: string}
   cronSchedule?: string
-  runConfig?: TstrCommonV1Common.TestRunConfig
+  matrix?: TstrCommonV1Common.TestMatrix
+}
+
+export type UpdateTestResponse = {
 }
 
 export type GetTestRequest = {
@@ -37,14 +42,10 @@ export type GetTestResponse = {
 }
 
 export type ListTestsRequest = {
-  labels?: {[key: string]: string}
 }
 
 export type ListTestsResponse = {
   tests?: TstrCommonV1Common.Test[]
-}
-
-export type UpdateTestResponse = {
 }
 
 export type ArchiveTestRequest = {
@@ -122,10 +123,12 @@ export type ListRunsResponse = {
 
 export type ScheduleRunRequest = {
   testId?: string
+  labels?: {[key: string]: string}
+  testMatrix?: TstrCommonV1Common.TestMatrix
 }
 
 export type ScheduleRunResponse = {
-  run?: TstrCommonV1Common.Run
+  runs?: TstrCommonV1Common.Run[]
 }
 
 export type GetRunnerRequest = {
@@ -137,7 +140,6 @@ export type GetRunnerResponse = {
 }
 
 export type ListRunnersRequest = {
-  includeRevoked?: boolean
 }
 
 export type ListRunnersResponse = {

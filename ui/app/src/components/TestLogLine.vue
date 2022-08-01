@@ -11,7 +11,10 @@ export default {
     props: ['logline'],
     computed: {
         txtData() {
-            return atob(this.logline.data)
+            if (this.logline.data && this.logline.data.length > 0) {
+                return atob(this.logline.data)
+            }
+            return ""
         },
         style() {
             var borderColor = ""
@@ -20,7 +23,7 @@ export default {
                 borderColor = "red"
             else
                 borderColor = "green"
-            return `padding-left:0.5em; border-left: 2px solid ${borderColor}`
+            return `font-family: monospace; padding-left:0.5em; border-left: 3px solid ${borderColor}`
 
         }
 

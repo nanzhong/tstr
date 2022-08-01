@@ -4,6 +4,7 @@
 * This file is a generated Typescript file for GRPC Gateway, DO NOT MODIFY
 */
 
+import * as GoogleProtobufDuration from "../../google/protobuf/duration.pb"
 import * as GoogleProtobufTimestamp from "../../google/protobuf/timestamp.pb"
 
 export enum RunResult {
@@ -30,24 +31,31 @@ export enum AccessTokenScope {
 }
 
 export type TestRunConfig = {
-  id?: string
   containerImage?: string
   command?: string
   args?: string[]
   env?: {[key: string]: string}
-  createdAt?: GoogleProtobufTimestamp.Timestamp
+  timeout?: GoogleProtobufDuration.Duration
+}
+
+export type TestMatrixLabelValues = {
+  values?: string[]
+}
+
+export type TestMatrix = {
+  labels?: {[key: string]: TestMatrixLabelValues}
 }
 
 export type Test = {
   id?: string
   name?: string
+  runConfig?: TestRunConfig
   labels?: {[key: string]: string}
   cronSchedule?: string
   nextRunAt?: GoogleProtobufTimestamp.Timestamp
-  runConfig?: TestRunConfig
+  matrix?: TestMatrix
   registeredAt?: GoogleProtobufTimestamp.Timestamp
   updatedAt?: GoogleProtobufTimestamp.Timestamp
-  archivedAt?: GoogleProtobufTimestamp.Timestamp
 }
 
 export type TestSuite = {
@@ -56,7 +64,6 @@ export type TestSuite = {
   labels?: {[key: string]: string}
   createdAt?: GoogleProtobufTimestamp.Timestamp
   updatedAt?: GoogleProtobufTimestamp.Timestamp
-  archivedAt?: GoogleProtobufTimestamp.Timestamp
 }
 
 export type RunLog = {
@@ -69,6 +76,8 @@ export type Run = {
   id?: string
   testId?: string
   testRunConfig?: TestRunConfig
+  testMatrixId?: string
+  labels?: {[key: string]: string}
   runnerId?: string
   result?: RunResult
   logs?: RunLog[]

@@ -29,4 +29,4 @@ plugins:
     out: ui/app/src/api
     opt:
       - paths=source_relative
-
+    strategy: all

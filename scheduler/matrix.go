@@ -56,7 +56,11 @@ func generateMatrixLabelSet(b map[string]string, ml map[string][]string) []map[s
 		}
 
 		for {
-			labels := make(map[string]string)
+			labels := copyLabels(b)
+			if labels == nil {
+				labels = make(map[string]string)
+			}
+
 			for _, rk := range keys {
 				labels[rk] = ml[rk][kIdx[rk]]
 			}
@@ -80,4 +84,16 @@ func generateMatrixLabelSet(b map[string]string, ml map[string][]string) []map[s
 	}
 
 	return labelSets
+}
+
+func copyLabels(l map[string]string) map[string]string {
+	if l == nil {
+		return nil
+	}
+
+	c := make(map[string]string)
+	for k, v := range l {
+		c[k] = v
+	}
+	return c
 }

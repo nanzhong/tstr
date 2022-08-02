@@ -128,8 +128,6 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		acceptSelectorsRE = make(map[string]*regexp.Regexp)
 		rejectSelectors   map[string]string
 		rejectSelectorsRE = make(map[string]*regexp.Regexp)
-
-		acceptKeys []string
 	)
 	if err := dbRunner.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
 		log.Error().
@@ -145,7 +143,6 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 	}
 
 	for k, v := range acceptSelectors {
-		acceptKeys = append(acceptKeys, k)
 		re, err := regexp.Compile(v)
 		if err != nil {
 			log.Error().
@@ -169,60 +166,62 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		rejectSelectorsRE[k] = re
 	}
 
-	// NOTE we don't care about reject keys here, because unless all reject labels have selectors that match anything (non-trivial to determine), we need to first get the tests that match the accept keys before applying filtering.
-	tests, err := s.dbQuerier.ListTestsIDsMatchingLabelKeys(ctx, s.pgxPool, db.ListTestsIDsMatchingLabelKeysParams{
-		IncludeLabelKeys: acceptKeys,
-		FilterLabelKeys:  nil,
-	})
+	runs, err := s.dbQuerier.ListPendingRuns(ctx, s.pgxPool)
 	if err != nil {
 		log.Error().
 			Err(err).
-			Strs("accept_keys", acceptKeys).
-			Msg("failed to find tests matching label keys")
-		return nil, status.Error(codes.Internal, "failed to determine matching tests for runner")
+			Msg("failed to find pending runs")
+		return nil, status.Error(codes.Internal, "failed to find pending runs")
 	}
 
-	var matchingTestIDs []uuid.UUID
-	for _, test := range tests {
+	var matchingRunIDs []uuid.UUID
+	for _, run := range runs {
 		var labels map[string]string
-		if err := test.Labels.AssignTo(&labels); err != nil {
+		if err := run.Labels.AssignTo(&labels); err != nil {
 			log.Error().
 				Err(err).
-				Str("test_id", test.ID.String()).
-				Msg("failed to parse test labels")
-			return nil, status.Error(codes.Internal, "failed to determine matching tests for runner")
+				Str("run_id", run.ID.String()).
+				Msg("failed to parse run labels")
+			return nil, status.Error(codes.Internal, "failed to parse labels for run")
 		}
 
-		matches := true
-		for k, v := range labels {
-			acceptRE, ok := acceptSelectorsRE[k]
-			if !ok {
-				continue
-			}
-			if !acceptRE.Match([]byte(v)) {
-				matches = false
-				break
-			}
-
-			rejectRE, ok := rejectSelectorsRE[k]
-			if !ok {
-				continue
-			}
-			if rejectRE.Match([]byte(v)) {
-				matches = false
+		// First skip rejected runs
+		reject := false
+		for key, re := range rejectSelectorsRE {
+			value, exists := labels[key]
+			if exists && re.MatchString(value) {
+				reject = true
 				break
 			}
 		}
-		if !matches {
+		if reject {
 			continue
 		}
 
-		matchingTestIDs = append(matchingTestIDs, test.ID)
+		// Then check that we match all the accept selectors
+		// Start with assuming a match and invalidate
+		match := true
+		for k, v := range labels {
+			re, exists := acceptSelectorsRE[k]
+			if !exists {
+				match = false
+				break
+			}
+			if !re.MatchString(v) {
+				match = false
+				break
+			}
+		}
+		if !match {
+			continue
+		}
+
+		matchingRunIDs = append(matchingRunIDs, run.ID)
 	}
 
 	run, err := s.dbQuerier.AssignRun(ctx, s.pgxPool, db.AssignRunParams{
 		RunnerID: runnerID,
-		TestIds:  matchingTestIDs,
+		RunIDs:   matchingRunIDs,
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -230,34 +229,28 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		}
 
 		// NOTE []uuid.UUID can't be directly used as []fmt.Stringer
-		matchingTestIDStrings := make([]string, len(matchingTestIDs))
-		for i, s := range matchingTestIDs {
-			matchingTestIDStrings[i] = s.String()
+		matchingRunIDStrings := make([]string, len(matchingRunIDs))
+		for i, s := range matchingRunIDs {
+			matchingRunIDStrings[i] = s.String()
 		}
 		log.Error().
 			Err(err).
 			Stringer("runner_id", runnerID).
-			Strs("test_ids", matchingTestIDStrings).
+			Strs("run_ids", matchingRunIDStrings).
 			Msg("failed to assign run to runner")
 		return nil, status.Error(codes.Internal, "failed to assign run to runner")
 	}
 
-	var runConfig db.TestRunConfig
-	if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
+	pbRun, err := types.ToProtoRun(&run)
+	if err != nil {
 		log.Error().
 			Err(err).
 			Stringer("run_id", run.ID).
-			Msg("failed to parse run config")
-		return nil, status.Error(codes.Internal, "failed to format run config")
+			Msg("failed to format assigned run")
+		return nil, status.Error(codes.Internal, "failed to format assigned run")
 	}
 	return &runnerv1.NextRunResponse{
-		Run: &commonv1.Run{
-			Id:            run.ID.String(),
-			TestId:        run.TestID.String(),
-			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
-			RunnerId:      run.RunnerID.UUID.String(),
-			ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
-		},
+		Run: pbRun,
 	}, nil
 }
 

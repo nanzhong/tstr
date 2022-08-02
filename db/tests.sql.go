@@ -72,44 +72,6 @@ func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
 	return items, nil
 }
 
-const listTestsIDsMatchingLabelKeys = `-- name: ListTestsIDsMatchingLabelKeys :many
-SELECT tests.id, tests.labels
-FROM tests
-WHERE
-  tests.labels ?& COALESCE($1::varchar[], '{}') AND
-  NOT tests.labels ?| COALESCE($2::varchar[], '{}')::varchar[]
-`
-
-type ListTestsIDsMatchingLabelKeysParams struct {
-	IncludeLabelKeys []string
-	FilterLabelKeys  []string
-}
-
-type ListTestsIDsMatchingLabelKeysRow struct {
-	ID     uuid.UUID
-	Labels pgtype.JSONB
-}
-
-func (q *Queries) ListTestsIDsMatchingLabelKeys(ctx context.Context, db DBTX, arg ListTestsIDsMatchingLabelKeysParams) ([]ListTestsIDsMatchingLabelKeysRow, error) {
-	rows, err := db.Query(ctx, listTestsIDsMatchingLabelKeys, arg.IncludeLabelKeys, arg.FilterLabelKeys)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []ListTestsIDsMatchingLabelKeysRow
-	for rows.Next() {
-		var i ListTestsIDsMatchingLabelKeysRow
-		if err := rows.Scan(&i.ID, &i.Labels); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
 SELECT tests.id, tests.name, tests.run_config, tests.labels, tests.matrix, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at
 FROM tests

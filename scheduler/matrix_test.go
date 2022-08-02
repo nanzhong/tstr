@@ -38,11 +38,11 @@ func Test_generateLabelSet(t *testing.T) {
 		},
 		{
 			name:         "matrix overwrite base",
-			baseLabels:   map[string]string{"key": "value"},
+			baseLabels:   map[string]string{"key": "value", "other": "label"},
 			matrixLabels: map[string][]string{"key": {"value_1", "value_2"}},
 			labelSet: []map[string]string{
-				{"key": "value_1"},
-				{"key": "value_2"},
+				{"key": "value_1", "other": "label"},
+				{"key": "value_2", "other": "label"},
 			},
 		},
 	}

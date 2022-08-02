@@ -172,15 +172,3 @@ func (s *Scheduler) Stop(ctx context.Context) {
 		}
 	}
 }
-
-func copyLabels(l map[string]string) map[string]string {
-	if l == nil {
-		return nil
-	}
-
-	c := make(map[string]string)
-	for k, v := range l {
-		c[k] = v
-	}
-	return c
-}

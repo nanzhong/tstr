@@ -65,6 +65,8 @@ spec:
               value: tstr-grpc:9000
             - name: RUN_INSECURE
               value: "true"
+            - name: RUN_ACCEPT_LABEL_SELECTORS
+              value: "region=nyc"
             - name: RUN_ACCESS_TOKEN
               valueFrom:
                 secretKeyRef:

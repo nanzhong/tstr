@@ -34,22 +34,24 @@ const assignRun = `-- name: AssignRun :one
 UPDATE runs
 SET runner_id = $1::uuid
 WHERE runs.id = (
-  SELECT id
-  FROM runs AS selected_runs
-  WHERE selected_runs.test_id = ANY($2::uuid[]) AND selected_runs.runner_id IS NULL
-  ORDER BY selected_runs.scheduled_at ASC
+  SELECT matching_runs.id
+  FROM runs AS matching_runs
+  WHERE
+    matching_runs.id = ANY ($2::uuid[]) AND
+    matching_runs.runner_id IS NULL
   LIMIT 1
+  FOR UPDATE SKIP LOCKED
 )
-RETURNING runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
+RETURNING id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 `
 
 type AssignRunParams struct {
 	RunnerID uuid.UUID
-	TestIds  []uuid.UUID
+	RunIDs   []uuid.UUID
 }
 
 func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (Run, error) {
-	row := db.QueryRow(ctx, assignRun, arg.RunnerID, arg.TestIds)
+	row := db.QueryRow(ctx, assignRun, arg.RunnerID, arg.RunIDs)
 	var i Run
 	err := row.Scan(
 		&i.ID,
@@ -92,6 +94,45 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error
 		&i.FinishedAt,
 	)
 	return i, err
+}
+
+const listPendingRuns = `-- name: ListPendingRuns :many
+SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+FROM runs
+WHERE runner_id IS NULL
+`
+
+func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
+	rows, err := db.Query(ctx, listPendingRuns)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Run
+	for rows.Next() {
+		var i Run
+		if err := rows.Scan(
+			&i.ID,
+			&i.TestID,
+			&i.TestRunConfig,
+			&i.TestMatrixID,
+			&i.Labels,
+			&i.RunnerID,
+			&i.Result,
+			&i.Logs,
+			&i.ResultData,
+			&i.ScheduledAt,
+			&i.StartedAt,
+			&i.FinishedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listRuns = `-- name: ListRuns :many

@@ -14,17 +14,24 @@ FROM tests
 WHERE tests.id = sqlc.arg('test_id')
 RETURNING *;
 
+-- name: ListPendingRuns :many
+SELECT *
+FROM runs
+WHERE runner_id IS NULL;
+
 -- name: AssignRun :one
 UPDATE runs
 SET runner_id = sqlc.arg('runner_id')::uuid
 WHERE runs.id = (
-  SELECT id
-  FROM runs AS selected_runs
-  WHERE selected_runs.test_id = ANY(sqlc.arg('test_ids')::uuid[]) AND selected_runs.runner_id IS NULL
-  ORDER BY selected_runs.scheduled_at ASC
+  SELECT matching_runs.id
+  FROM runs AS matching_runs
+  WHERE
+    matching_runs.id = ANY (sqlc.arg('run_IDs')::uuid[]) AND
+    matching_runs.runner_id IS NULL
   LIMIT 1
+  FOR UPDATE SKIP LOCKED
 )
-RETURNING runs.*;
+RETURNING *;
 
 -- name: UpdateRun :exec
 UPDATE runs

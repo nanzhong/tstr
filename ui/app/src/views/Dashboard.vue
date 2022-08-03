@@ -2,13 +2,12 @@
 import { inject, ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import Plotly from "plotly.js-dist/plotly";
-import { Run, RunResult } from "../api/common/v1/common.pb";
+import { LightningBoltIcon, EmojiHappyIcon, EmojiSadIcon, ExclamationCircleIcon } from '@heroicons/vue/outline';
+import { RunResult } from "../api/common/v1/common.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
 import { InitReq } from "../api/fetch.pb";
 import RunsTable from "../components/RunsTable.vue";
 import TestRunCountsTable from "../components/TestRunCountsTable.vue";
-import { ArrowSmDownIcon, ArrowSmUpIcon } from "@heroicons/vue/solid";
-import { w } from "@/dist/assets/index.bea62ac2";
 
 const initReq: InitReq = inject('dataInitReq')!;
 
@@ -83,27 +82,30 @@ runSummary.intervalStats?.forEach(s => {
     });
   });
 });
-console.log(testRunCounts)
 
 const totalRunCount = runCounts[RunResult.PASS] + runCounts[RunResult.FAIL] + runCounts[RunResult.ERROR] + runCounts[RunResult.UNKNOWN];
 const stats = {
   totalRuns: {
-    name: 'Test Runs Orchestrated',
+    name: 'Runs Scheduled',
+    icon: LightningBoltIcon,
     stat: totalRunCount,
     colour: 'text-indigo-500'
   },
   passRate: {
     name: 'Pass Rate',
+    icon: EmojiHappyIcon,
     stat: `${(runCounts[RunResult.PASS] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-green-500'
   },
   FailRate: {
     name: 'Fail Rate',
+    icon: EmojiSadIcon,
     stat: `${(runCounts[RunResult.FAIL] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-red-500'
   },
   errorRate: {
     name: 'Error Rate',
+    icon: ExclamationCircleIcon,
     stat: `${(runCounts[RunResult.ERROR] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-pink-500'
   },
@@ -136,63 +138,71 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
-    <div class="pb-3 border-b border-gray-500">
-      <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
-        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Summary</h2>
-        <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+  <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white rounded-lg shadow px-5 py-6 sm:px-6">
+      <div class="-mx-5 sm:-mx-6 px-5 sm:px-6 pb-5 border-b border-gray-200">
+        <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
+          <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Summary</h2>
+          <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+        </div>
       </div>
+
+      <dl class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-4 md:divide-y-0 md:divide-x">
+        <div v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
+          <dt>
+            <div class="absolute bg-indigo-500 rounded-md p-3">
+              <component :is="item.icon" class="h-6 w-6 text-white" aria-hidden="true" />
+            </div>
+            <p class="ml-16 text-sm font-medium text-gray-500">{{ item.name }}</p>
+          </dt>
+          <dd class="ml-16 flex items-baseline">
+            <p :class="[ item.colour ? item.colour: '', 'text-2xl font-semibold']">
+              {{ item.stat }}
+            </p>
+          </dd>
+        </div>
+      </dl>
     </div>
 
-    <dl
-      class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-4 md:divide-y-0 md:divide-x">
-      <div v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
-        <dt class="text-base font-normal text-gray-900">
-          {{ item.name }}
-        </dt>
-        <dd class="mt-1 flex justify-between items-baseline md:block lg:flex">
-          <div :class="[ item.colour ? item.colour: '', 'flex items-baseline text-2xl font-semibold']">
-            {{ item.stat }}
-          </div>
-        </dd>
+    <div class="mt-5 bg-white rounded-lg shadow px-5 py-6 sm:px-6">
+      <div class="-mx-5 sm:-mx-6 px-5 sm:px-6 pb-5 border-b border-gray-200">
+        <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
+          <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Runs</h2>
+          <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+        </div>
       </div>
-    </dl>
-  </div>
 
-  <div>
-    <div class="mt-5 pb-3 border-b border-gray-500">
-      <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
-        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Runs</h2>
-        <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
-      </div>
-    </div>
+      <div ref="recentRunsPlot"></div>
 
-    <div ref="recentRunsPlot"></div>
-
-    <div class="mt-2">
-      <h3 class="text-md font-medium text-gray-900">Last 5 Runs</h3>
-      <div class="mt-5 flex flex-col">
-        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-          <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-            <RunsTable :runs="runs!.slice(0, 5)" />
+      <div class="mt-2">
+        <h3 class="text-md font-medium text-gray-900">Last 5 Runs</h3>
+        <div class="mt-5 flex flex-col">
+          <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
+            <div class="inline-block min-w-full py-2 align-middle">
+              <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
+                <RunsTable :runs="runs!.slice(0, 5)" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div>
-    <div class="mt-5 pb-3 border-b border-gray-500">
-      <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
-        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Tests</h2>
-        <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+    <div class="mt-5 bg-white rounded-lg shadow px-5 py-6 sm:px-6">
+      <div class="-mx-5 sm:-mx-6 px-5 sm:px-6 pb-5 border-b border-gray-200">
+        <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
+          <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Tests</h2>
+          <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+        </div>
       </div>
-    </div>
 
-    <div class="mt-5 flex flex-col">
-      <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-          <TestRunCountsTable :testRunCounts="Object.values(testRunCounts)" />
+      <div class="mt-5 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
+          <div class="inline-block min-w-full py-2 align-middle">
+            <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
+              <TestRunCountsTable :testRunCounts="Object.values(testRunCounts)" />
+            </div>
+          </div>
         </div>
       </div>
     </div>

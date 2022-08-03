@@ -103,6 +103,7 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
 			Id:            s.ID.String(),
 			TestId:        s.TestID.String(),
+			TestName:      s.TestName,
 			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
 			RunnerId:      s.RunnerID.UUID.String(),
 			Result:        types.ToRunResult(s.Result.RunResult),
@@ -496,6 +497,7 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
 			Id:            s.ID.String(),
 			TestId:        s.TestID.String(),
+			TestName:      s.TestName,
 			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
 			RunnerId:      s.RunnerID.UUID.String(),
 			Result:        types.ToRunResult(s.Result.RunResult),

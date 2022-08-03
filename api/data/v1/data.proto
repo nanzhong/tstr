@@ -210,12 +210,13 @@ message RunSummary {
   string test_id = 2 [
     (validate.rules).string.uuid = true
   ];
-  tstr.common.v1.Test.RunConfig test_run_config = 3;
-  string runner_id = 4 [
+  string test_name = 3;
+  tstr.common.v1.Test.RunConfig test_run_config = 4;
+  string runner_id = 5 [
     (validate.rules).string = {ignore_empty: true, uuid: true}
   ];
-  tstr.common.v1.Run.Result result = 5;
-  map<string,string> result_data = 6;
+  tstr.common.v1.Run.Result result = 6;
+  map<string,string> result_data = 7;
 
   google.protobuf.Timestamp scheduled_at = 10 [
     (validate.rules).timestamp.required = true

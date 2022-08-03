@@ -271,8 +271,10 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 }
 
 const runSummaryForRunner = `-- name: RunSummaryForRunner :many
-SELECT id, test_id, test_run_config, runner_id, result, scheduled_at, started_at, finished_at, result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runs.runner_id = $1::uuid
 ORDER by runs.scheduled_at desc
 LIMIT $2
@@ -286,6 +288,7 @@ type RunSummaryForRunnerParams struct {
 type RunSummaryForRunnerRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
+	TestName      string
 	TestRunConfig pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
@@ -307,6 +310,7 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
+			&i.TestName,
 			&i.TestRunConfig,
 			&i.RunnerID,
 			&i.Result,
@@ -326,8 +330,10 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 }
 
 const runSummaryForTest = `-- name: RunSummaryForTest :many
-SELECT id, test_id, test_run_config, runner_id, result, scheduled_at, started_at, finished_at, result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runs.test_id = $1
 ORDER by runs.scheduled_at desc
 LIMIT $2
@@ -341,6 +347,7 @@ type RunSummaryForTestParams struct {
 type RunSummaryForTestRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
+	TestName      string
 	TestRunConfig pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
@@ -362,6 +369,7 @@ func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummary
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
+			&i.TestName,
 			&i.TestRunConfig,
 			&i.RunnerID,
 			&i.Result,

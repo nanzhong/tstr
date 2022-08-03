@@ -127,6 +127,7 @@ export type QueryRunnersResponse = {
 export type RunSummary = {
   id?: string
   testId?: string
+  testName?: string
   testRunConfig?: TstrCommonV1Common.TestRunConfig
   runnerId?: string
   result?: TstrCommonV1Common.RunResult

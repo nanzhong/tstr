@@ -751,6 +751,9 @@
         "testId": {
           "type": "string"
         },
+        "testName": {
+          "type": "string"
+        },
         "testRunConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },

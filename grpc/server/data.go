@@ -423,35 +423,13 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 
 	var pbRuns []*commonv1.Run
 	for _, run := range runs {
-		var runConfig db.TestRunConfig
-		if err := run.TestRunConfig.AssignTo(&runConfig); err != nil {
+		pbRun, err := types.ToProtoRun(&run)
+		if err != nil {
 			log.Error().
 				Err(err).
 				Stringer("run_id", run.ID).
-				Msg("failed to parse run config")
-			return nil, status.Error(codes.Internal, "failed to format run config")
-		}
-
-		var logs []db.RunLog
-		if err := run.Logs.AssignTo(&logs); err != nil {
-			log.Error().
-				Err(err).
-				Stringer("run_id", run.ID).
-				Msg("failed to parse logs")
-			return nil, status.Error(codes.Internal, "failed to format run logs")
-		}
-		pbRun := &commonv1.Run{
-			Id:            run.ID.String(),
-			TestId:        run.TestID.String(),
-			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
-			Result:        types.ToRunResult(run.Result.RunResult),
-			Logs:          types.ToRunLogs(logs),
-			ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
-			StartedAt:     types.ToProtoTimestamp(run.StartedAt),
-			FinishedAt:    types.ToProtoTimestamp(run.FinishedAt),
-		}
-		if run.RunnerID.Valid {
-			pbRun.RunnerId = run.RunnerID.UUID.String()
+				Msg("failed to format run")
+			return nil, status.Error(codes.Internal, "failed to format run")
 		}
 		pbRuns = append(pbRuns, pbRun)
 	}

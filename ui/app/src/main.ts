@@ -1,24 +1,41 @@
-import { createApp, defineAsyncComponent, VueElement } from "vue";
-import { Quasar } from "quasar";
+import { createApp, defineAsyncComponent } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
 
-import "@quasar/extras/material-icons/material-icons.css";
-import "quasar/src/css/index.sass";
+import "./index.css";
 
 const App = defineAsyncComponent(() => import("./App.vue"));
-const RunDetails = defineAsyncComponent( () => import("./views/run-details.vue"));
-const RunnerDetails = defineAsyncComponent( () => import("./views/runner-details.vue"));
-const Runners = defineAsyncComponent(() => import("./views/runners.vue"));
-const Runs = defineAsyncComponent(() => import("./views/runs.vue"));
-const TestDetails = defineAsyncComponent( () => import("./views/test-details.vue"));
-const Tests = defineAsyncComponent(() => import("./views/tests.vue"));
-const app = createApp(App);
+const Header = () => import("./components/Header.vue");
+const Dashboard = () => import("./views/Dashboard.vue");
+const RunDetails = () => import("./views/run-details.vue");
+const RunnerDetails = () => import("./views/runner-details.vue");
+const Runners = () => import("./views/runners.vue");
+const Runs = () => import("./views/runs.vue");
+const TestDetails = () => import("./views/test-details.vue");
+const Tests = () => import("./views/tests.vue");
 
+const app = createApp(App);
+app.provide("dataInitReq", { pathPrefix: "/api" });
 app.config.globalProperties.$initReq = {
   pathPrefix: "/api",
 };
 
 const routes = [
+  {
+    path: "/",
+    name: "home",
+    redirect: "/dashboard",
+  },
+  {
+    path: "/dashboard",
+    name: "dashboard",
+    props: { 
+      header: { title: "Dashboard" },
+    },
+    components: {
+      default: Dashboard,
+      header: Header,
+    },
+  },
   {
     path: "/tests",
     name: "tests",
@@ -49,11 +66,6 @@ const routes = [
     path: "/runners/:id",
     component: RunnerDetails,
   },
-  {
-    path: "/",
-    name: "home",
-    component: Tests,
-  },
 ];
 
 const router = createRouter({
@@ -62,9 +74,4 @@ const router = createRouter({
 });
 
 app.use(router);
-
-app.use(Quasar, {
-  plugins: {},
-});
-
 app.mount("#app");

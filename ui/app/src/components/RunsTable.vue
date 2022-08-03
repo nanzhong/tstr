@@ -42,7 +42,7 @@ tests.forEach(t => testMap.set(t.id!, t));
       </thead>
       <tbody class="divide-y divide-gray-200 bg-white">
         <tr v-for="run in runs" :key="run.id">
-          <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ testMap.get(run.testId!) ? testMap.get(run.testId!)!.name : run.testId }}</td>
+          <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"><router-link :to="{ name: 'test-details', params: { id: run.testId! } }">{{ testMap.get(run.testId!) ? testMap.get(run.testId!)!.name : run.testId }}</router-link></td>
           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><Labels :labels="run.labels!" /></td>
           <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
             <RunResult :result="run.result!" />

@@ -6,7 +6,9 @@ import { Run, RunResult } from "../api/common/v1/common.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
 import { InitReq } from "../api/fetch.pb";
 import RunsTable from "../components/RunsTable.vue";
+import TestRunCountsTable from "../components/TestRunCountsTable.vue";
 import { ArrowSmDownIcon, ArrowSmUpIcon } from "@heroicons/vue/solid";
+import { w } from "@/dist/assets/index.bea62ac2";
 
 const initReq: InitReq = inject('dataInitReq')!;
 
@@ -27,6 +29,15 @@ const runDataSeries = {
   [RunResult.PASS]: { name: "Pass", type: "bar", x: hourBuckets, y: Array(0), marker: { color: "#22c55e" } },
 }
 
+const runCounts = {
+  [RunResult.UNKNOWN]: 0,
+  [RunResult.FAIL]: 0,
+  [RunResult.ERROR]: 0,
+  [RunResult.PASS]: 0,
+}
+
+const testRunCounts: { [key: string]: { testID: string, testName: string, runCounts: { [key in RunResult]: number } } } = {};
+
 runSummary.intervalStats?.forEach(s => {
   hourBuckets.push(dayjs(s.startTime!).toISOString());
   s.resultCount?.forEach(c => {
@@ -36,13 +47,67 @@ runSummary.intervalStats?.forEach(s => {
       case RunResult.ERROR:
       case RunResult.UNKNOWN:
         runDataSeries[c.result!].y.push(c.count || 0);
+        runCounts[c.result!] += (c.count! || 0);
       break;
       default:
         runDataSeries[RunResult.UNKNOWN].y.push(c.count || 0);
+        runCounts[RunResult.UNKNOWN] += (c.count! || 0);
     }
   });
+
+  s.testCount?.forEach(c => {
+    if (!testRunCounts[c.testId!]) {
+      testRunCounts[c.testId!] = {
+        testID: c.testId!,
+        testName: c.testName!,
+        runCounts: {
+          [RunResult.UNKNOWN]: 0,
+          [RunResult.FAIL]: 0,
+          [RunResult.ERROR]: 0,
+          [RunResult.PASS]: 0,
+        }
+      }
+    }
+
+    c.resultCount?.forEach(rc => {
+      switch(rc.result!) {
+        case RunResult.PASS:
+        case RunResult.FAIL:
+        case RunResult.ERROR:
+        case RunResult.UNKNOWN:
+          testRunCounts[c.testId!].runCounts[rc.result!] += (rc.count! || 0);
+          break;
+        default:
+        testRunCounts[c.testId!].runCounts[RunResult.UNKNOWN] += (rc.count! || 0);
+      }
+    });
+  });
 });
-console.log(runDataSeries);
+console.log(testRunCounts)
+
+const totalRunCount = runCounts[RunResult.PASS] + runCounts[RunResult.FAIL] + runCounts[RunResult.ERROR] + runCounts[RunResult.UNKNOWN];
+const stats = {
+  totalRuns: {
+    name: 'Test Runs Orchestrated',
+    stat: totalRunCount,
+    colour: 'text-indigo-500'
+  },
+  passRate: {
+    name: 'Pass Rate',
+    stat: `${(runCounts[RunResult.PASS] / totalRunCount * 100).toFixed(2)}%`,
+    colour: 'text-green-500'
+  },
+  FailRate: {
+    name: 'Fail Rate',
+    stat: `${(runCounts[RunResult.FAIL] / totalRunCount * 100).toFixed(2)}%`,
+    colour: 'text-red-500'
+  },
+  errorRate: {
+    name: 'Error Rate',
+    stat: `${(runCounts[RunResult.ERROR] / totalRunCount * 100).toFixed(2)}%`,
+    colour: 'text-pink-500'
+  },
+}
 
 var data = [
   runDataSeries[RunResult.PASS],
@@ -65,12 +130,6 @@ var layout = {
 
 const recentRunsPlot = ref(null);
 
-const stats = [
-  { name: 'Test Runs Orchestrated', stat: '71,897', colour: 'text-indigo-500' },
-  { name: 'Pass Rate', stat: '58.16%', colour: 'text-green-500' },
-  { name: 'Error Rate', stat: '24.57%', colour: 'text-pink-500' },
-]
-
 onMounted(() => {
   Plotly.newPlot(recentRunsPlot.value, data, layout, { repsonsive: true, displayModeBar: false });
 })
@@ -86,7 +145,7 @@ onMounted(() => {
     </div>
 
     <dl
-      class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-3 md:divide-y-0 md:divide-x">
+      class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-4 md:divide-y-0 md:divide-x">
       <div v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
         <dt class="text-base font-normal text-gray-900">
           {{ item.name }}
@@ -103,7 +162,7 @@ onMounted(() => {
   <div>
     <div class="mt-5 pb-3 border-b border-gray-500">
       <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
-        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Recent Test Runs</h2>
+        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Runs</h2>
         <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
       </div>
     </div>
@@ -111,12 +170,29 @@ onMounted(() => {
     <div ref="recentRunsPlot"></div>
 
     <div class="mt-2">
-      <h3 class="text-lg font-medium text-gray-900">Last 5 Test Runs</h3>
+      <h3 class="text-md font-medium text-gray-900">Last 5 Runs</h3>
       <div class="mt-5 flex flex-col">
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
             <RunsTable :runs="runs!.slice(0, 5)" />
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="mt-5 pb-3 border-b border-gray-500">
+      <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
+        <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Tests</h2>
+        <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
+      </div>
+    </div>
+
+    <div class="mt-5 flex flex-col">
+      <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+          <TestRunCountsTable :testRunCounts="Object.values(testRunCounts)" />
         </div>
       </div>
     </div>

@@ -3,10 +3,13 @@ package server
 import (
 	"context"
 	"database/sql"
+	"sort"
+	"time"
 
 	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
 	"github.com/jackc/pgtype"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	datav1 "github.com/nanzhong/tstr/api/data/v1"
@@ -16,6 +19,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 type DataServer struct {
@@ -586,5 +590,102 @@ func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersReq
 
 	return &datav1.QueryRunnersResponse{
 		Runners: pbRunners,
+	}, nil
+}
+
+func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsRequest) (*datav1.SummarizeRunsResponse, error) {
+	var precision string
+	var interval time.Duration
+	switch r.Interval {
+	case datav1.SummarizeRunsRequest_HOUR:
+		precision = "hour"
+		interval = time.Hour
+	case datav1.SummarizeRunsRequest_DAY:
+		precision = "hour"
+		interval = 24 * time.Hour
+	case datav1.SummarizeRunsRequest_WEEK:
+		precision = "week"
+		interval = 7 * 24 * time.Hour
+	case datav1.SummarizeRunsRequest_UNKNOWN:
+		precision = "hour"
+		interval = time.Hour
+	}
+	startTime := r.ScheduledAfter.AsTime()
+	endTime := r.ScheduledAfter.AsTime().Add(r.Window.AsDuration())
+
+	var stats []*datav1.SummarizeRunsResponse_IntervalStats
+	err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		log := log.With().
+			Str("precision", precision).
+			Time("start_time", startTime).
+			Time("end_time", endTime).
+			Dur("duration", interval).
+			Logger()
+
+		resultBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownResult(ctx, tx, db.SummarizeRunsBreakdownResultParams{
+			Precision: precision,
+			StartTime: sql.NullTime{Valid: true, Time: startTime},
+			EndTime:   sql.NullTime{Valid: true, Time: endTime},
+			Interval:  interval.Seconds(),
+		})
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("failed to sumarize runs - result breakdown")
+			return err
+		}
+
+		testBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownTest(ctx, tx, db.SummarizeRunsBreakdownTestParams{
+			Precision: precision,
+			StartTime: sql.NullTime{Valid: true, Time: startTime},
+			EndTime:   sql.NullTime{Valid: true, Time: endTime},
+			Interval:  interval.Seconds(),
+		})
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("failed to sumarize runs - test breakdown")
+			return err
+		}
+
+		statsMap := map[time.Time]*datav1.SummarizeRunsResponse_IntervalStats{}
+		for _, result := range resultBreakdwon {
+			statsMap[result.IntervalsStart] = &datav1.SummarizeRunsResponse_IntervalStats{
+				StartTime: types.ToProtoTimestamp(result.IntervalsStart),
+				Duration:  durationpb.New(interval),
+				ResultCount: []*datav1.SummarizeRunsResponse_IntervalStats_ResultBreakdown{
+					{Result: commonv1.Run_PASS, Count: uint32(result.Pass)},
+					{Result: commonv1.Run_FAIL, Count: uint32(result.Fail)},
+					{Result: commonv1.Run_ERROR, Count: uint32(result.Error)},
+					{Result: commonv1.Run_UNKNOWN, Count: uint32(result.Unknown)},
+				},
+			}
+		}
+		for _, test := range testBreakdwon {
+			statsMap[test.IntervalsStart].TestCount = append(statsMap[test.IntervalsStart].TestCount, &datav1.SummarizeRunsResponse_IntervalStats_TestBreakdown{
+				TestId:   test.ID.String(),
+				TestName: test.Name,
+				ResultCount: []*datav1.SummarizeRunsResponse_IntervalStats_ResultBreakdown{
+					{Result: commonv1.Run_PASS, Count: uint32(test.Pass)},
+					{Result: commonv1.Run_FAIL, Count: uint32(test.Fail)},
+					{Result: commonv1.Run_ERROR, Count: uint32(test.Error)},
+					{Result: commonv1.Run_UNKNOWN, Count: uint32(test.Unknown)},
+				},
+			})
+		}
+
+		for _, v := range statsMap {
+			stats = append(stats, v)
+		}
+		sort.Slice(stats, func(i, j int) bool {
+			return stats[i].StartTime.AsTime().Before(stats[j].StartTime.AsTime())
+		})
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to summarize runs")
+	}
+	return &datav1.SummarizeRunsResponse{
+		IntervalStats: stats,
 	}, nil
 }

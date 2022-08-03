@@ -1888,6 +1888,304 @@ var _ interface {
 	ErrorName() string
 } = QueryRunsResponseValidationError{}
 
+// Validate checks the field values on SummarizeRunsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SummarizeRunsRequest) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SummarizeRunsRequest with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SummarizeRunsRequestMultiError, or nil if none found.
+func (m *SummarizeRunsRequest) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SummarizeRunsRequest) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetScheduledAfter()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SummarizeRunsRequestValidationError{
+					field:  "ScheduledAfter",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SummarizeRunsRequestValidationError{
+					field:  "ScheduledAfter",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetScheduledAfter()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SummarizeRunsRequestValidationError{
+				field:  "ScheduledAfter",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetWindow()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SummarizeRunsRequestValidationError{
+					field:  "Window",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SummarizeRunsRequestValidationError{
+					field:  "Window",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetWindow()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SummarizeRunsRequestValidationError{
+				field:  "Window",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	// no validation rules for Interval
+
+	if len(errors) > 0 {
+		return SummarizeRunsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+// SummarizeRunsRequestMultiError is an error wrapping multiple validation
+// errors returned by SummarizeRunsRequest.ValidateAll() if the designated
+// constraints aren't met.
+type SummarizeRunsRequestMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SummarizeRunsRequestMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SummarizeRunsRequestMultiError) AllErrors() []error { return m }
+
+// SummarizeRunsRequestValidationError is the validation error returned by
+// SummarizeRunsRequest.Validate if the designated constraints aren't met.
+type SummarizeRunsRequestValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SummarizeRunsRequestValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SummarizeRunsRequestValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SummarizeRunsRequestValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SummarizeRunsRequestValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SummarizeRunsRequestValidationError) ErrorName() string {
+	return "SummarizeRunsRequestValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SummarizeRunsRequestValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSummarizeRunsRequest.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SummarizeRunsRequestValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SummarizeRunsRequestValidationError{}
+
+// Validate checks the field values on SummarizeRunsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *SummarizeRunsResponse) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SummarizeRunsResponse with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// SummarizeRunsResponseMultiError, or nil if none found.
+func (m *SummarizeRunsResponse) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SummarizeRunsResponse) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetIntervalStats() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SummarizeRunsResponseValidationError{
+						field:  fmt.Sprintf("IntervalStats[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SummarizeRunsResponseValidationError{
+						field:  fmt.Sprintf("IntervalStats[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SummarizeRunsResponseValidationError{
+					field:  fmt.Sprintf("IntervalStats[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SummarizeRunsResponseMultiError(errors)
+	}
+
+	return nil
+}
+
+// SummarizeRunsResponseMultiError is an error wrapping multiple validation
+// errors returned by SummarizeRunsResponse.ValidateAll() if the designated
+// constraints aren't met.
+type SummarizeRunsResponseMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SummarizeRunsResponseMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SummarizeRunsResponseMultiError) AllErrors() []error { return m }
+
+// SummarizeRunsResponseValidationError is the validation error returned by
+// SummarizeRunsResponse.Validate if the designated constraints aren't met.
+type SummarizeRunsResponseValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SummarizeRunsResponseValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SummarizeRunsResponseValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SummarizeRunsResponseValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SummarizeRunsResponseValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SummarizeRunsResponseValidationError) ErrorName() string {
+	return "SummarizeRunsResponseValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SummarizeRunsResponseValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSummarizeRunsResponse.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SummarizeRunsResponseValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SummarizeRunsResponseValidationError{}
+
 // Validate checks the field values on GetRunnerRequest with the rules defined
 // in the proto definition for this message. If any rules are violated, the
 // first error encountered is returned, or nil if there are no violations.
@@ -2717,3 +3015,503 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = RunSummaryValidationError{}
+
+// Validate checks the field values on SummarizeRunsResponse_IntervalStats with
+// the rules defined in the proto definition for this message. If any rules
+// are violated, the first error encountered is returned, or nil if there are
+// no violations.
+func (m *SummarizeRunsResponse_IntervalStats) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on SummarizeRunsResponse_IntervalStats
+// with the rules defined in the proto definition for this message. If any
+// rules are violated, the result is a list of violation errors wrapped in
+// SummarizeRunsResponse_IntervalStatsMultiError, or nil if none found.
+func (m *SummarizeRunsResponse_IntervalStats) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SummarizeRunsResponse_IntervalStats) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if all {
+		switch v := interface{}(m.GetStartTime()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  "StartTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  "StartTime",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetStartTime()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SummarizeRunsResponse_IntervalStatsValidationError{
+				field:  "StartTime",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	if all {
+		switch v := interface{}(m.GetDuration()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  "Duration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  "Duration",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetDuration()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return SummarizeRunsResponse_IntervalStatsValidationError{
+				field:  "Duration",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
+
+	for idx, item := range m.GetResultCount() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+						field:  fmt.Sprintf("ResultCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+						field:  fmt.Sprintf("ResultCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  fmt.Sprintf("ResultCount[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	for idx, item := range m.GetTestCount() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+						field:  fmt.Sprintf("TestCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStatsValidationError{
+						field:  fmt.Sprintf("TestCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SummarizeRunsResponse_IntervalStatsValidationError{
+					field:  fmt.Sprintf("TestCount[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SummarizeRunsResponse_IntervalStatsMultiError(errors)
+	}
+
+	return nil
+}
+
+// SummarizeRunsResponse_IntervalStatsMultiError is an error wrapping multiple
+// validation errors returned by
+// SummarizeRunsResponse_IntervalStats.ValidateAll() if the designated
+// constraints aren't met.
+type SummarizeRunsResponse_IntervalStatsMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SummarizeRunsResponse_IntervalStatsMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SummarizeRunsResponse_IntervalStatsMultiError) AllErrors() []error { return m }
+
+// SummarizeRunsResponse_IntervalStatsValidationError is the validation error
+// returned by SummarizeRunsResponse_IntervalStats.Validate if the designated
+// constraints aren't met.
+type SummarizeRunsResponse_IntervalStatsValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SummarizeRunsResponse_IntervalStatsValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e SummarizeRunsResponse_IntervalStatsValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e SummarizeRunsResponse_IntervalStatsValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e SummarizeRunsResponse_IntervalStatsValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SummarizeRunsResponse_IntervalStatsValidationError) ErrorName() string {
+	return "SummarizeRunsResponse_IntervalStatsValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SummarizeRunsResponse_IntervalStatsValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSummarizeRunsResponse_IntervalStats.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SummarizeRunsResponse_IntervalStatsValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SummarizeRunsResponse_IntervalStatsValidationError{}
+
+// Validate checks the field values on
+// SummarizeRunsResponse_IntervalStats_ResultBreakdown with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *SummarizeRunsResponse_IntervalStats_ResultBreakdown) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// SummarizeRunsResponse_IntervalStats_ResultBreakdown with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError, or nil if
+// none found.
+func (m *SummarizeRunsResponse_IntervalStats_ResultBreakdown) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SummarizeRunsResponse_IntervalStats_ResultBreakdown) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for Result
+
+	// no validation rules for Count
+
+	if len(errors) > 0 {
+		return SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError(errors)
+	}
+
+	return nil
+}
+
+// SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError is an error
+// wrapping multiple validation errors returned by
+// SummarizeRunsResponse_IntervalStats_ResultBreakdown.ValidateAll() if the
+// designated constraints aren't met.
+type SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SummarizeRunsResponse_IntervalStats_ResultBreakdownMultiError) AllErrors() []error { return m }
+
+// SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError is the
+// validation error returned by
+// SummarizeRunsResponse_IntervalStats_ResultBreakdown.Validate if the
+// designated constraints aren't met.
+type SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) ErrorName() string {
+	return "SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSummarizeRunsResponse_IntervalStats_ResultBreakdown.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SummarizeRunsResponse_IntervalStats_ResultBreakdownValidationError{}
+
+// Validate checks the field values on
+// SummarizeRunsResponse_IntervalStats_TestBreakdown with the rules defined in
+// the proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *SummarizeRunsResponse_IntervalStats_TestBreakdown) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on
+// SummarizeRunsResponse_IntervalStats_TestBreakdown with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in
+// SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError, or nil if none found.
+func (m *SummarizeRunsResponse_IntervalStats_TestBreakdown) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *SummarizeRunsResponse_IntervalStats_TestBreakdown) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	// no validation rules for TestId
+
+	// no validation rules for TestName
+
+	for idx, item := range m.GetResultCount() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError{
+						field:  fmt.Sprintf("ResultCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError{
+						field:  fmt.Sprintf("ResultCount[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError{
+					field:  fmt.Sprintf("ResultCount[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError(errors)
+	}
+
+	return nil
+}
+
+// SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError is an error
+// wrapping multiple validation errors returned by
+// SummarizeRunsResponse_IntervalStats_TestBreakdown.ValidateAll() if the
+// designated constraints aren't met.
+type SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m SummarizeRunsResponse_IntervalStats_TestBreakdownMultiError) AllErrors() []error { return m }
+
+// SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError is the
+// validation error returned by
+// SummarizeRunsResponse_IntervalStats_TestBreakdown.Validate if the
+// designated constraints aren't met.
+type SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) Field() string {
+	return e.field
+}
+
+// Reason function returns reason value.
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) Reason() string {
+	return e.reason
+}
+
+// Cause function returns cause value.
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) Cause() error {
+	return e.cause
+}
+
+// Key function returns key value.
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) ErrorName() string {
+	return "SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sSummarizeRunsResponse_IntervalStats_TestBreakdown.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = SummarizeRunsResponse_IntervalStats_TestBreakdownValidationError{}

@@ -106,3 +106,53 @@ WHERE
   (sqlc.narg('finished_before')::timestamptz IS NULL OR finished_at < sqlc.narg('finished_before')::timestamptz) AND
   (sqlc.narg('finished_after')::timestamptz IS NULL OR finished_at > sqlc.narg('finished_after')::timestamptz)
 ORDER BY scheduled_at DESC;
+
+-- name: SummarizeRunsBreakdownResult :many
+WITH intervals AS (
+  SELECT generate_series(
+    date_trunc(sqlc.arg('precision'), sqlc.arg('start_time')::timestamptz) + make_interval(secs => sqlc.arg('interval')),
+    date_trunc(sqlc.arg('precision'), sqlc.arg('end_time')::timestamptz),
+    make_interval(secs => sqlc.arg('interval'))
+  ) as start
+)
+SELECT 
+  intervals.start::timestamptz,
+  COUNT(id) FILTER (WHERE result = 'pass') as pass,
+  COUNT(id) FILTER (WHERE result = 'fail') as fail,
+  COUNT(id) FILTER (WHERE result = 'error') as error,
+  COUNT(id) FILTER (WHERE result = 'unknown') as unknown
+FROM intervals
+LEFT JOIN runs
+ON
+  intervals.start = date_trunc(sqlc.arg('precision'), runs.scheduled_at) AND
+  runs.scheduled_at > sqlc.arg('start_time') AND
+  runs.scheduled_at < sqlc.arg('end_time')
+GROUP BY intervals.start
+ORDER BY intervals.start ASC;
+
+-- name: SummarizeRunsBreakdownTest :many
+WITH intervals AS (
+  SELECT generate_series(
+    date_trunc(sqlc.arg('precision'), sqlc.arg('start_time')::timestamptz) + make_interval(secs => sqlc.arg('interval')),
+    date_trunc(sqlc.arg('precision'), sqlc.arg('end_time')::timestamptz),
+    make_interval(secs => sqlc.arg('interval'))
+  ) as start
+)
+SELECT 
+  intervals.start::timestamptz,
+  tests.id,
+  tests.name,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'pass') as pass,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'fail') as fail,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'error') as error,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'unknown') as unknown
+FROM intervals
+LEFT JOIN runs
+ON
+  intervals.start = date_trunc(sqlc.arg('precision'), runs.scheduled_at) AND
+  runs.scheduled_at > sqlc.arg('start_time') AND
+  runs.scheduled_at < sqlc.arg('end_time')
+JOIN tests
+ON runs.test_id = tests.id
+GROUP BY intervals.start, tests.id
+ORDER BY intervals.start ASC;

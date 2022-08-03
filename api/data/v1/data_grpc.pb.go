@@ -28,6 +28,7 @@ type DataServiceClient interface {
 	QueryTestSuites(ctx context.Context, in *QueryTestSuitesRequest, opts ...grpc.CallOption) (*QueryTestSuitesResponse, error)
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
 	QueryRuns(ctx context.Context, in *QueryRunsRequest, opts ...grpc.CallOption) (*QueryRunsResponse, error)
+	SummarizeRuns(ctx context.Context, in *SummarizeRunsRequest, opts ...grpc.CallOption) (*SummarizeRunsResponse, error)
 	GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error)
 	QueryRunners(ctx context.Context, in *QueryRunnersRequest, opts ...grpc.CallOption) (*QueryRunnersResponse, error)
 }
@@ -94,6 +95,15 @@ func (c *dataServiceClient) QueryRuns(ctx context.Context, in *QueryRunsRequest,
 	return out, nil
 }
 
+func (c *dataServiceClient) SummarizeRuns(ctx context.Context, in *SummarizeRunsRequest, opts ...grpc.CallOption) (*SummarizeRunsResponse, error) {
+	out := new(SummarizeRunsResponse)
+	err := c.cc.Invoke(ctx, "/tstr.data.v1.DataService/SummarizeRuns", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dataServiceClient) GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error) {
 	out := new(GetRunnerResponse)
 	err := c.cc.Invoke(ctx, "/tstr.data.v1.DataService/GetRunner", in, out, opts...)
@@ -122,6 +132,7 @@ type DataServiceServer interface {
 	QueryTestSuites(context.Context, *QueryTestSuitesRequest) (*QueryTestSuitesResponse, error)
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
 	QueryRuns(context.Context, *QueryRunsRequest) (*QueryRunsResponse, error)
+	SummarizeRuns(context.Context, *SummarizeRunsRequest) (*SummarizeRunsResponse, error)
 	GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error)
 	QueryRunners(context.Context, *QueryRunnersRequest) (*QueryRunnersResponse, error)
 	mustEmbedUnimplementedDataServiceServer()
@@ -148,6 +159,9 @@ func (UnimplementedDataServiceServer) GetRun(context.Context, *GetRunRequest) (*
 }
 func (UnimplementedDataServiceServer) QueryRuns(context.Context, *QueryRunsRequest) (*QueryRunsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryRuns not implemented")
+}
+func (UnimplementedDataServiceServer) SummarizeRuns(context.Context, *SummarizeRunsRequest) (*SummarizeRunsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SummarizeRuns not implemented")
 }
 func (UnimplementedDataServiceServer) GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRunner not implemented")
@@ -276,6 +290,24 @@ func _DataService_QueryRuns_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DataService_SummarizeRuns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SummarizeRunsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DataServiceServer).SummarizeRuns(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tstr.data.v1.DataService/SummarizeRuns",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DataServiceServer).SummarizeRuns(ctx, req.(*SummarizeRunsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DataService_GetRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRunnerRequest)
 	if err := dec(in); err != nil {
@@ -342,6 +374,10 @@ var DataService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryRuns",
 			Handler:    _DataService_QueryRuns_Handler,
+		},
+		{
+			MethodName: "SummarizeRuns",
+			Handler:    _DataService_SummarizeRuns_Handler,
 		},
 		{
 			MethodName: "GetRunner",

@@ -208,6 +208,56 @@
         ]
       }
     },
+    "/data/v1/runs/summary": {
+      "get": {
+        "operationId": "DataService_SummarizeRuns",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SummarizeRunsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "scheduledAfter",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "window",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "UNKNOWN",
+              "HOUR",
+              "DAY",
+              "WEEK"
+            ],
+            "default": "UNKNOWN"
+          }
+        ],
+        "tags": [
+          "DataService"
+        ]
+      }
+    },
     "/data/v1/runs/{id}": {
       "get": {
         "operationId": "DataService_GetRun",
@@ -378,6 +428,35 @@
     }
   },
   "definitions": {
+    "IntervalStatsResultBreakdown": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "$ref": "#/definitions/RunResult"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "IntervalStatsTestBreakdown": {
+      "type": "object",
+      "properties": {
+        "testId": {
+          "type": "string"
+        },
+        "testName": {
+          "type": "string"
+        },
+        "resultCount": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IntervalStatsResultBreakdown"
+          }
+        }
+      }
+    },
     "LogOutput": {
       "type": "string",
       "enum": [
@@ -423,6 +502,40 @@
         "ERROR"
       ],
       "default": "UNKNOWN"
+    },
+    "SummarizeRunsRequestInterval": {
+      "type": "string",
+      "enum": [
+        "UNKNOWN",
+        "HOUR",
+        "DAY",
+        "WEEK"
+      ],
+      "default": "UNKNOWN"
+    },
+    "SummarizeRunsResponseIntervalStats": {
+      "type": "object",
+      "properties": {
+        "startTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "duration": {
+          "type": "string"
+        },
+        "resultCount": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IntervalStatsResultBreakdown"
+          }
+        },
+        "testCount": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IntervalStatsTestBreakdown"
+          }
+        }
+      }
     },
     "TestMatrix": {
       "type": "object",
@@ -695,6 +808,17 @@
         "lastHeartbeatAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "v1SummarizeRunsResponse": {
+      "type": "object",
+      "properties": {
+        "intervalStats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SummarizeRunsResponseIntervalStats"
+          }
         }
       }
     },

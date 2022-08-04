@@ -53,31 +53,10 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		return nil, status.Error(codes.Internal, "failed to get test")
 	}
 
-	var runConfig db.TestRunConfig
-	if err := test.RunConfig.AssignTo(&runConfig); err != nil {
-		log.Error().
-			Err(err).
-			Stringer("test_id", test.ID).
-			Msg("failed to parse run config")
-		return nil, status.Error(codes.Internal, "failed to format run config")
-	}
-	var labels map[string]string
-	if err := test.Labels.AssignTo(&labels); err != nil {
-		log.Error().
-			Err(err).
-			Stringer("test_id", test.ID).
-			Msg("failed to parse labels")
-		return nil, status.Error(codes.Internal, "failed to format labels")
-	}
-	pbTest := &commonv1.Test{
-		Id:           test.ID.String(),
-		Name:         test.Name,
-		Labels:       labels,
-		CronSchedule: test.CronSchedule.String,
-		RunConfig:    types.ToProtoTestRunConfig(runConfig),
-		NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
-		RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
-		UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
+	pbTest, err := types.ToProtoTest(&test)
+	if err != nil {
+		log.Error().Err(err).Stringer("test_id", test.ID).Msg("failed to format test")
+		return nil, status.Error(codes.Internal, "failed to format test")
 	}
 
 	runSummaries, err := s.dbQuerier.RunSummariesForTest(ctx, s.pgxPool, db.RunSummariesForTestParams{
@@ -172,32 +151,12 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 
 	var pbTests []*commonv1.Test
 	for _, test := range tests {
-		var labels map[string]string
-		if err := test.Labels.AssignTo(&labels); err != nil {
-			log.Error().
-				Err(err).
-				Stringer("test_id", test.ID).
-				Msg("failed to parse labels")
-			return nil, status.Error(codes.Internal, "failed to format labels")
+		pbTest, err := types.ToProtoTest(&test)
+		if err != nil {
+			log.Error().Err(err).Stringer("test_id", test.ID).Msg("failed to format test")
+			return nil, status.Error(codes.Internal, "failed to format test")
 		}
-		var runConfig db.TestRunConfig
-		if err := test.RunConfig.AssignTo(&runConfig); err != nil {
-			log.Error().
-				Err(err).
-				Stringer("test_id", test.ID).
-				Msg("failed to parse run config")
-			return nil, status.Error(codes.Internal, "failed to format run config")
-		}
-		pbTests = append(pbTests, &commonv1.Test{
-			Id:           test.ID.String(),
-			Name:         test.Name,
-			Labels:       labels,
-			CronSchedule: test.CronSchedule.String,
-			RunConfig:    types.ToProtoTestRunConfig(runConfig),
-			NextRunAt:    types.ToProtoTimestamp(test.NextRunAt),
-			RegisteredAt: types.ToProtoTimestamp(test.RegisteredAt),
-			UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
-		})
+		pbTests = append(pbTests, pbTest)
 	}
 
 	return &datav1.QueryTestsResponse{
@@ -323,21 +282,15 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 			Msg("failed to parse logs")
 		return nil, status.Error(codes.Internal, "failed to format run logs")
 	}
-	pbRun := &commonv1.Run{
-		Id:            run.ID.String(),
-		TestId:        run.TestID.String(),
-		TestRunConfig: types.ToProtoTestRunConfig(runConfig),
-		Result:        types.ToRunResult(run.Result.RunResult),
-		Logs:          types.ToRunLogs(logs),
-		ScheduledAt:   types.ToProtoTimestamp(run.ScheduledAt),
-		StartedAt:     types.ToProtoTimestamp(run.StartedAt),
-		FinishedAt:    types.ToProtoTimestamp(run.FinishedAt),
-		ResultData:    types.ToProtoResultData(run.ResultData),
-	}
-	if run.RunnerID.Valid {
-		pbRun.RunnerId = run.RunnerID.UUID.String()
-	}
 
+	pbRun, err := types.ToProtoRun(&run)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Stringer("run_id", run.ID).
+			Msg("failed to format run")
+		return nil, status.Error(codes.Internal, "failed to format run")
+	}
 	return &datav1.GetRunResponse{
 		Run: pbRun,
 	}, nil

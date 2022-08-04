@@ -80,10 +80,10 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 		UpdatedAt:    types.ToProtoTimestamp(test.UpdatedAt),
 	}
 
-	runSummaries, err := s.dbQuerier.RunSummaryForTest(ctx, s.pgxPool, db.RunSummaryForTestParams{
+	runSummaries, err := s.dbQuerier.RunSummariesForTest(ctx, s.pgxPool, db.RunSummariesForTestParams{
 		TestID: test.ID,
 		// TODO Configure default + query param handling
-		Limit: 200,
+		ScheduledAfter: sql.NullTime{Valid: true, Time: s.clock.Now().Add(-24 * time.Hour)},
 	})
 	if err != nil {
 		log.Error().Err(err).Stringer("test_id", test.ID).Msg("failed to summarize runs for test")
@@ -474,10 +474,10 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 		LastHeartbeatAt:          types.ToProtoTimestamp(runner.LastHeartbeatAt),
 	}
 
-	runSummaries, err := s.dbQuerier.RunSummaryForRunner(ctx, s.pgxPool, db.RunSummaryForRunnerParams{
-		RunnerID: runner.ID,
+	runSummaries, err := s.dbQuerier.RunSummariesForRunner(ctx, s.pgxPool, db.RunSummariesForRunnerParams{
+		RunnerID: uuid.NullUUID{Valid: true, UUID: runner.ID},
 		// TODO Configure default + query param handling
-		Limit: 200,
+		ScheduledAfter: sql.NullTime{Valid: true, Time: s.clock.Now().Add(-24 * time.Hour)},
 	})
 	if err != nil {
 		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to summarize runs for runner")

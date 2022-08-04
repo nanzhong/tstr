@@ -270,22 +270,21 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 	return err
 }
 
-const runSummaryForRunner = `-- name: RunSummaryForRunner :many
+const runSummariesForRunner = `-- name: RunSummariesForRunner :many
 SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
-WHERE runs.runner_id = $1::uuid
+WHERE runs.runner_id = $1 AND runs.scheduled_at > $2
 ORDER by runs.scheduled_at desc
-LIMIT $2
 `
 
-type RunSummaryForRunnerParams struct {
-	RunnerID uuid.UUID
-	Limit    int32
+type RunSummariesForRunnerParams struct {
+	RunnerID       uuid.NullUUID
+	ScheduledAfter sql.NullTime
 }
 
-type RunSummaryForRunnerRow struct {
+type RunSummariesForRunnerRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
 	TestName      string
@@ -298,15 +297,15 @@ type RunSummaryForRunnerRow struct {
 	ResultData    pgtype.JSONB
 }
 
-func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error) {
-	rows, err := db.Query(ctx, runSummaryForRunner, arg.RunnerID, arg.Limit)
+func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSummariesForRunnerParams) ([]RunSummariesForRunnerRow, error) {
+	rows, err := db.Query(ctx, runSummariesForRunner, arg.RunnerID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RunSummaryForRunnerRow
+	var items []RunSummariesForRunnerRow
 	for rows.Next() {
-		var i RunSummaryForRunnerRow
+		var i RunSummariesForRunnerRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
@@ -329,22 +328,21 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 	return items, nil
 }
 
-const runSummaryForTest = `-- name: RunSummaryForTest :many
+const runSummariesForTest = `-- name: RunSummariesForTest :many
 SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
-WHERE runs.test_id = $1
+WHERE runs.test_id = $1 AND runs.scheduled_at > $2
 ORDER by runs.scheduled_at desc
-LIMIT $2
 `
 
-type RunSummaryForTestParams struct {
-	TestID uuid.UUID
-	Limit  int32
+type RunSummariesForTestParams struct {
+	TestID         uuid.UUID
+	ScheduledAfter sql.NullTime
 }
 
-type RunSummaryForTestRow struct {
+type RunSummariesForTestRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
 	TestName      string
@@ -357,15 +355,15 @@ type RunSummaryForTestRow struct {
 	ResultData    pgtype.JSONB
 }
 
-func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error) {
-	rows, err := db.Query(ctx, runSummaryForTest, arg.TestID, arg.Limit)
+func (q *Queries) RunSummariesForTest(ctx context.Context, db DBTX, arg RunSummariesForTestParams) ([]RunSummariesForTestRow, error) {
+	rows, err := db.Query(ctx, runSummariesForTest, arg.TestID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RunSummaryForTestRow
+	var items []RunSummariesForTestRow
 	for rows.Next() {
-		var i RunSummaryForTestRow
+		var i RunSummariesForTestRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,

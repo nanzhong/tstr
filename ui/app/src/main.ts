@@ -1,12 +1,11 @@
 import { createApp, defineAsyncComponent } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
-
+import App from "./App.vue";
 import "./index.css";
 
-const App = defineAsyncComponent(() => import("./App.vue"));
 const Header = () => import("./components/Header.vue");
 const Dashboard = () => import("./views/Dashboard.vue");
-const RunDetails = () => import("./views/run-details.vue");
+const RunDetails = () => import("./views/RunDetails.vue");
 const RunnerDetails = () => import("./views/runner-details.vue");
 const Runners = () => import("./views/runners.vue");
 const Runs = () => import("./views/runs.vue");
@@ -65,7 +64,13 @@ const routes = [
   {
     name: "run-details",
     path: "/runs/:id",
-    component: RunDetails,
+    props: {
+      header: { title: "Run Details" }
+    },
+    components: {
+      default: RunDetails,
+      header: Header,
+    }
   },
   {
     name: "runner-details",

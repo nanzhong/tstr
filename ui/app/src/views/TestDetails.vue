@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { inject } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { InitReq } from "../api/fetch.pb";
-import { DataService, RunSummary } from "../api/data/v1/data.pb";
+import { DataService } from "../api/data/v1/data.pb";
 import RunSummariesPlot from "../components/RunSummariesPlot.vue";
 import Labels from "../components/Labels.vue";
 import MatrixLabels from "../components/MatrixLabels.vue";

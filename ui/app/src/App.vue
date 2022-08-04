@@ -76,9 +76,9 @@ const currentRoute = computed((path) => {
     <main class="-mt-32">
       <router-view v-slot="{ Component }">
         <template v-if="Component">
-          <Transition name="fade">
+          <Transition>
             <KeepAlive>
-              <Suspense>
+              <Suspense timeout="0">
                 <div>
                   <component :is="Component"></component>
                 </div>

@@ -405,26 +405,13 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 		return nil, status.Error(codes.Internal, "failed to get runner")
 	}
 
-	var (
-		acceptSelectors map[string]string
-		rejectSelectors map[string]string
-	)
-	if err := runner.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
-		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format accept label selectors")
-		return nil, status.Error(codes.Internal, "failed to format accept label selectors")
-	}
-	if err := runner.RejectTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
-		log.Error().Err(err).Stringer("runner_id", runner.ID).Msg("failed to format reject label selectors")
-		return nil, status.Error(codes.Internal, "failed to format reject label selectors")
-	}
-
-	pbRunner := &commonv1.Runner{
-		Id:                       runner.ID.String(),
-		Name:                     runner.Name,
-		AcceptTestLabelSelectors: acceptSelectors,
-		RejectTestLabelSelectors: rejectSelectors,
-		RegisteredAt:             types.ToProtoTimestamp(runner.RegisteredAt),
-		LastHeartbeatAt:          types.ToProtoTimestamp(runner.LastHeartbeatAt),
+	pbRunner, err := types.ToProtoRunner(&runner)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Stringer("runner_id", runner.ID).
+			Msg("failed to format runner")
+		return nil, status.Error(codes.Internal, "failed to format runner")
 	}
 
 	runSummaries, err := s.dbQuerier.RunSummariesForRunner(ctx, s.pgxPool, db.RunSummariesForRunnerParams{
@@ -492,33 +479,16 @@ func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersReq
 	}
 	var pbRunners []*commonv1.Runner
 	for _, r := range runners {
-		var (
-			acceptSelectors map[string]string
-			rejectSelectors map[string]string
-		)
-		if err := r.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
+		pbRunner, err := types.ToProtoRunner(&r)
+		if err != nil {
 			log.Error().
 				Err(err).
 				Stringer("runner_id", r.ID).
-				Msg("failed to format accept selectors")
-			return nil, status.Error(codes.Internal, "failed to format accept selectorr")
-		}
-		if err := r.RejectTestLabelSelectors.AssignTo(&rejectSelectors); err != nil {
-			log.Error().
-				Err(err).
-				Stringer("runner_id", r.ID).
-				Msg("failed to format reject selectors")
-			return nil, status.Error(codes.Internal, "failed to format reject selectorr")
+				Msg("failed to format runner")
+			return nil, status.Error(codes.Internal, "failed to format runner")
 		}
 
-		pbRunners = append(pbRunners, &commonv1.Runner{
-			Id:                       r.ID.String(),
-			Name:                     r.Name,
-			AcceptTestLabelSelectors: acceptSelectors,
-			RejectTestLabelSelectors: rejectSelectors,
-			RegisteredAt:             types.ToProtoTimestamp(r.RegisteredAt),
-			LastHeartbeatAt:          types.ToProtoTimestamp(r.LastHeartbeatAt),
-		})
+		pbRunners = append(pbRunners, pbRunner)
 	}
 
 	return &datav1.QueryRunnersResponse{

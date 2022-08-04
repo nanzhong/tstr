@@ -25,8 +25,6 @@ props.test.results.forEach(r => {
     runSeries[result].y.push(count);
   }
 });
-console.log(props.test)
-console.log(runSeries);
 
 const layout = {
   barmode: 'stack',

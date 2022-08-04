@@ -8,7 +8,7 @@ const Dashboard = () => import("./views/Dashboard.vue");
 const RunDetails = () => import("./views/RunDetails.vue");
 const RunnerDetails = () => import("./views/runner-details.vue");
 const Runners = () => import("./views/runners.vue");
-const Runs = () => import("./views/runs.vue");
+const Runs = () => import("./views/Runs.vue");
 const TestDetails = () => import("./views/TestDetails.vue");
 const Tests = () => import("./views/Tests.vue");
 
@@ -49,7 +49,13 @@ const routes = [
   {
     path: "/runs",
     name: "runs",
-    component: Runs,
+    props: {
+      header: { title: "Runs" }
+    },
+    components: {
+      default: Runs,
+      header: Header,
+    }
   },
   {
     path: "/runners",

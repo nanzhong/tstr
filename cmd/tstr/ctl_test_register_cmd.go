@@ -82,9 +82,10 @@ var (
 					}
 
 					if test.Matrix == nil {
-						test.Matrix = &commonv1.Test_Matrix{
-							Labels: make(map[string]*commonv1.Test_Matrix_LabelValues),
-						}
+						test.Matrix = &commonv1.Test_Matrix{}
+					}
+					if test.Matrix.Labels == nil {
+						test.Matrix.Labels = make(map[string]*commonv1.Test_Matrix_LabelValues)
 					}
 					if test.Matrix.Labels[kv[0]] == nil {
 						test.Matrix.Labels[kv[0]] = &commonv1.Test_Matrix_LabelValues{}

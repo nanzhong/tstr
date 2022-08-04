@@ -78,10 +78,8 @@ const currentRoute = computed((path) => {
         <template v-if="Component">
           <Transition name="fade">
             <KeepAlive>
-              <Suspense timeout="0">
-                <div>
-                  <component :is="Component" :key="route.path" />
-                </div>
+              <Suspense>
+                <component :is="Component" :key="route.path" />
 
                 <template #fallback>
                   <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { inject } from "vue";
 import dayjs from "dayjs";
 import { InitReq } from "../api/fetch.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";

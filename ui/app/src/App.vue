@@ -74,13 +74,13 @@ const currentRoute = computed((path) => {
     </div>
 
     <main class="-mt-32">
-      <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
         <template v-if="Component">
-          <Transition>
+          <Transition name="fade">
             <KeepAlive>
               <Suspense timeout="0">
                 <div>
-                  <component :is="Component"></component>
+                  <component :is="Component" :key="route.path" />
                 </div>
 
                 <template #fallback>

@@ -10,7 +10,7 @@ const RunnerDetails = () => import("./views/runner-details.vue");
 const Runners = () => import("./views/runners.vue");
 const Runs = () => import("./views/runs.vue");
 const TestDetails = () => import("./views/TestDetails.vue");
-const Tests = () => import("./views/tests.vue");
+const Tests = () => import("./views/Tests.vue");
 
 const app = createApp(App);
 app.provide("dataInitReq", { pathPrefix: "/api" });
@@ -38,7 +38,13 @@ const routes = [
   {
     path: "/tests",
     name: "tests",
-    component: Tests,
+    props: {
+      header: { title: "Tests" },
+    },
+    components: {
+      default: Tests,
+      header: Header,
+    }
   },
   {
     path: "/runs",

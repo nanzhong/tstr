@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
-import { MenuIcon, XIcon } from '@heroicons/vue/outline';
+import { SparklesIcon, MenuIcon, XIcon } from '@heroicons/vue/outline';
 
 const navigation = [
   { name: 'Dashboard', route: 'dashboard' },
@@ -27,8 +27,10 @@ const currentRoute = computed((path) => {
             <div class="flex items-center justify-between h-16 px-4 sm:px-0">
               <div class="flex items-center">
                 <div class="flex-shrink-0">
-                  <img class="h-8 w-8" src="https://tailwindui.com/img/logos/workflow-mark-indigo-500.svg"
-                    alt="Workflow" />
+                  <SparklesIcon class="h-8 w-8 text-white" />
+                </div>
+                <div class="flex-shrink-0">
+                  <span class="ml-4 text-white text-xl font-extrabold">tstr</span>
                 </div>
                 <div class="hidden md:block">
                   <div class="ml-10 flex items-baseline space-x-4">
@@ -72,18 +74,18 @@ const currentRoute = computed((path) => {
     </div>
 
     <main class="-mt-32">
-      <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
-        <div class="bg-white rounded-lg shadow px-5 py-6 sm:px-6">
-          <router-view v-slot="{ Component }">
-            <template v-if="Component">
-              <Transition name="fade">
-                <KeepAlive>
-                  <Suspense>
-                    <div>
-                      <component :is="Component"></component>
-                    </div>
+      <router-view v-slot="{ Component }">
+        <template v-if="Component">
+          <Transition name="fade">
+            <KeepAlive>
+              <Suspense>
+                <div>
+                  <component :is="Component"></component>
+                </div>
 
-                    <template #fallback>
+                <template #fallback>
+                  <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">
+                    <div class="bg-white rounded-lg shadow px-5 py-6 sm:px-6">
                       <div class="flex justify-center items-center">
                         <div role="status">
                           <svg aria-hidden="true"
@@ -99,14 +101,14 @@ const currentRoute = computed((path) => {
                         </div>
                         <span>Loading...</span>
                       </div>
-                    </template>
-                  </Suspense>
-                </KeepAlive>
-              </Transition>
-            </template>
-          </router-view>
-        </div>
-      </div>
+                    </div>
+                  </div>
+                </template>
+              </Suspense>
+            </KeepAlive>
+          </Transition>
+        </template>
+      </router-view>
     </main>
   </div>
 </template>

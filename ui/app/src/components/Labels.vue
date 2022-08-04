@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const props = defineProps<{
-  labels: { [key: string]: string }
+defineProps<{
+  labels: { [key: string]: string } | undefined
 }>();
 </script>
 

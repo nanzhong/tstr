@@ -10,7 +10,7 @@ const RunDetails = () => import("./views/run-details.vue");
 const RunnerDetails = () => import("./views/runner-details.vue");
 const Runners = () => import("./views/runners.vue");
 const Runs = () => import("./views/runs.vue");
-const TestDetails = () => import("./views/test-details.vue");
+const TestDetails = () => import("./views/TestDetails.vue");
 const Tests = () => import("./views/tests.vue");
 
 const app = createApp(App);
@@ -54,7 +54,13 @@ const routes = [
   {
     name: "test-details",
     path: "/tests/:id",
-    component: TestDetails,
+    props: {
+      header: { title: "Test Details" }
+    },
+    components: {
+      default: TestDetails,
+      header: Header,
+    }
   },
   {
     name: "run-details",

@@ -6,7 +6,7 @@ import "./index.css";
 const Header = () => import("./components/Header.vue");
 const Dashboard = () => import("./views/Dashboard.vue");
 const RunDetails = () => import("./views/RunDetails.vue");
-const RunnerDetails = () => import("./views/runner-details.vue");
+const RunnerDetails = () => import("./views/RunnerDetails.vue");
 const Runners = () => import("./views/Runners.vue");
 const Runs = () => import("./views/Runs.vue");
 const TestDetails = () => import("./views/TestDetails.vue");
@@ -93,7 +93,13 @@ const routes = [
   {
     name: "runner-details",
     path: "/runners/:id",
-    component: RunnerDetails,
+    props: {
+      header: { title: "Runner Details" }
+    },
+    components: {
+      default: RunnerDetails,
+      header: Header,
+    }
   },
 ];
 

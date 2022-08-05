@@ -27,30 +27,31 @@ const runSummaries = testData.runSummaries!;
           <p class="ml-2 mt-1 text-sm text-gray-500 truncate">{{ test. id }}</p>
         </div>
       </div>
+
       <div class="mt-5">
         <dl class="grid grid-cols-1 gap-x-2 gap-y-4 mb-4 sm:grid-cols-3">
-          <div class="sm:col-span-1">
+          <div class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Container Image</dt>
             <dd class="mt-1 text-sm text-gray-900"><pre>{{ test.runConfig?.containerImage }}</pre></dd>
           </div>
-          <div v-if="test.runConfig?.command" class="sm:col-span-1">
+          <div v-if="test.runConfig?.command" class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Command</dt>
             <dd class="mt-1 text-sm text-gray-900"><pre>{{ test.runConfig?.command }}</pre></dd>
           </div>
-          <div v-if="test.runConfig?.args"  class="sm:col-span-1">
+          <div v-if="test.runConfig?.args"  class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Args</dt>
             <dd class="mt-1 text-sm text-gray-900">
               <pre><span v-for="(arg, i) in test.runConfig?.args">"{{ arg }}"<span v-if="i < test.runConfig?.args.length - 1">, </span></span></pre></dd>
           </div>
-          <div v-if="test.cronSchedule" class="sm:col-span-1">
+          <div v-if="test.cronSchedule" class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Cron Schedule</dt>
             <dd class="mt-1 text-sm text-gray-900"><pre>{{ test.cronSchedule }}</pre></dd>
           </div>
-          <div lass="sm:col-span-1">
+          <div lass="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Next Run At</dt>
             <dd class="mt-1 text-sm text-gray-900"><pre>{{ dayjs(test.nextRunAt!).fromNow() }}</pre></dd>
           </div>
-          <div v-if="test.runConfig?.timeout" class="sm:col-span-1">
+          <div v-if="test.runConfig?.timeout" class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Timeout</dt>
             <dd class="mt-1 text-sm text-gray-900"><pre>{{ test.runConfig?.timeout }}</pre></dd>
           </div>

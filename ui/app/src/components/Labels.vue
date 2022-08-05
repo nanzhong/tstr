@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineProps<{
-  labels: { [key: string]: string } | undefined
+  labels: { [key: string]: string } | null
 }>();
 </script>
 

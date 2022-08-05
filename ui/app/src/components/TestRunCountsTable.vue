@@ -10,12 +10,12 @@ const props = defineProps<{
   <table class="min-w-full divide-y divide-gray-300">
     <thead class="bg-gray-50">
       <tr>
-        <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold uppercase text-gray-500 sm:pl-6">Test</th>
-        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold uppercase text-gray-500">Scheduled</th>
-        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold uppercase text-gray-500">Pass</th>
-        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold uppercase text-gray-500">Fail</th>
-        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold uppercase text-gray-500">Error</th>
-        <th scope="col" class="py-3.5 pl-3 pr-4 text-left text-sm font-semibold uppercase text-gray-500 sm:pr-6">Unknown</th>
+        <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-500 sm:pl-6">Test</th>
+        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold text-gray-500">Scheduled</th>
+        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold text-gray-500">Pass</th>
+        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold text-gray-500">Fail</th>
+        <th scope="col" class="px-2 py-3.5 text-left text-sm font-semibold text-gray-500">Error</th>
+        <th scope="col" class="py-3.5 pl-3 pr-4 text-left text-sm font-semibold text-gray-500 sm:pr-6">Pending</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-gray-200 bg-white">

@@ -8,6 +8,14 @@ import * as TstrCommonV1Common from "../../common/v1/common.pb"
 import * as fm from "../../fetch.pb"
 import * as GoogleProtobufDuration from "../../google/protobuf/duration.pb"
 import * as GoogleProtobufTimestamp from "../../google/protobuf/timestamp.pb"
+
+export enum SummarizeRunsRequestInterval {
+  UNKNOWN = "UNKNOWN",
+  HOUR = "HOUR",
+  DAY = "DAY",
+  WEEK = "WEEK",
+}
+
 export type GetTestRequest = {
   id?: string
 }
@@ -70,6 +78,34 @@ export type QueryRunsResponse = {
   runs?: TstrCommonV1Common.Run[]
 }
 
+export type SummarizeRunsRequest = {
+  scheduledAfter?: GoogleProtobufTimestamp.Timestamp
+  window?: GoogleProtobufDuration.Duration
+  interval?: SummarizeRunsRequestInterval
+}
+
+export type SummarizeRunsResponseIntervalStatsResultBreakdown = {
+  result?: TstrCommonV1Common.RunResult
+  count?: number
+}
+
+export type SummarizeRunsResponseIntervalStatsTestBreakdown = {
+  testId?: string
+  testName?: string
+  resultCount?: SummarizeRunsResponseIntervalStatsResultBreakdown[]
+}
+
+export type SummarizeRunsResponseIntervalStats = {
+  startTime?: GoogleProtobufTimestamp.Timestamp
+  duration?: GoogleProtobufDuration.Duration
+  resultCount?: SummarizeRunsResponseIntervalStatsResultBreakdown[]
+  testCount?: SummarizeRunsResponseIntervalStatsTestBreakdown[]
+}
+
+export type SummarizeRunsResponse = {
+  intervalStats?: SummarizeRunsResponseIntervalStats[]
+}
+
 export type GetRunnerRequest = {
   id?: string
 }
@@ -91,7 +127,9 @@ export type QueryRunnersResponse = {
 export type RunSummary = {
   id?: string
   testId?: string
+  testName?: string
   testRunConfig?: TstrCommonV1Common.TestRunConfig
+  labels?: {[key: string]: string}
   runnerId?: string
   result?: TstrCommonV1Common.RunResult
   resultData?: {[key: string]: string}
@@ -118,6 +156,9 @@ export class DataService {
   }
   static QueryRuns(req: QueryRunsRequest, initReq?: fm.InitReq): Promise<QueryRunsResponse> {
     return fm.fetchReq<QueryRunsRequest, QueryRunsResponse>(`/data/v1/runs?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+  }
+  static SummarizeRuns(req: SummarizeRunsRequest, initReq?: fm.InitReq): Promise<SummarizeRunsResponse> {
+    return fm.fetchReq<SummarizeRunsRequest, SummarizeRunsResponse>(`/data/v1/runs/summary?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
   static GetRunner(req: GetRunnerRequest, initReq?: fm.InitReq): Promise<GetRunnerResponse> {
     return fm.fetchReq<GetRunnerRequest, GetRunnerResponse>(`/data/v1/runners/${req["id"]}?${fm.renderURLSearchParams(req, ["id"])}`, {...initReq, method: "GET"})

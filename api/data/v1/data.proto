@@ -46,6 +46,12 @@ service DataService {
     };
   };
 
+  rpc SummarizeRuns(SummarizeRunsRequest) returns (SummarizeRunsResponse) {
+    option (google.api.http) = {
+      get: "/data/v1/runs/summary"
+    };
+  };
+
   rpc GetRunner(GetRunnerRequest) returns (GetRunnerResponse) {
     option (google.api.http) = {
       get: "/data/v1/runners/{id}"
@@ -141,6 +147,40 @@ message QueryRunsResponse {
   repeated tstr.common.v1.Run runs = 1;
 }
 
+message SummarizeRunsRequest {
+  enum Interval {
+    UNKNOWN = 0;
+    HOUR = 1;
+    DAY = 2;
+    WEEK = 3;
+  }
+  google.protobuf.Timestamp scheduled_after = 1;
+  google.protobuf.Duration window = 2;
+  Interval interval = 3;
+}
+
+message SummarizeRunsResponse {
+  message IntervalStats {
+    message ResultBreakdown {
+      tstr.common.v1.Run.Result result = 1;
+      uint32 count = 2;
+    }
+
+    message TestBreakdown {
+      string test_id = 1;
+      string test_name = 2;
+      repeated ResultBreakdown result_count = 3;
+    }
+
+    google.protobuf.Timestamp start_time = 1;
+    google.protobuf.Duration duration = 2;
+    repeated ResultBreakdown result_count = 3;
+    repeated TestBreakdown test_count = 4;
+  }
+
+  repeated IntervalStats interval_stats = 1;
+}
+
 message GetRunnerRequest {
   string id = 1 [
     (validate.rules).string.uuid = true
@@ -170,12 +210,14 @@ message RunSummary {
   string test_id = 2 [
     (validate.rules).string.uuid = true
   ];
-  tstr.common.v1.Test.RunConfig test_run_config = 3;
-  string runner_id = 4 [
+  string test_name = 3;
+  tstr.common.v1.Test.RunConfig test_run_config = 4;
+  map<string, string> labels = 5;
+  string runner_id = 6 [
     (validate.rules).string = {ignore_empty: true, uuid: true}
   ];
-  tstr.common.v1.Run.Result result = 5;
-  map<string,string> result_data = 6;
+  tstr.common.v1.Run.Result result = 7;
+  map<string, string> result_data = 8;
 
   google.protobuf.Timestamp scheduled_at = 10 [
     (validate.rules).timestamp.required = true

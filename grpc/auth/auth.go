@@ -54,6 +54,7 @@ var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
 	"/tstr.data.v1.DataService/QueryTestSuites": {commonv1.AccessToken_DATA},
 	"/tstr.data.v1.DataService/GetRun":          {commonv1.AccessToken_DATA},
 	"/tstr.data.v1.DataService/QueryRuns":       {commonv1.AccessToken_DATA},
+	"/tstr.data.v1.DataService/SummarizeRuns":   {commonv1.AccessToken_DATA},
 	"/tstr.data.v1.DataService/GetRunner":       {commonv1.AccessToken_DATA},
 	"/tstr.data.v1.DataService/QueryRunners":    {commonv1.AccessToken_DATA},
 }

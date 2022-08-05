@@ -270,23 +270,26 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 	return err
 }
 
-const runSummaryForRunner = `-- name: RunSummaryForRunner :many
-SELECT id, test_id, test_run_config, runner_id, result, scheduled_at, started_at, finished_at, result_data
+const runSummariesForRunner = `-- name: RunSummariesForRunner :many
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
-WHERE runs.runner_id = $1::uuid
+JOIN tests
+ON runs.test_id = tests.id
+WHERE runs.runner_id = $1 AND runs.scheduled_at > $2
 ORDER by runs.scheduled_at desc
-LIMIT $2
 `
 
-type RunSummaryForRunnerParams struct {
-	RunnerID uuid.UUID
-	Limit    int32
+type RunSummariesForRunnerParams struct {
+	RunnerID       uuid.NullUUID
+	ScheduledAfter sql.NullTime
 }
 
-type RunSummaryForRunnerRow struct {
+type RunSummariesForRunnerRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
+	TestName      string
 	TestRunConfig pgtype.JSONB
+	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	ScheduledAt   sql.NullTime
@@ -295,19 +298,21 @@ type RunSummaryForRunnerRow struct {
 	ResultData    pgtype.JSONB
 }
 
-func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error) {
-	rows, err := db.Query(ctx, runSummaryForRunner, arg.RunnerID, arg.Limit)
+func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSummariesForRunnerParams) ([]RunSummariesForRunnerRow, error) {
+	rows, err := db.Query(ctx, runSummariesForRunner, arg.RunnerID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RunSummaryForRunnerRow
+	var items []RunSummariesForRunnerRow
 	for rows.Next() {
-		var i RunSummaryForRunnerRow
+		var i RunSummariesForRunnerRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
+			&i.TestName,
 			&i.TestRunConfig,
+			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
 			&i.ScheduledAt,
@@ -325,23 +330,26 @@ func (q *Queries) RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSumma
 	return items, nil
 }
 
-const runSummaryForTest = `-- name: RunSummaryForTest :many
-SELECT id, test_id, test_run_config, runner_id, result, scheduled_at, started_at, finished_at, result_data
+const runSummariesForTest = `-- name: RunSummariesForTest :many
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
-WHERE runs.test_id = $1
+JOIN tests
+ON runs.test_id = tests.id
+WHERE runs.test_id = $1 AND runs.scheduled_at > $2
 ORDER by runs.scheduled_at desc
-LIMIT $2
 `
 
-type RunSummaryForTestParams struct {
-	TestID uuid.UUID
-	Limit  int32
+type RunSummariesForTestParams struct {
+	TestID         uuid.UUID
+	ScheduledAfter sql.NullTime
 }
 
-type RunSummaryForTestRow struct {
+type RunSummariesForTestRow struct {
 	ID            uuid.UUID
 	TestID        uuid.UUID
+	TestName      string
 	TestRunConfig pgtype.JSONB
+	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	ScheduledAt   sql.NullTime
@@ -350,19 +358,21 @@ type RunSummaryForTestRow struct {
 	ResultData    pgtype.JSONB
 }
 
-func (q *Queries) RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error) {
-	rows, err := db.Query(ctx, runSummaryForTest, arg.TestID, arg.Limit)
+func (q *Queries) RunSummariesForTest(ctx context.Context, db DBTX, arg RunSummariesForTestParams) ([]RunSummariesForTestRow, error) {
+	rows, err := db.Query(ctx, runSummariesForTest, arg.TestID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []RunSummaryForTestRow
+	var items []RunSummariesForTestRow
 	for rows.Next() {
-		var i RunSummaryForTestRow
+		var i RunSummariesForTestRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
+			&i.TestName,
 			&i.TestRunConfig,
+			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
 			&i.ScheduledAt,
@@ -412,6 +422,154 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 		&i.FinishedAt,
 	)
 	return i, err
+}
+
+const summarizeRunsBreakdownResult = `-- name: SummarizeRunsBreakdownResult :many
+WITH intervals AS (
+  SELECT generate_series(
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $4),
+    date_trunc($1, $3::timestamptz),
+    make_interval(secs => $4)
+  ) as start
+)
+SELECT 
+  intervals.start::timestamptz,
+  COUNT(id) FILTER (WHERE result = 'pass') as pass,
+  COUNT(id) FILTER (WHERE result = 'fail') as fail,
+  COUNT(id) FILTER (WHERE result = 'error') as error,
+  COUNT(id) FILTER (WHERE result = 'unknown') as unknown
+FROM intervals
+LEFT JOIN runs
+ON
+  intervals.start = date_trunc($1, runs.scheduled_at) AND
+  runs.scheduled_at > $2 AND
+  runs.scheduled_at < $3
+GROUP BY intervals.start
+ORDER BY intervals.start ASC
+`
+
+type SummarizeRunsBreakdownResultParams struct {
+	Precision string
+	StartTime sql.NullTime
+	EndTime   sql.NullTime
+	Interval  float64
+}
+
+type SummarizeRunsBreakdownResultRow struct {
+	IntervalsStart time.Time
+	Pass           int64
+	Fail           int64
+	Error          int64
+	Unknown        int64
+}
+
+func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg SummarizeRunsBreakdownResultParams) ([]SummarizeRunsBreakdownResultRow, error) {
+	rows, err := db.Query(ctx, summarizeRunsBreakdownResult,
+		arg.Precision,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Interval,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SummarizeRunsBreakdownResultRow
+	for rows.Next() {
+		var i SummarizeRunsBreakdownResultRow
+		if err := rows.Scan(
+			&i.IntervalsStart,
+			&i.Pass,
+			&i.Fail,
+			&i.Error,
+			&i.Unknown,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const summarizeRunsBreakdownTest = `-- name: SummarizeRunsBreakdownTest :many
+WITH intervals AS (
+  SELECT generate_series(
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $4),
+    date_trunc($1, $3::timestamptz),
+    make_interval(secs => $4)
+  ) as start
+)
+SELECT 
+  intervals.start::timestamptz,
+  tests.id,
+  tests.name,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'pass') as pass,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'fail') as fail,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'error') as error,
+  COUNT(tests.id) FILTER (WHERE runs.result = 'unknown') as unknown
+FROM intervals
+LEFT JOIN runs
+ON
+  intervals.start = date_trunc($1, runs.scheduled_at) AND
+  runs.scheduled_at > $2 AND
+  runs.scheduled_at < $3
+JOIN tests
+ON runs.test_id = tests.id
+GROUP BY intervals.start, tests.id
+ORDER BY intervals.start ASC
+`
+
+type SummarizeRunsBreakdownTestParams struct {
+	Precision string
+	StartTime sql.NullTime
+	EndTime   sql.NullTime
+	Interval  float64
+}
+
+type SummarizeRunsBreakdownTestRow struct {
+	IntervalsStart time.Time
+	ID             uuid.UUID
+	Name           string
+	Pass           int64
+	Fail           int64
+	Error          int64
+	Unknown        int64
+}
+
+func (q *Queries) SummarizeRunsBreakdownTest(ctx context.Context, db DBTX, arg SummarizeRunsBreakdownTestParams) ([]SummarizeRunsBreakdownTestRow, error) {
+	rows, err := db.Query(ctx, summarizeRunsBreakdownTest,
+		arg.Precision,
+		arg.StartTime,
+		arg.EndTime,
+		arg.Interval,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SummarizeRunsBreakdownTestRow
+	for rows.Next() {
+		var i SummarizeRunsBreakdownTestRow
+		if err := rows.Scan(
+			&i.IntervalsStart,
+			&i.ID,
+			&i.Name,
+			&i.Pass,
+			&i.Fail,
+			&i.Error,
+			&i.Unknown,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const timeoutRuns = `-- name: TimeoutRuns :exec

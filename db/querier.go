@@ -42,9 +42,11 @@ type Querier interface {
 	RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (Test, error)
 	ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Time) error
 	RevokeAccessToken(ctx context.Context, db DBTX, id uuid.UUID) error
-	RunSummaryForRunner(ctx context.Context, db DBTX, arg RunSummaryForRunnerParams) ([]RunSummaryForRunnerRow, error)
-	RunSummaryForTest(ctx context.Context, db DBTX, arg RunSummaryForTestParams) ([]RunSummaryForTestRow, error)
+	RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSummariesForRunnerParams) ([]RunSummariesForRunnerRow, error)
+	RunSummariesForTest(ctx context.Context, db DBTX, arg RunSummariesForTestParams) ([]RunSummariesForTestRow, error)
 	ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error)
+	SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg SummarizeRunsBreakdownResultParams) ([]SummarizeRunsBreakdownResultRow, error)
+	SummarizeRunsBreakdownTest(ctx context.Context, db DBTX, arg SummarizeRunsBreakdownTestParams) ([]SummarizeRunsBreakdownTestRow, error)
 	TimeoutRuns(ctx context.Context, db DBTX, arg TimeoutRunsParams) error
 	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error

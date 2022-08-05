@@ -1,8 +1,8 @@
 package scheduler
 
 import (
-	"fmt"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -29,10 +29,10 @@ func Test_generateLabelSet(t *testing.T) {
 			},
 			labelSet: []map[string]string{
 				{"a": "1", "b": "4", "c": "6"},
-				{"a": "2", "b": "4", "c": "6"},
-				{"a": "3", "b": "4", "c": "6"},
 				{"a": "1", "b": "5", "c": "6"},
+				{"a": "2", "b": "4", "c": "6"},
 				{"a": "2", "b": "5", "c": "6"},
+				{"a": "3", "b": "4", "c": "6"},
 				{"a": "3", "b": "5", "c": "6"},
 			},
 		},
@@ -51,17 +51,38 @@ func Test_generateLabelSet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			labelSet := generateMatrixLabelSet(tt.baseLabels, tt.matrixLabels)
 
-			trans := cmp.Transformer("Sort", func(in []int) []int {
-				out := append([]int(nil), in...) // Copy input to avoid mutating it
-				sort.Slice(out, func(i, j int) bool {
-					return fmt.Sprintf("%v", out[i]) < fmt.Sprintf("%v", out[j])
-				})
-				return out
+			trans := cmp.Transformer("SortLabels", func(labels []map[string]string) []string {
+				var lStrs []string
+				for _, l := range labels {
+					ls, err := sortedLabelsString(l)
+					if err != nil {
+						t.Fatal(err)
+					}
+					lStrs = append(lStrs, ls)
+				}
+				sort.Strings(lStrs)
+				return lStrs
 			})
-
 			if !cmp.Equal(labelSet, tt.labelSet, trans) {
 				t.Errorf("incorrect label set\nexpected:\t%v\ngot:\t%v", tt.labelSet, labelSet)
 			}
 		})
 	}
+}
+
+func sortedLabelsString(l map[string]string) (string, error) {
+	var keys []string
+	for k := range l {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var sb strings.Builder
+	for _, k := range keys {
+		_, err := sb.WriteString("[" + k + "=" + l[k] + "]")
+		if err != nil {
+			return "", err
+		}
+	}
+	return sb.String(), nil
 }

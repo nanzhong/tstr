@@ -21,10 +21,12 @@ require (
 	google.golang.org/protobuf v1.28.1
 )
 
-require github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.1
+require (
+	github.com/google/go-cmp v0.5.8
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.1
+)
 
 require (
-	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 )

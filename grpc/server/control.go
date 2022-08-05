@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/benbjohnson/clock"
 	"github.com/google/uuid"
@@ -67,13 +68,27 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 		nextRunAt.Time = schedule.Next(s.clock.Now())
 	}
 
-	test, err := s.dbQuerier.RegisterTest(ctx, s.pgxPool, db.RegisterTestParams{
-		Name:         r.Name,
-		Labels:       labels,
-		Matrix:       matrix,
-		RunConfig:    runConfig,
-		CronSchedule: sql.NullString{Valid: r.CronSchedule != "", String: r.CronSchedule},
-		NextRunAt:    nextRunAt,
+	var test db.Test
+	err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		var err error
+		test, err = s.dbQuerier.RegisterTest(ctx, tx, db.RegisterTestParams{
+			Name:         r.Name,
+			Labels:       labels,
+			Matrix:       matrix,
+			RunConfig:    runConfig,
+			CronSchedule: sql.NullString{Valid: r.CronSchedule != "", String: r.CronSchedule},
+			NextRunAt:    nextRunAt,
+		})
+		if err != nil {
+			return fmt.Errorf("registering test: %w", err)
+		}
+
+		_, err = s.scheduleRuns(ctx, tx, &test)
+		if err != nil {
+			return fmt.Errorf("scheduling runs for test: %w", err)
+		}
+
+		return nil
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to store test")
@@ -214,16 +229,29 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 		return nil, status.Error(codes.Internal, "failed to format run config")
 	}
 
-	err = s.dbQuerier.UpdateTest(ctx, s.pgxPool, db.UpdateTestParams{
-		Name:         test.Name,
-		Labels:       test.Labels,
-		Matrix:       test.Matrix,
-		RunConfig:    test.RunConfig,
-		CronSchedule: test.CronSchedule,
-		NextRunAt:    test.NextRunAt,
-		ID:           id,
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
+			Name:         test.Name,
+			Labels:       test.Labels,
+			Matrix:       test.Matrix,
+			RunConfig:    test.RunConfig,
+			CronSchedule: test.CronSchedule,
+			NextRunAt:    test.NextRunAt,
+			ID:           id,
+		})
+		if err != nil {
+			return fmt.Errorf("updating test: %w", err)
+		}
+
+		_, err = s.scheduleRuns(ctx, tx, &test)
+		if err != nil {
+			return fmt.Errorf("scheduling runs for test: %w", err)
+		}
+
+		return nil
 	})
 	if err != nil {
+		log.Error().Err(err).Stringer("test_id", id).Msg("failed to update test")
 		return nil, status.Error(codes.Internal, "failed to update test")
 	}
 	return &controlv1.UpdateTestResponse{}, nil
@@ -308,48 +336,18 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, r *controlv1.ScheduleRu
 	} else {
 		labels = test.Labels
 	}
-	var matrix pgtype.JSONB
-	if r.TestMatrix != nil {
-		if err := matrix.Set(&r.TestMatrix); err != nil {
-			log.Error().
-				Err(err).
-				Stringer("test_matrix", r.TestMatrix).
-				Msg("failed to format test matrix")
-			return nil, status.Error(codes.Internal, "failed to format test matrix")
-		}
-	}
 
 	var runs []db.Run
-	runParams, err := scheduler.RunsForTest(test)
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		var err error
+		runs, err = s.scheduleRuns(ctx, tx, &test)
+		return err
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
 			Stringer("test_id", test.ID).
-			Msg("failed to generate runs for test")
-		return nil, status.Error(codes.Internal, "failed to generate runs for test")
-	}
-
-	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
-		for _, runParam := range runParams {
-			run, err := s.dbQuerier.ScheduleRun(ctx, tx, runParam)
-			if err != nil {
-				log.Error().
-					Err(err).
-					Stringer("test_id", test.ID).
-					Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
-					Msg("failed to schedule run for test")
-				return err
-			}
-			runs = append(runs, run)
-			log.Info().
-				Stringer("test_id", runParam.TestID).
-				Stringer("test_matrix_id", runParam.TestMatrixID.UUID).
-				Msg("scheduled run for test")
-		}
-		return nil
-	})
-	if err != nil {
-		log.Error().Err(err).Msg("failed to begin transaction")
+			Msg("failed to schedule runs")
 		return nil, status.Error(codes.Internal, "failed to schedule runs for test")
 	}
 
@@ -425,4 +423,22 @@ func (s *ControlServer) ListRunners(ctx context.Context, r *controlv1.ListRunner
 	return &controlv1.ListRunnersResponse{
 		Runners: pbRunners,
 	}, nil
+}
+
+func (s ControlServer) scheduleRuns(ctx context.Context, dbtx db.DBTX, test *db.Test) ([]db.Run, error) {
+	var runs []db.Run
+	runParams, err := scheduler.RunsForTest(*test)
+	if err != nil {
+		return nil, fmt.Errorf("generating runs for test: %w", err)
+	}
+
+	for _, runParam := range runParams {
+		run, err := s.dbQuerier.ScheduleRun(ctx, dbtx, runParam)
+		if err != nil {
+			return nil, fmt.Errorf("scheduling run for test %s: %w", test.ID, err)
+		}
+		runs = append(runs, run)
+	}
+
+	return runs, nil
 }

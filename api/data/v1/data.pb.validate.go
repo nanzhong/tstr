@@ -2844,6 +2844,8 @@ func (m *RunSummary) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for Labels
+
 	if m.GetRunnerId() != "" {
 
 		if err := m._validateUuid(m.GetRunnerId()); err != nil {

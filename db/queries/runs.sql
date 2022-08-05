@@ -71,7 +71,7 @@ WHERE
   CURRENT_TIMESTAMP > started_at + make_interval(secs => COALESCE(test_run_config['timeout_seconds']::int, sqlc.arg('default_timeout')::int));
 
 -- name: RunSummariesForTest :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
@@ -79,7 +79,7 @@ WHERE runs.test_id = sqlc.arg('test_id') AND runs.scheduled_at > sqlc.arg('sched
 ORDER by runs.scheduled_at desc;
 
 -- name: RunSummariesForRunner :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id

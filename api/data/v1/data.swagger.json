@@ -757,6 +757,12 @@
         "testRunConfig": {
           "$ref": "#/definitions/TestRunConfig"
         },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "runnerId": {
           "type": "string"
         },

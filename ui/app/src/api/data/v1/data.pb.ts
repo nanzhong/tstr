@@ -129,6 +129,7 @@ export type RunSummary = {
   testId?: string
   testName?: string
   testRunConfig?: TstrCommonV1Common.TestRunConfig
+  labels?: {[key: string]: string}
   runnerId?: string
   result?: TstrCommonV1Common.RunResult
   resultData?: {[key: string]: string}

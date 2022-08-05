@@ -79,11 +79,21 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 			return nil, status.Error(codes.Internal, "failed to format run config")
 		}
 
+		var labels map[string]string
+		if err := s.Labels.AssignTo(&labels); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", s.ID).
+				Msg("failed to format labels")
+			return nil, status.Error(codes.Internal, "failed to format labels")
+		}
+
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
 			Id:            s.ID.String(),
 			TestId:        s.TestID.String(),
 			TestName:      s.TestName,
 			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			Labels:        labels,
 			RunnerId:      s.RunnerID.UUID.String(),
 			Result:        types.ToRunResult(s.Result.RunResult),
 			ScheduledAt:   types.ToProtoTimestamp(s.ScheduledAt),
@@ -434,11 +444,21 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 			return nil, status.Error(codes.Internal, "failed to format run config")
 		}
 
+		var labels map[string]string
+		if err := s.Labels.AssignTo(&labels); err != nil {
+			log.Error().
+				Err(err).
+				Stringer("run_id", s.ID).
+				Msg("failed to format labels")
+			return nil, status.Error(codes.Internal, "failed to format labels")
+		}
+
 		pbRunSummaries = append(pbRunSummaries, &datav1.RunSummary{
 			Id:            s.ID.String(),
 			TestId:        s.TestID.String(),
 			TestName:      s.TestName,
 			TestRunConfig: types.ToProtoTestRunConfig(runConfig),
+			Labels:        labels,
 			RunnerId:      s.RunnerID.UUID.String(),
 			Result:        types.ToRunResult(s.Result.RunResult),
 			ScheduledAt:   types.ToProtoTimestamp(s.ScheduledAt),

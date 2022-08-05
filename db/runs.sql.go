@@ -271,7 +271,7 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 }
 
 const runSummariesForRunner = `-- name: RunSummariesForRunner :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
@@ -289,6 +289,7 @@ type RunSummariesForRunnerRow struct {
 	TestID        uuid.UUID
 	TestName      string
 	TestRunConfig pgtype.JSONB
+	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	ScheduledAt   sql.NullTime
@@ -311,6 +312,7 @@ func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSum
 			&i.TestID,
 			&i.TestName,
 			&i.TestRunConfig,
+			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
 			&i.ScheduledAt,
@@ -329,7 +331,7 @@ func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSum
 }
 
 const runSummariesForTest = `-- name: RunSummariesForTest :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
@@ -347,6 +349,7 @@ type RunSummariesForTestRow struct {
 	TestID        uuid.UUID
 	TestName      string
 	TestRunConfig pgtype.JSONB
+	Labels        pgtype.JSONB
 	RunnerID      uuid.NullUUID
 	Result        NullRunResult
 	ScheduledAt   sql.NullTime
@@ -369,6 +372,7 @@ func (q *Queries) RunSummariesForTest(ctx context.Context, db DBTX, arg RunSumma
 			&i.TestID,
 			&i.TestName,
 			&i.TestRunConfig,
+			&i.Labels,
 			&i.RunnerID,
 			&i.Result,
 			&i.ScheduledAt,

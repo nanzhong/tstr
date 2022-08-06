@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { inject, defineAsyncComponent } from "vue";
+import { inject } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import duration from "dayjs/plugin/duration";
 import { InitReq } from "../api/fetch.pb";
 import { DataService } from "../api/data/v1/data.pb";
-import { Run, RunLogOutput, Runner, Test } from "../api/common/v1/common.pb";
+import { RunLogOutput, Runner } from "../api/common/v1/common.pb";
 import RunResult from "../components/RunResult.vue";
 import Labels from "../components/Labels.vue";
 import TimeWithTooltip from "../components/TimeWithTooltip.vue";
@@ -19,7 +19,12 @@ const initReq: InitReq = inject('dataInitReq')!;
 
 const run = (await DataService.GetRun({ id: route.params.id as string }, initReq)).run!;
 const test = (await DataService.GetTest({ id: run.testId }, initReq)).test!;
-const runner = (await DataService.GetRunner({ id: run.runnerId }, initReq)).runner!;
+let runner: Runner | undefined;
+// TODO this is a quirk where the zero value of a uuid is not the same as the
+// zero value of a string pb field. We should fix this at the api level.
+if (run.runnerId !== "00000000-0000-0000-0000-000000000000") {
+ runner = (await DataService.GetRunner({ id: run.runnerId }, initReq)).runner;
+}
 
 const logColour = (t: RunLogOutput | null) => {
   switch (t) {
@@ -34,7 +39,7 @@ const logColour = (t: RunLogOutput | null) => {
   }
 };
 
-const logDecode = (data) => {
+const logDecode = (data: string | null) => {
   if (!data || data.length === 0) {
     return "";
   }
@@ -113,7 +118,7 @@ const logDecode = (data) => {
           </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow px-5 py-6 pb-10 sm:px-6 mt-5 relative overflow-hidden">
+        <div v-if="runner" class="bg-white rounded-lg shadow px-5 py-6 pb-10 sm:px-6 mt-5 relative overflow-hidden">
           <div class="-mx-5 sm:-mx-6 px-5 sm:px-6 pb-5 border-b border-gray-200">
             <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
               <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Runner</h2>

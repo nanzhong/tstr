@@ -7,14 +7,15 @@ import { InitReq } from "../api/fetch.pb";
 import { DataService } from "../api/data/v1/data.pb";
 import Labels from "../components/Labels.vue";
 import RunsTable from "../components/RunsTable.vue";
+import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 
 const route = useRoute();
 const initReq: InitReq = inject('dataInitReq')!;
-const runnerDetails = await DataService.GetRunner({ id: route.params.id }, initReq);
+const runnerDetails = await DataService.GetRunner({ id: route.params.id as string }, initReq);
 const runner = runnerDetails.runner!;
-const runSummaries = runnerDetails.runSummaries!;
+const runSummaries = runnerDetails.runSummaries || [];
 </script>
 
 <template>
@@ -39,11 +40,11 @@ const runSummaries = runnerDetails.runSummaries!;
           </div>
           <div class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Registered At</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ dayjs(runner.registeredAt).fromNow() }}</dd>
+            <dd class="mt-1 text-sm text-gray-900"><TimeWithTooltip :time="runner.registeredAt" :relative="true" /></dd>
           </div>
           <div class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Last Heartbeat At</dt>
-            <dd class="mt-1 text-sm text-gray-900">{{ dayjs(runner.lastHeartbeatAt).fromNow() }}</dd>
+            <dd class="mt-1 text-sm text-gray-900"><TimeWithTooltip :time="runner.lastHeartbeatAt" :relative="true" /></dd>
           </div>
         </dl>
       </div>

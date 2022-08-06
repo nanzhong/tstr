@@ -9,6 +9,7 @@ import { DataService } from "../api/data/v1/data.pb";
 import { Run, RunLogOutput, Runner, Test } from "../api/common/v1/common.pb";
 import RunResult from "../components/RunResult.vue";
 import Labels from "../components/Labels.vue";
+import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 dayjs.extend(duration)
@@ -20,7 +21,7 @@ const run = (await DataService.GetRun({ id: route.params.id as string }, initReq
 const test = (await DataService.GetTest({ id: run.testId }, initReq)).test!;
 const runner = (await DataService.GetRunner({ id: run.runnerId }, initReq)).runner!;
 
-const logColour = (t) => {
+const logColour = (t: RunLogOutput | null) => {
   switch (t) {
     case RunLogOutput.STDOUT:
       return "border-green-300";
@@ -56,17 +57,22 @@ const logDecode = (data) => {
         <dl class="grid grid-cols-1 gap-2 mt-4 sm:grid-cols-3 text-sm">
           <div class="col-span-1">
             <dt class="font-medium text-gray-500">Scheduled At</dt>
-            <dd class="mt-1 text-gray-900">{{ dayjs(run.scheduledAt).fromNow() }}</dd>
+            <dd class="mt-1 text-gray-900">
+              <TimeWithTooltip :time="run.scheduledAt" :relative="true" />
+            </dd>
           </div>
           <div class="col-span-1">
             <dt class="font-medium text-gray-500">Started At</dt>
-            <dd class="mt-1 text-gray-900"><span v-if="run.startedAt">{{ dayjs(run.startedAt).fromNow() }}</span></dd>
+            <dd class="mt-1 text-gray-900">
+              <TimeWithTooltip v-if="run.startedAt" :time="run.startedAt" :relative="true" />
+            </dd>
           </div>
           <div class="col-span-1">
             <dt class="font-medium text-gray-500">Finished At</dt>
-            <dd class="mt-1 text-gray-900"><span v-if="run.finishedAt">{{ dayjs(run.finishedAt).fromNow() }} ({{
-                dayjs.duration(dayjs(run.finishedAt).diff(run.startedAt)).humanize()
-            }})</span></dd>
+            <dd class="mt-1 text-gray-900">
+              <TimeWithTooltip v-if="run.finishedAt" :time="run.finishedAt" :relative="true" />
+              <span v-if="run.finishedAt"> ({{ dayjs.duration(dayjs(run.finishedAt).diff(run.startedAt)).humanize() }})</span>
+            </dd>
           </div>
         </dl>
       </div>
@@ -129,7 +135,7 @@ const logDecode = (data) => {
             </div>
             <div class="col-span-1">
               <dt class="font-medium text-gray-500">Last Heartbeat At</dt>
-              <dd class="mt-1 text-gray-900">{{ dayjs(runner.lastHeartbeatAt).fromNow() }}</dd>
+              <dd class="mt-1 text-gray-900"><TimeWithTooltip :time="runner.lastHeartbeatAt" :relative="true" /></dd>
             </div>
           </dl>
 

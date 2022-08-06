@@ -3,14 +3,16 @@ import { inject } from "vue";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { InitReq } from "../api/fetch.pb";
+import { Runner } from "../api/common/v1/common.pb";
 import { DataService } from "../api/data/v1/data.pb";
 import Labels from "../components/Labels.vue";
+import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 
 const initReq: InitReq = inject('dataInitReq')!;
 
-const runners = (await DataService.QueryRunners({ lastHeartbeatWithin: `${24*60*60}s` }, initReq)).runners!;
+const runners: Runner[] = (await DataService.QueryRunners({ lastHeartbeatWithin: `${24*60*60}s` }, initReq)).runners || [];
 </script>
 
 <template>
@@ -44,8 +46,8 @@ const runners = (await DataService.QueryRunners({ lastHeartbeatWithin: `${24*60*
                   <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">{{ runner.name }}</td>
                   <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><Labels :labels="runner.acceptTestLabelSelectors || null" /></td>
                   <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><Labels :labels="runner.rejectTestLabelSelectors || null" /></td>
-                  <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{{ dayjs(runner.registeredAt).fromNow() }}</td>
-                  <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{{ dayjs(runner.lastHeartbeatAt).fromNow() }}</td>
+                  <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><TimeWithTooltip :time="runner.registeredAt" :relative="true" /></td>
+                  <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500"><TimeWithTooltip :time="runner.lastHeartbeatAt" :relative="true" /></td>
                   <td class="relative whitespace-nowrap py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                     <router-link :to="{ name: 'runner-details', params: { id: runner.id } }" custom v-slot="{ href, navigate }">
                       <a :href="href" @click="navigate" class="text-indigo-600 hover:text-indigo-900">View<span

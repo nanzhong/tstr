@@ -175,6 +175,10 @@ func (r Runner) executeRun(ctx context.Context, run *commonv1.Run) error {
 	env = append(env, "RECORD_START="+string(recordStart))
 	env = append(env, "RECORD_END="+string(recordEnd))
 
+	for k, v := range run.Labels {
+		env = append(env, k, v)
+	}
+
 	var cmd []string
 	if run.TestRunConfig.Command != "" {
 		cmd = append(cmd, run.TestRunConfig.Command)

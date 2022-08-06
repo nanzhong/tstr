@@ -3,12 +3,12 @@ import { inject } from "vue";
 import dayjs from "dayjs";
 import RunsTable from "../components/RunsTable.vue";
 import { InitReq } from "../api/fetch.pb";
-import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
+import { DataService } from "../api/data/v1/data.pb";
 
 const initReq: InitReq = inject('dataInitReq')!;
 
 const now = dayjs();
-const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(1, "hour").toISOString() }, initReq)).runs;
+const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(1, "hour").toISOString() }, initReq)).runs || [];
 </script>
 
 <template>
@@ -25,7 +25,7 @@ const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(1, "hou
         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
           <div class="inline-block min-w-full py-2 align-middle">
             <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
-              <RunsTable :runs="runs!" />
+              <RunsTable :runs="runs" />
 
             </div>
           </div>

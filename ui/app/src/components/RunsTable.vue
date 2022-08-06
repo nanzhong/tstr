@@ -7,6 +7,7 @@ import { DataService, RunSummary } from "../api/data/v1/data.pb";
 import RunResult from "./RunResult.vue";
 import Labels from "./Labels.vue";
 import { InitReq } from "../api/fetch.pb";
+import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 
@@ -46,15 +47,15 @@ tests.forEach(t => testMap.set(t.id!, t));
         <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
           <RunResult :result="run.result!" />
         </td>
-        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{{ run.scheduledAt ?
-          dayjs(run.scheduledAt).fromNow() : ''
-        }}</td>
-        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{{ run.startedAt ?
-          dayjs(run.startedAt).fromNow() : ''
-        }}</td>
-        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">{{ run.finishedAt ?
-          dayjs(run.finishedAt).fromNow() : ''
-        }}</td>
+        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+          <TimeWithTooltip v-if="run.scheduledAt" :time="run.scheduledAt" :relative="true" />
+        </td>
+        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+          <TimeWithTooltip v-if="run.startedAt" :time="run.startedAt" :relative="true" />
+        </td>
+        <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+          <TimeWithTooltip v-if="run.finishedAt" :time="run.finishedAt" :relative="true" />
+        </td>
         <td class="relative whitespace-nowrap py-2 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
           <router-link :to="{ name: 'run-details', params: { id: run.id } }" custom v-slot="{ href, navigate }">
             <a :href="href" @click="navigate" class="text-indigo-600 hover:text-indigo-900">View<span

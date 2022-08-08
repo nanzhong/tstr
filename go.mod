@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jackc/pgconn v1.12.1
-	github.com/jackc/pgtype v1.11.0
+	github.com/jackc/pgtype v1.12.0
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/jwreagor/grpc-zerolog v0.0.0-20180425150930-27ca9d023ead
 	github.com/robfig/cron/v3 v3.0.1

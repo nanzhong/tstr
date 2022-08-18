@@ -115,7 +115,7 @@
             tstr = tstr;
             image = pkgs.dockerTools.buildLayeredImage {
               name = "nanzhong/tstr";
-              contents = [ tstr ];
+              contents = [ tstr pkgs.busybox pkgs.cacert ];
               config = {
                 Cmd = [ "/bin/tstr" ];
               };

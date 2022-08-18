@@ -77,12 +77,18 @@ func (r *Runner) Run() error {
 	var ctx context.Context
 	ctx, r.stopCancelFn = context.WithCancel(context.Background())
 
-	_, err := r.dockerClient.Ping(ctx)
+	log.Debug().Msg("validating access to docker")
+	pingCtx, pingCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer pingCancel()
+	_, err := r.dockerClient.Ping(pingCtx)
 	if err != nil {
 		return fmt.Errorf("docker not available, unable to ping: %w", err)
 	}
 
-	regRes, err := r.runnerClient.RegisterRunner(ctx, &runnerv1.RegisterRunnerRequest{
+	log.Debug().Msg("registering runner")
+	registerCtx, registerCancel := context.WithTimeout(ctx, 15*time.Second)
+	defer registerCancel()
+	regRes, err := r.runnerClient.RegisterRunner(registerCtx, &runnerv1.RegisterRunnerRequest{
 		Name:                     r.name,
 		AcceptTestLabelSelectors: r.allowLabelSelectors,
 		RejectTestLabelSelectors: r.rejectLabelSelectors,

@@ -9,6 +9,7 @@ import (
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -39,7 +40,10 @@ func clientDialOpts(secure bool, accessToken string) []grpc.DialOption {
 }
 
 func withControlClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, controlv1.ControlServiceClient) error) error {
-	conn, err := grpc.Dial(
+	log.Debug().Str("addr", apiAddr).Msg("dialing control service")
+
+	conn, err := grpc.DialContext(
+		ctx,
 		apiAddr,
 		clientDialOpts(secure, accessToken)...,
 	)
@@ -53,7 +57,10 @@ func withControlClient(ctx context.Context, apiAddr string, secure bool, accessT
 }
 
 func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, adminv1.AdminServiceClient) error) error {
-	conn, err := grpc.Dial(
+	log.Debug().Str("addr", apiAddr).Msg("dialing admin service")
+
+	conn, err := grpc.DialContext(
+		ctx,
 		apiAddr,
 		clientDialOpts(secure, accessToken)...,
 	)
@@ -67,7 +74,10 @@ func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessTok
 }
 
 func withRunnerClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, runnerv1.RunnerServiceClient) error) error {
-	conn, err := grpc.Dial(
+	log.Debug().Str("addr", apiAddr).Msg("dialing runner service")
+
+	conn, err := grpc.DialContext(
+		ctx,
 		apiAddr,
 		clientDialOpts(secure, accessToken)...,
 	)

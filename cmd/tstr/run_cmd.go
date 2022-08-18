@@ -9,12 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	grpczerolog "github.com/jwreagor/grpc-zerolog"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/runner"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc/grpclog"
 )
 
 var runCmd = &cobra.Command{
@@ -22,11 +24,9 @@ var runCmd = &cobra.Command{
 	Short: "Start a tstr runner for executing test workloads",
 	Args:  cobra.ExactArgs(0),
 	Run: func(cmd *cobra.Command, _ []string) {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-		log.Info().
-			Str("name", viper.GetString("run.name")).
-			Msg("starting runner")
+		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "grpc").Logger()))
 
 		var (
 			acceptLabelSelectors = make(map[string]string)
@@ -71,6 +71,10 @@ var runCmd = &cobra.Command{
 
 				log.Info().Msg("runner shutdown gracefully")
 			}()
+
+			log.Info().
+				Str("name", viper.GetString("run.name")).
+				Msg("starting runner")
 
 			return runner.Run()
 		})

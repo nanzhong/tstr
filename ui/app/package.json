@@ -12,7 +12,7 @@
     "@headlessui/vue": "^1.6.7",
     "@heroicons/vue": "^1.0.6",
     "axios": "^0.27.2",
-    "dayjs": "^1.11.4",
+    "dayjs": "^1.11.5",
     "plotly.js-dist": "^2.14.0",
     "vue": "^3.2.37",
     "vue-property-decorator": "^9.1.2",

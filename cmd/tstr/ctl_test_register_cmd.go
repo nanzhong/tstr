@@ -47,19 +47,15 @@ var (
 				}
 			}
 
-			var fieldMask fieldmaskpb.FieldMask
-
 			if ctlTestRegisterID != "" {
 				test.Id = ctlTestRegisterID
 			}
 
 			if ctlTestRegisterName != "" {
-				fieldMask.Paths = append(fieldMask.Paths, "name")
 				test.Name = ctlTestRegisterName
 			}
 
 			if len(ctlTestRegisterLabels) > 0 {
-				fieldMask.Paths = append(fieldMask.Paths, "labels")
 				for _, label := range ctlTestRegisterLabels {
 					kv := strings.Split(label, "=")
 					if len(kv) != 2 {
@@ -74,7 +70,6 @@ var (
 			}
 
 			if len(ctlTestRegisterMatrixLabels) > 0 {
-				fieldMask.Paths = append(fieldMask.Paths, "matrix")
 				for _, label := range ctlTestRegisterMatrixLabels {
 					kv := strings.Split(label, "=")
 					if len(kv) != 2 {
@@ -95,27 +90,22 @@ var (
 			}
 
 			if ctlTestRegisterCron != "" {
-				fieldMask.Paths = append(fieldMask.Paths, "cron_schedule")
 				test.CronSchedule = ctlTestRegisterCron
 			}
 
 			if ctlTestRegisterImage != "" {
-				fieldMask.Paths = append(fieldMask.Paths, "run_config.container_image")
 				test.RunConfig.ContainerImage = ctlTestRegisterImage
 			}
 
 			if ctlTestRegisterCommand != "" {
-				fieldMask.Paths = append(fieldMask.Paths, "run_config.command")
 				test.RunConfig.Command = ctlTestRegisterCommand
 			}
 
 			if len(ctlTestRegisterArgs) > 0 {
-				fieldMask.Paths = append(fieldMask.Paths, "run_config.args")
 				test.RunConfig.Args = ctlTestRegisterArgs
 			}
 
 			if len(ctlTestRegisterEnv) > 0 {
-				fieldMask.Paths = append(fieldMask.Paths, "run_config.env")
 				for _, ev := range ctlTestRegisterEnv {
 					kv := strings.Split(ev, "=")
 					if len(kv) != 2 {
@@ -130,7 +120,6 @@ var (
 			}
 
 			if ctlTestRegisterTimeout > 0 {
-				fieldMask.Paths = append(fieldMask.Paths, "run_config.timeout")
 				test.RunConfig.Timeout = durationpb.New(ctlTestRegisterTimeout)
 			}
 
@@ -153,7 +142,19 @@ var (
 					fmt.Printf("Updating existing test: %s (%s)\n", test.Name, test.Id)
 
 					res, err := client.UpdateTest(ctx, &controlv1.UpdateTestRequest{
-						FieldMask:    &fieldMask,
+						FieldMask: &fieldmaskpb.FieldMask{
+							Paths: []string{
+								"name",
+								"labels",
+								"matrix",
+								"run_config.container_image",
+								"run_config.command",
+								"run_config.args",
+								"run_config.env",
+								"run_config.timeout",
+								"cron_schedule",
+							},
+						},
 						Id:           test.Id,
 						Name:         test.Name,
 						Labels:       test.Labels,

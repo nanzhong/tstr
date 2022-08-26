@@ -36,7 +36,7 @@
         pkgs = import nixpkgs { inherit system; };
         bp = pkgs.callPackage nix-npm-buildpackage {};
         version = "0.0.1";
-        tstr = pkgs.buildGo118Module {
+        tstr = pkgs.buildGo119Module {
           pname = "tstr";
           inherit version;
           src = ./.;
@@ -61,12 +61,12 @@
         };
 
         devTools = {
-          sqlc = pkgs.buildGo118Module {
+          sqlc = pkgs.buildGoModule {
             name = "sqlc";
             src = sqlc;
             subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-0Q2HYP3am8H757wT8WqI+jglAuTkmysKPaZFKVQMYFo=";
+            vendorSha256 = "sha256-xefmx4aqHjBdEDfTgXrlYcWAZaGM7jO5nY1ICZXlxUQ=";
             proxyVendor = true;
             buildInputs = [
               pkgs.xxHash
@@ -84,13 +84,7 @@
             name = "overmind";
             src = overmind;
             doCheck = false;
-            vendorSha256 = "sha256-KDMzR6qAruscgS6/bHTN6RnHOlLKCm9lxkr9k3oLY+Y=";
-          };
-          quicktemplate = pkgs.buildGoModule {
-            name = "quicktemplate";
-            src = quicktemplate;
-            doCheck = false;
-            vendorSha256 = null;
+            vendorSha256 = "sha256-QIKyLknPvmt8yiUCSCIqha8h9ozDGeQnKSM9Vwus0uY=";
           };
           grpc-gateway = pkgs.buildGoModule {
             name = "grpc-gateway";
@@ -141,7 +135,7 @@
                 entr
                 getopt
                 go-tools
-                go_1_18
+                go_1_19
                 gopls
                 grpcurl
                 kustomize

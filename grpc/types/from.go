@@ -81,6 +81,9 @@ func FromProtoTestMatrix(m *commonv1.Test_Matrix) db.TestMatrix {
 	}
 	labels := make(map[string][]string)
 	for key, values := range m.Labels {
+		if values == nil || len(values.Values) == 0 {
+			continue
+		}
 		labels[key] = append(labels[key], values.Values...)
 	}
 	return db.TestMatrix{

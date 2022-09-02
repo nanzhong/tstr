@@ -23,7 +23,7 @@ require (
 
 require (
 	github.com/google/go-cmp v0.5.8
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2
+	github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
 )
 
 require (
@@ -73,7 +73,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.7 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
-	google.golang.org/genproto v0.0.0-20220805133916-01dd62135a58
+	google.golang.org/genproto v0.0.0-20220822174746-9e6da59bd2fc
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

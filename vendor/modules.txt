@@ -81,7 +81,7 @@ github.com/google/uuid
 # github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 ## explicit; go 1.14
 github.com/grpc-ecosystem/go-grpc-middleware/validator
-# github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.2
+# github.com/grpc-ecosystem/grpc-gateway/v2 v2.11.3
 ## explicit; go 1.17
 github.com/grpc-ecosystem/grpc-gateway/v2/internal/httprule
 github.com/grpc-ecosystem/grpc-gateway/v2/runtime
@@ -302,8 +302,8 @@ golang.org/x/tools/internal/typesinternal
 ## explicit; go 1.17
 golang.org/x/xerrors
 golang.org/x/xerrors/internal
-# google.golang.org/genproto v0.0.0-20220805133916-01dd62135a58
-## explicit; go 1.18
+# google.golang.org/genproto v0.0.0-20220822174746-9e6da59bd2fc
+## explicit; go 1.19
 google.golang.org/genproto/googleapis/api/annotations
 google.golang.org/genproto/googleapis/api/httpbody
 google.golang.org/genproto/googleapis/rpc/status

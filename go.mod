@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.17.1
 	github.com/jwreagor/grpc-zerolog v0.0.0-20180425150930-27ca9d023ead
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
@@ -58,7 +58,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/rs/xid v1.3.0 // indirect
+	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect

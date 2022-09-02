@@ -82,6 +82,12 @@ func (detachedCtx) Err() error                  { return nil }
 
 // Pool allows for connection reuse.
 type Pool struct {
+	// 64 bit fields accessed with atomics must be at beginning of struct to guarantee alignment for certain 32-bit
+	// architectures. See BUGS section of https://pkg.go.dev/sync/atomic and https://github.com/jackc/pgx/issues/1288.
+	newConnsCount        int64
+	lifetimeDestroyCount int64
+	idleDestroyCount     int64
+
 	p                     *puddle.Pool
 	config                *Config
 	beforeConnect         func(context.Context, *pgx.ConnConfig) error
@@ -95,10 +101,6 @@ type Pool struct {
 	maxConnIdleTime       time.Duration
 	healthCheckPeriod     time.Duration
 	healthCheckChan       chan struct{}
-
-	newConnsCount        int64
-	lifetimeDestroyCount int64
-	idleDestroyCount     int64
 
 	closeOnce sync.Once
 	closeChan chan struct{}
@@ -214,14 +216,14 @@ func ConnectConfig(ctx context.Context, config *Config) (*Pool, error) {
 			// see https://github.com/jackc/pgx/issues/1259
 			ctx = detachedCtx{ctx}
 
-			// But we do want to ensure that a connect won't hang forever.
-			ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
-			defer cancel()
+			connConfig := p.config.ConnConfig.Copy()
 
-			connConfig := p.config.ConnConfig
+			// But we do want to ensure that a connect won't hang forever.
+			if connConfig.ConnectTimeout <= 0 {
+				connConfig.ConnectTimeout = 2 * time.Minute
+			}
 
 			if p.beforeConnect != nil {
-				connConfig = p.config.ConnConfig.Copy()
 				if err := p.beforeConnect(ctx, connConfig); err != nil {
 					return nil, err
 				}

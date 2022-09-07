@@ -72,6 +72,7 @@ export type QueryRunsRequest = {
   startedAfter?: GoogleProtobufTimestamp.Timestamp
   finishedBefore?: GoogleProtobufTimestamp.Timestamp
   finishedAfter?: GoogleProtobufTimestamp.Timestamp
+  includeLogs?: boolean
 }
 
 export type QueryRunsResponse = {

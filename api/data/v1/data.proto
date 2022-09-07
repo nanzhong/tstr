@@ -141,6 +141,7 @@ message QueryRunsRequest {
   google.protobuf.Timestamp started_after = 9;
   google.protobuf.Timestamp finished_before = 10;
   google.protobuf.Timestamp finished_after = 11;
+  bool include_logs = 12;
 }
 
 message QueryRunsResponse {

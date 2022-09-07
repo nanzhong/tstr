@@ -1666,6 +1666,8 @@ func (m *QueryRunsRequest) validate(all bool) error {
 		}
 	}
 
+	// no validation rules for IncludeLogs
+
 	if len(errors) > 0 {
 		return QueryRunsRequestMultiError(errors)
 	}

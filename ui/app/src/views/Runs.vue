@@ -8,7 +8,7 @@ import { DataService } from "../api/data/v1/data.pb";
 const initReq: InitReq = inject('dataInitReq')!;
 
 const now = dayjs();
-const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(1, "hour").toISOString() }, initReq)).runs || [];
+const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(24, "hour").toISOString() }, initReq)).runs || [];
 </script>
 
 <template>
@@ -17,7 +17,7 @@ const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(1, "hou
       <div class="-mx-5 sm:-mx-6 px-5 sm:px-6 pb-5 border-b border-gray-200">
         <div class="-ml-2 -mt-2 flex flex-wrap items-baseline">
           <h2 class="ml-2 mt-2 text-lg leading-6 font-medium text-gray-900">Recent Runs</h2>
-          <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 1h</p>
+          <p class="ml-2 mt-1 text-sm text-gray-500 truncate">last 24h</p>
         </div>
       </div>
 

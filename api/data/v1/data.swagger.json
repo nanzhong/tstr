@@ -201,6 +201,12 @@
             "required": false,
             "type": "string",
             "format": "date-time"
+          },
+          {
+            "name": "includeLogs",
+            "in": "query",
+            "required": false,
+            "type": "boolean"
           }
         ],
         "tags": [

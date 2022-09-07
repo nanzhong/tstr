@@ -66,7 +66,7 @@
             src = sqlc;
             subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-xefmx4aqHjBdEDfTgXrlYcWAZaGM7jO5nY1ICZXlxUQ=";
+            vendorSha256 = "sha256-QTNzhlphJNq918450WNXGDI/y6D0QHDoTwWYnH+NkbM=";
             proxyVendor = true;
             buildInputs = [
               pkgs.xxHash

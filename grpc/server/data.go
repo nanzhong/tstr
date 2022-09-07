@@ -395,6 +395,13 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 				Msg("failed to format run")
 			return nil, status.Error(codes.Internal, "failed to format run")
 		}
+
+		// TODO This is not ideal, but the naive solution. Instead of discarding
+		// the data here, we should not retrieve it in the first place.
+		if !r.IncludeLogs {
+			pbRun.Logs = nil
+		}
+
 		pbRuns = append(pbRuns, pbRun)
 	}
 

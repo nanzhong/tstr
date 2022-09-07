@@ -14,7 +14,7 @@
     "axios": "^0.27.2",
     "dayjs": "^1.11.5",
     "plotly.js-dist": "^2.14.0",
-    "vue": "^3.2.37",
+    "vue": "^3.2.38",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "4"
   },

@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
-mkdir -p .dev
-overmind start --auto-restart api,runner,ui,db --daemonize
-dbmate --wait up
+# shellcheck source=dev/common.sh
+source dev/common.sh
+# shellcheck source=scripts/common.sh
+source scripts/common.sh
+
+mkdir -p "$dev_state_path"
+
+if [ ! -S "$dev_overmind_sock" ]; then
+  run "Bringing up local dev..." overmind start \
+    --title tstr \
+    --auto-restart api,runner,ui,ui-vite,db \
+    --socket "$dev_overmind_sock" \
+    --daemonize
+else
+  run "Reloading local dev..." overmind restart --socket "$dev_overmind_sock"
+fi
+
+run "Running DB migrations" dbmate --wait up

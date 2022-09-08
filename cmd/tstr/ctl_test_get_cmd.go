@@ -9,15 +9,15 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var ctlTestListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List registered tests",
-	Args:  cobra.ExactArgs(0),
-	RunE: func(cmd *cobra.Command, _ []string) error {
+var ctlTestGetCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Get a registered test",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
 		return withCtlControlClient(context.Background(), func(ctx context.Context, client controlv1.ControlServiceClient) error {
-			fmt.Println("Listing registered tests...")
+			fmt.Printf("Getting registered test %s...\n", args[0])
 
-			res, err := client.ListTests(ctx, &controlv1.ListTestsRequest{})
+			res, err := client.GetTest(ctx, &controlv1.GetTestRequest{Id: args[0]})
 			if err != nil {
 				return err
 			}
@@ -29,5 +29,5 @@ var ctlTestListCmd = &cobra.Command{
 }
 
 func init() {
-	ctlTestCmd.AddCommand(ctlTestListCmd)
+	ctlTestCmd.AddCommand(ctlTestGetCmd)
 }

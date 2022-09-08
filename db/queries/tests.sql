@@ -32,6 +32,10 @@ SET
   updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid;
 
+-- name: DeleteTest :exec
+DELETE FROM tests
+WHERE id = sqlc.arg('id')::uuid;
+
 -- name: ListTestsToSchedule :many
 SELECT tests.*
 FROM tests

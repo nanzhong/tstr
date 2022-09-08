@@ -41,6 +41,10 @@ SET
   finished_at = sqlc.narg('finished_at')::timestamptz
 WHERE id = sqlc.arg('id');
 
+-- name: DeleteRunsForTest :exec
+DELETE FROM runs
+WHERE test_id = sqlc.arg('test_id');
+
 -- name: AppendLogsToRun :exec
 UPDATE runs
 SET logs = COALESCE(logs, '[]'::jsonb) || sqlc.arg('logs')

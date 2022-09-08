@@ -48,11 +48,11 @@ export type ListTestsResponse = {
   tests?: TstrCommonV1Common.Test[]
 }
 
-export type ArchiveTestRequest = {
+export type DeleteTestRequest = {
   id?: string
 }
 
-export type ArchiveTestResponse = {
+export type DeleteTestResponse = {
 }
 
 export type DefineTestSuiteRequest = {
@@ -159,8 +159,8 @@ export class ControlService {
   static ListTests(req: ListTestsRequest, initReq?: fm.InitReq): Promise<ListTestsResponse> {
     return fm.fetchReq<ListTestsRequest, ListTestsResponse>(`/tstr.control.v1.ControlService/ListTests`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
-  static ArchiveTest(req: ArchiveTestRequest, initReq?: fm.InitReq): Promise<ArchiveTestResponse> {
-    return fm.fetchReq<ArchiveTestRequest, ArchiveTestResponse>(`/tstr.control.v1.ControlService/ArchiveTest`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
+  static DeleteTest(req: DeleteTestRequest, initReq?: fm.InitReq): Promise<DeleteTestResponse> {
+    return fm.fetchReq<DeleteTestRequest, DeleteTestResponse>(`/tstr.control.v1.ControlService/DeleteTest`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static DefineTestSuite(req: DefineTestSuiteRequest, initReq?: fm.InitReq): Promise<DefineTestSuiteResponse> {
     return fm.fetchReq<DefineTestSuiteRequest, DefineTestSuiteResponse>(`/tstr.control.v1.ControlService/DefineTestSuite`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
@@ -173,9 +173,6 @@ export class ControlService {
   }
   static ListTestSuites(req: ListTestSuitesRequest, initReq?: fm.InitReq): Promise<ListTestSuitesResponse> {
     return fm.fetchReq<ListTestSuitesRequest, ListTestSuitesResponse>(`/tstr.control.v1.ControlService/ListTestSuites`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static ArchiveTestSuite(req: ArchiveTestSuiteRequest, initReq?: fm.InitReq): Promise<ArchiveTestSuiteResponse> {
-    return fm.fetchReq<ArchiveTestSuiteRequest, ArchiveTestSuiteResponse>(`/tstr.control.v1.ControlService/ArchiveTestSuite`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static GetRun(req: GetRunRequest, initReq?: fm.InitReq): Promise<GetRunResponse> {
     return fm.fetchReq<GetRunRequest, GetRunResponse>(`/tstr.control.v1.ControlService/GetRun`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

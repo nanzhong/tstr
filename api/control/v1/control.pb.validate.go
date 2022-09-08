@@ -1122,22 +1122,22 @@ var _ interface {
 	ErrorName() string
 } = ListTestsResponseValidationError{}
 
-// Validate checks the field values on ArchiveTestRequest with the rules
-// defined in the proto definition for this message. If any rules are
-// violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ArchiveTestRequest) Validate() error {
+// Validate checks the field values on DeleteTestRequest with the rules defined
+// in the proto definition for this message. If any rules are violated, the
+// first error encountered is returned, or nil if there are no violations.
+func (m *DeleteTestRequest) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ArchiveTestRequest with the rules
+// ValidateAll checks the field values on DeleteTestRequest with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ArchiveTestRequestMultiError, or nil if none found.
-func (m *ArchiveTestRequest) ValidateAll() error {
+// DeleteTestRequestMultiError, or nil if none found.
+func (m *DeleteTestRequest) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ArchiveTestRequest) validate(all bool) error {
+func (m *DeleteTestRequest) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1147,19 +1147,19 @@ func (m *ArchiveTestRequest) validate(all bool) error {
 	// no validation rules for Id
 
 	if len(errors) > 0 {
-		return ArchiveTestRequestMultiError(errors)
+		return DeleteTestRequestMultiError(errors)
 	}
 
 	return nil
 }
 
-// ArchiveTestRequestMultiError is an error wrapping multiple validation errors
-// returned by ArchiveTestRequest.ValidateAll() if the designated constraints
+// DeleteTestRequestMultiError is an error wrapping multiple validation errors
+// returned by DeleteTestRequest.ValidateAll() if the designated constraints
 // aren't met.
-type ArchiveTestRequestMultiError []error
+type DeleteTestRequestMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ArchiveTestRequestMultiError) Error() string {
+func (m DeleteTestRequestMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1168,11 +1168,11 @@ func (m ArchiveTestRequestMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ArchiveTestRequestMultiError) AllErrors() []error { return m }
+func (m DeleteTestRequestMultiError) AllErrors() []error { return m }
 
-// ArchiveTestRequestValidationError is the validation error returned by
-// ArchiveTestRequest.Validate if the designated constraints aren't met.
-type ArchiveTestRequestValidationError struct {
+// DeleteTestRequestValidationError is the validation error returned by
+// DeleteTestRequest.Validate if the designated constraints aren't met.
+type DeleteTestRequestValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1180,24 +1180,24 @@ type ArchiveTestRequestValidationError struct {
 }
 
 // Field function returns field value.
-func (e ArchiveTestRequestValidationError) Field() string { return e.field }
+func (e DeleteTestRequestValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ArchiveTestRequestValidationError) Reason() string { return e.reason }
+func (e DeleteTestRequestValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ArchiveTestRequestValidationError) Cause() error { return e.cause }
+func (e DeleteTestRequestValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ArchiveTestRequestValidationError) Key() bool { return e.key }
+func (e DeleteTestRequestValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ArchiveTestRequestValidationError) ErrorName() string {
-	return "ArchiveTestRequestValidationError"
+func (e DeleteTestRequestValidationError) ErrorName() string {
+	return "DeleteTestRequestValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ArchiveTestRequestValidationError) Error() string {
+func (e DeleteTestRequestValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1209,14 +1209,14 @@ func (e ArchiveTestRequestValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sArchiveTestRequest.%s: %s%s",
+		"invalid %sDeleteTestRequest.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ArchiveTestRequestValidationError{}
+var _ error = DeleteTestRequestValidationError{}
 
 var _ interface {
 	Field() string
@@ -1224,24 +1224,24 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ArchiveTestRequestValidationError{}
+} = DeleteTestRequestValidationError{}
 
-// Validate checks the field values on ArchiveTestResponse with the rules
+// Validate checks the field values on DeleteTestResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the first error encountered is returned, or nil if there are no violations.
-func (m *ArchiveTestResponse) Validate() error {
+func (m *DeleteTestResponse) Validate() error {
 	return m.validate(false)
 }
 
-// ValidateAll checks the field values on ArchiveTestResponse with the rules
+// ValidateAll checks the field values on DeleteTestResponse with the rules
 // defined in the proto definition for this message. If any rules are
 // violated, the result is a list of violation errors wrapped in
-// ArchiveTestResponseMultiError, or nil if none found.
-func (m *ArchiveTestResponse) ValidateAll() error {
+// DeleteTestResponseMultiError, or nil if none found.
+func (m *DeleteTestResponse) ValidateAll() error {
 	return m.validate(true)
 }
 
-func (m *ArchiveTestResponse) validate(all bool) error {
+func (m *DeleteTestResponse) validate(all bool) error {
 	if m == nil {
 		return nil
 	}
@@ -1249,19 +1249,19 @@ func (m *ArchiveTestResponse) validate(all bool) error {
 	var errors []error
 
 	if len(errors) > 0 {
-		return ArchiveTestResponseMultiError(errors)
+		return DeleteTestResponseMultiError(errors)
 	}
 
 	return nil
 }
 
-// ArchiveTestResponseMultiError is an error wrapping multiple validation
-// errors returned by ArchiveTestResponse.ValidateAll() if the designated
-// constraints aren't met.
-type ArchiveTestResponseMultiError []error
+// DeleteTestResponseMultiError is an error wrapping multiple validation errors
+// returned by DeleteTestResponse.ValidateAll() if the designated constraints
+// aren't met.
+type DeleteTestResponseMultiError []error
 
 // Error returns a concatenation of all the error messages it wraps.
-func (m ArchiveTestResponseMultiError) Error() string {
+func (m DeleteTestResponseMultiError) Error() string {
 	var msgs []string
 	for _, err := range m {
 		msgs = append(msgs, err.Error())
@@ -1270,11 +1270,11 @@ func (m ArchiveTestResponseMultiError) Error() string {
 }
 
 // AllErrors returns a list of validation violation errors.
-func (m ArchiveTestResponseMultiError) AllErrors() []error { return m }
+func (m DeleteTestResponseMultiError) AllErrors() []error { return m }
 
-// ArchiveTestResponseValidationError is the validation error returned by
-// ArchiveTestResponse.Validate if the designated constraints aren't met.
-type ArchiveTestResponseValidationError struct {
+// DeleteTestResponseValidationError is the validation error returned by
+// DeleteTestResponse.Validate if the designated constraints aren't met.
+type DeleteTestResponseValidationError struct {
 	field  string
 	reason string
 	cause  error
@@ -1282,24 +1282,24 @@ type ArchiveTestResponseValidationError struct {
 }
 
 // Field function returns field value.
-func (e ArchiveTestResponseValidationError) Field() string { return e.field }
+func (e DeleteTestResponseValidationError) Field() string { return e.field }
 
 // Reason function returns reason value.
-func (e ArchiveTestResponseValidationError) Reason() string { return e.reason }
+func (e DeleteTestResponseValidationError) Reason() string { return e.reason }
 
 // Cause function returns cause value.
-func (e ArchiveTestResponseValidationError) Cause() error { return e.cause }
+func (e DeleteTestResponseValidationError) Cause() error { return e.cause }
 
 // Key function returns key value.
-func (e ArchiveTestResponseValidationError) Key() bool { return e.key }
+func (e DeleteTestResponseValidationError) Key() bool { return e.key }
 
 // ErrorName returns error name.
-func (e ArchiveTestResponseValidationError) ErrorName() string {
-	return "ArchiveTestResponseValidationError"
+func (e DeleteTestResponseValidationError) ErrorName() string {
+	return "DeleteTestResponseValidationError"
 }
 
 // Error satisfies the builtin error interface
-func (e ArchiveTestResponseValidationError) Error() string {
+func (e DeleteTestResponseValidationError) Error() string {
 	cause := ""
 	if e.cause != nil {
 		cause = fmt.Sprintf(" | caused by: %v", e.cause)
@@ -1311,14 +1311,14 @@ func (e ArchiveTestResponseValidationError) Error() string {
 	}
 
 	return fmt.Sprintf(
-		"invalid %sArchiveTestResponse.%s: %s%s",
+		"invalid %sDeleteTestResponse.%s: %s%s",
 		key,
 		e.field,
 		e.reason,
 		cause)
 }
 
-var _ error = ArchiveTestResponseValidationError{}
+var _ error = DeleteTestResponseValidationError{}
 
 var _ interface {
 	Field() string
@@ -1326,7 +1326,7 @@ var _ interface {
 	Key() bool
 	Cause() error
 	ErrorName() string
-} = ArchiveTestResponseValidationError{}
+} = DeleteTestResponseValidationError{}
 
 // Validate checks the field values on DefineTestSuiteRequest with the rules
 // defined in the proto definition for this message. If any rules are

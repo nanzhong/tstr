@@ -13,6 +13,16 @@ import (
 	"github.com/jackc/pgtype"
 )
 
+const deleteTest = `-- name: DeleteTest :exec
+DELETE FROM tests
+WHERE id = $1::uuid
+`
+
+func (q *Queries) DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error {
+	_, err := db.Exec(ctx, deleteTest, id)
+	return err
+}
+
 const getTest = `-- name: GetTest :one
 SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
 FROM tests

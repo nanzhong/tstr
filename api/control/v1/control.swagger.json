@@ -127,12 +127,6 @@
         }
       }
     },
-    "v1ArchiveTestResponse": {
-      "type": "object"
-    },
-    "v1ArchiveTestSuiteResponse": {
-      "type": "object"
-    },
     "v1DefineTestSuiteResponse": {
       "type": "object",
       "properties": {
@@ -140,6 +134,9 @@
           "$ref": "#/definitions/v1TestSuite"
         }
       }
+    },
+    "v1DeleteTestResponse": {
+      "type": "object"
     },
     "v1GetRunResponse": {
       "type": "object",

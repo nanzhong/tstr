@@ -18,6 +18,8 @@ type Querier interface {
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
 	DefineTestSuite(ctx context.Context, db DBTX, arg DefineTestSuiteParams) (TestSuite, error)
+	DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UUID) error
+	DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error)
 	GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error)

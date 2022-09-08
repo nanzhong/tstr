@@ -70,6 +70,16 @@ func (q *Queries) AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (
 	return i, err
 }
 
+const deleteRunsForTest = `-- name: DeleteRunsForTest :exec
+DELETE FROM runs
+WHERE test_id = $1
+`
+
+func (q *Queries) DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UUID) error {
+	_, err := db.Exec(ctx, deleteRunsForTest, testID)
+	return err
+}
+
 const getRun = `-- name: GetRun :one
 SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 FROM runs

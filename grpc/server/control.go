@@ -257,6 +257,29 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 	return &controlv1.UpdateTestResponse{}, nil
 }
 
+func (s *ControlServer) DeleteTest(ctx context.Context, r *controlv1.DeleteTestRequest) (*controlv1.DeleteTestResponse, error) {
+	id, err := uuid.Parse(r.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid test id")
+	}
+
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+		if err := s.dbQuerier.DeleteRunsForTest(ctx, tx, id); err != nil {
+			return err
+		}
+		if err := s.dbQuerier.DeleteTest(ctx, tx, id); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		log.Error().Err(err).Stringer("test_id", id).Msg("failed to delete test")
+		return nil, status.Error(codes.Internal, "failed to delete test")
+	}
+
+	return &controlv1.DeleteTestResponse{}, nil
+}
+
 func (s *ControlServer) GetRun(ctx context.Context, r *controlv1.GetRunRequest) (*controlv1.GetRunResponse, error) {
 	id, err := uuid.Parse(r.Id)
 	if err != nil {

@@ -13,13 +13,12 @@ service ControlService {
   rpc UpdateTest(UpdateTestRequest) returns (UpdateTestResponse);
   rpc GetTest(GetTestRequest) returns (GetTestResponse);
   rpc ListTests(ListTestsRequest) returns (ListTestsResponse);
-  rpc ArchiveTest(ArchiveTestRequest) returns (ArchiveTestResponse);
+  rpc DeleteTest(DeleteTestRequest) returns (DeleteTestResponse);
 
   rpc DefineTestSuite(DefineTestSuiteRequest) returns (DefineTestSuiteResponse);
   rpc UpdateTestSuite(UpdateTestSuiteRequest) returns (UpdateTestSuiteResponse);
   rpc GetTestSuite(GetTestSuiteRequest) returns (GetTestSuiteResponse);
   rpc ListTestSuites(ListTestSuitesRequest) returns (ListTestSuitesResponse);
-  rpc ArchiveTestSuite(ArchiveTestSuiteRequest) returns (ArchiveTestSuiteResponse);
 
   rpc GetRun(GetRunRequest) returns (GetRunResponse);
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
@@ -71,11 +70,11 @@ message ListTestsResponse {
   repeated tstr.common.v1.Test tests = 1; // required
 }
 
-message ArchiveTestRequest {
+message DeleteTestRequest {
   string id = 1; // required
 }
 
-message ArchiveTestResponse {}
+message DeleteTestResponse {}
 
 message DefineTestSuiteRequest {
   string name = 1; // required

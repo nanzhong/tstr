@@ -14,7 +14,7 @@ import (
 )
 
 const getRunner = `-- name: GetRunner :one
-SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
+SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at, namespace_selectors
 FROM runners
 WHERE id = $1
 `
@@ -29,12 +29,13 @@ func (q *Queries) GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner,
 		&i.RejectTestLabelSelectors,
 		&i.RegisteredAt,
 		&i.LastHeartbeatAt,
+		&i.NamespaceSelectors,
 	)
 	return i, err
 }
 
 const listRunners = `-- name: ListRunners :many
-SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
+SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at, namespace_selectors
 FROM runners
 ORDER by last_heartbeat_at DESC, registered_at
 `
@@ -55,6 +56,7 @@ func (q *Queries) ListRunners(ctx context.Context, db DBTX) ([]Runner, error) {
 			&i.RejectTestLabelSelectors,
 			&i.RegisteredAt,
 			&i.LastHeartbeatAt,
+			&i.NamespaceSelectors,
 		); err != nil {
 			return nil, err
 		}
@@ -67,7 +69,7 @@ func (q *Queries) ListRunners(ctx context.Context, db DBTX) ([]Runner, error) {
 }
 
 const queryRunners = `-- name: QueryRunners :many
-SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
+SELECT id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at, namespace_selectors
 FROM runners
 WHERE
   ($1::uuid[] IS NULL OR runners.id = ANY ($1::uuid[])) AND
@@ -96,6 +98,7 @@ func (q *Queries) QueryRunners(ctx context.Context, db DBTX, arg QueryRunnersPar
 			&i.RejectTestLabelSelectors,
 			&i.RegisteredAt,
 			&i.LastHeartbeatAt,
+			&i.NamespaceSelectors,
 		); err != nil {
 			return nil, err
 		}
@@ -115,7 +118,7 @@ VALUES (
   $3,
   CURRENT_TIMESTAMP
 )
-RETURNING id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at
+RETURNING id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at, namespace_selectors
 `
 
 type RegisterRunnerParams struct {
@@ -134,6 +137,7 @@ func (q *Queries) RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunne
 		&i.RejectTestLabelSelectors,
 		&i.RegisteredAt,
 		&i.LastHeartbeatAt,
+		&i.NamespaceSelectors,
 	)
 	return i, err
 }

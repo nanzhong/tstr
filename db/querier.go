@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgtype"
 )
 
 type Querier interface {
@@ -17,7 +16,6 @@ type Querier interface {
 	AssignRun(ctx context.Context, db DBTX, arg AssignRunParams) (Run, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
-	DefineTestSuite(ctx context.Context, db DBTX, arg DefineTestSuiteParams) (TestSuite, error)
 	DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UUID) error
 	DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -25,7 +23,6 @@ type Querier interface {
 	GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error)
 	GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner, error)
 	GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, error)
-	GetTestSuite(ctx context.Context, db DBTX, id uuid.UUID) (TestSuite, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -33,12 +30,10 @@ type Querier interface {
 	ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error)
 	ListRunners(ctx context.Context, db DBTX) ([]Runner, error)
 	ListRuns(ctx context.Context, db DBTX) ([]Run, error)
-	ListTestSuites(ctx context.Context, db DBTX, labels pgtype.JSONB) ([]TestSuite, error)
 	ListTests(ctx context.Context, db DBTX) ([]Test, error)
 	ListTestsToSchedule(ctx context.Context, db DBTX) ([]Test, error)
 	QueryRunners(ctx context.Context, db DBTX, arg QueryRunnersParams) ([]Runner, error)
 	QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) ([]Run, error)
-	QueryTestSuites(ctx context.Context, db DBTX, arg QueryTestSuitesParams) ([]TestSuite, error)
 	QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]Test, error)
 	RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunnerParams) (Runner, error)
 	RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (Test, error)
@@ -54,7 +49,6 @@ type Querier interface {
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error
 	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error
-	UpdateTestSuite(ctx context.Context, db DBTX, arg UpdateTestSuiteParams) error
 }
 
 var _ Querier = (*Queries)(nil)

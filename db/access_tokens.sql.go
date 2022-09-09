@@ -13,7 +13,7 @@ import (
 )
 
 const authAccessToken = `-- name: AuthAccessToken :one
-SELECT scopes::text[], expires_at
+SELECT namespace_selectors, scopes::text[], expires_at
 FROM access_tokens
 WHERE
   token_hash = $1 AND
@@ -21,31 +21,33 @@ WHERE
 `
 
 type AuthAccessTokenRow struct {
-	Scopes    []string
-	ExpiresAt sql.NullTime
+	NamespaceSelectors []string
+	Scopes             []string
+	ExpiresAt          sql.NullTime
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error) {
 	row := db.QueryRow(ctx, authAccessToken, tokenHash)
 	var i AuthAccessTokenRow
-	err := row.Scan(&i.Scopes, &i.ExpiresAt)
+	err := row.Scan(&i.NamespaceSelectors, &i.Scopes, &i.ExpiresAt)
 	return i, err
 }
 
 const getAccessToken = `-- name: GetAccessToken :one
-SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE id = $1
 `
 
 type GetAccessTokenRow struct {
-	ID        uuid.UUID
-	Name      string
-	Scopes    []string
-	IssuedAt  sql.NullTime
-	ExpiresAt sql.NullTime
-	RevokedAt sql.NullTime
+	ID                 uuid.UUID
+	Name               string
+	NamespaceSelectors []string
+	Scopes             []string
+	IssuedAt           sql.NullTime
+	ExpiresAt          sql.NullTime
+	RevokedAt          sql.NullTime
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -55,6 +57,7 @@ func (q *Queries) GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (Ge
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.NamespaceSelectors,
 		&i.Scopes,
 		&i.IssuedAt,
 		&i.ExpiresAt,
@@ -64,24 +67,32 @@ func (q *Queries) GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (Ge
 }
 
 const issueAccessToken = `-- name: IssueAccessToken :one
-INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
-VALUES ($1, $2, $3::text[]::access_token_scope[], $4)
-RETURNING id, name, scopes::text[], issued_at, expires_at
+INSERT INTO access_tokens (name, token_hash, namespace_selectors, scopes, expires_at)
+VALUES (
+  $1, 
+  $2, 
+  $3,
+  $4::text[]::access_token_scope[], 
+  $5
+)
+RETURNING id, name, namespace_selectors, scopes::text[], issued_at, expires_at
 `
 
 type IssueAccessTokenParams struct {
-	Name      string
-	TokenHash string
-	Scopes    []string
-	ExpiresAt sql.NullTime
+	Name               string
+	TokenHash          string
+	NamespaceSelectors []string
+	Scopes             []string
+	ExpiresAt          sql.NullTime
 }
 
 type IssueAccessTokenRow struct {
-	ID        uuid.UUID
-	Name      string
-	Scopes    []string
-	IssuedAt  sql.NullTime
-	ExpiresAt sql.NullTime
+	ID                 uuid.UUID
+	Name               string
+	NamespaceSelectors []string
+	Scopes             []string
+	IssuedAt           sql.NullTime
+	ExpiresAt          sql.NullTime
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -89,6 +100,7 @@ func (q *Queries) IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccess
 	row := db.QueryRow(ctx, issueAccessToken,
 		arg.Name,
 		arg.TokenHash,
+		arg.NamespaceSelectors,
 		arg.Scopes,
 		arg.ExpiresAt,
 	)
@@ -96,6 +108,7 @@ func (q *Queries) IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccess
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.NamespaceSelectors,
 		&i.Scopes,
 		&i.IssuedAt,
 		&i.ExpiresAt,
@@ -104,7 +117,7 @@ func (q *Queries) IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccess
 }
 
 const listAccessTokens = `-- name: ListAccessTokens :many
-SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   CASE WHEN $1::bool
@@ -123,12 +136,13 @@ type ListAccessTokensParams struct {
 }
 
 type ListAccessTokensRow struct {
-	ID        uuid.UUID
-	Name      string
-	Scopes    []string
-	IssuedAt  sql.NullTime
-	ExpiresAt sql.NullTime
-	RevokedAt sql.NullTime
+	ID                 uuid.UUID
+	Name               string
+	NamespaceSelectors []string
+	Scopes             []string
+	IssuedAt           sql.NullTime
+	ExpiresAt          sql.NullTime
+	RevokedAt          sql.NullTime
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -144,6 +158,7 @@ func (q *Queries) ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessT
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.NamespaceSelectors,
 			&i.Scopes,
 			&i.IssuedAt,
 			&i.ExpiresAt,

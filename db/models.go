@@ -103,13 +103,14 @@ func (ns NullRunResult) Value() (driver.Value, error) {
 }
 
 type AccessToken struct {
-	ID        uuid.UUID
-	Name      string
-	TokenHash string
-	Scopes    []AccessTokenScope
-	IssuedAt  sql.NullTime
-	ExpiresAt sql.NullTime
-	RevokedAt sql.NullTime
+	ID                 uuid.UUID
+	Name               string
+	TokenHash          string
+	Scopes             []AccessTokenScope
+	IssuedAt           sql.NullTime
+	ExpiresAt          sql.NullTime
+	RevokedAt          sql.NullTime
+	NamespaceSelectors []string
 }
 
 type Run struct {
@@ -134,6 +135,7 @@ type Runner struct {
 	RejectTestLabelSelectors pgtype.JSONB
 	RegisteredAt             sql.NullTime
 	LastHeartbeatAt          sql.NullTime
+	NamespaceSelectors       []string
 }
 
 type SchemaMigration struct {
@@ -150,12 +152,5 @@ type Test struct {
 	NextRunAt    sql.NullTime
 	RegisteredAt sql.NullTime
 	UpdatedAt    sql.NullTime
-}
-
-type TestSuite struct {
-	ID        uuid.UUID
-	Name      string
-	Labels    pgtype.JSONB
-	CreatedAt sql.NullTime
-	UpdatedAt sql.NullTime
+	Namespace    string
 }

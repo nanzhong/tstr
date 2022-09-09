@@ -24,7 +24,7 @@ func (q *Queries) DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error {
 }
 
 const getTest = `-- name: GetTest :one
-SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
 WHERE tests.id = $1
 `
@@ -42,12 +42,13 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, err
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
+		&i.Namespace,
 	)
 	return i, err
 }
 
 const listTests = `-- name: ListTests :many
-SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
 ORDER BY tests.name ASC
 `
@@ -71,6 +72,7 @@ func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
+			&i.Namespace,
 		); err != nil {
 			return nil, err
 		}
@@ -83,7 +85,7 @@ func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
 }
 
 const listTestsToSchedule = `-- name: ListTestsToSchedule :many
-SELECT tests.id, tests.name, tests.run_config, tests.labels, tests.matrix, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at
+SELECT tests.id, tests.name, tests.run_config, tests.labels, tests.matrix, tests.cron_schedule, tests.next_run_at, tests.registered_at, tests.updated_at, tests.namespace
 FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
@@ -110,6 +112,7 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]Test, err
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
+			&i.Namespace,
 		); err != nil {
 			return nil, err
 		}
@@ -122,7 +125,7 @@ func (q *Queries) ListTestsToSchedule(ctx context.Context, db DBTX) ([]Test, err
 }
 
 const queryTests = `-- name: QueryTests :many
-SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
+SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
 WHERE
   ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
@@ -154,6 +157,7 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 			&i.NextRunAt,
 			&i.RegisteredAt,
 			&i.UpdatedAt,
+			&i.Namespace,
 		); err != nil {
 			return nil, err
 		}
@@ -175,7 +179,7 @@ VALUES (
   $5,
   $6
 )
-RETURNING id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at
+RETURNING id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 `
 
 type RegisterTestParams struct {
@@ -207,6 +211,7 @@ func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestPar
 		&i.NextRunAt,
 		&i.RegisteredAt,
 		&i.UpdatedAt,
+		&i.Namespace,
 	)
 	return i, err
 }

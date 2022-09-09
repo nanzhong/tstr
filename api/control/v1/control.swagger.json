@@ -257,6 +257,12 @@
         "name": {
           "type": "string"
         },
+        "namespaceSelectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "acceptTestLabelSelectors": {
           "type": "object",
           "additionalProperties": {
@@ -294,6 +300,9 @@
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "name": {

@@ -183,6 +183,12 @@
         "name": {
           "type": "string"
         },
+        "namespaceSelectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "acceptTestLabelSelectors": {
           "type": "object",
           "additionalProperties": {

@@ -21,12 +21,13 @@ message Test {
   }
 
   string id = 1; // required (generated)
-  string name = 2; // required
-  RunConfig run_config = 3; // required
-  map<string, string> labels = 4;
-  string cron_schedule = 5;
-  google.protobuf.Timestamp next_run_at = 6;
-  Matrix matrix = 7;
+  string namespace = 2; // required
+  string name = 3; // required
+  RunConfig run_config = 4; // required
+  map<string, string> labels = 5;
+  string cron_schedule = 6;
+  google.protobuf.Timestamp next_run_at = 7;
+  Matrix matrix = 8;
 
   google.protobuf.Timestamp registered_at = 10; // required
   google.protobuf.Timestamp updated_at = 11; // required
@@ -62,18 +63,17 @@ message Run {
   Result result = 7;
   repeated Log logs = 8;
   map<string, string> result_data = 9;
-
   google.protobuf.Timestamp scheduled_at = 10; // required
   google.protobuf.Timestamp started_at = 11;
   google.protobuf.Timestamp finished_at = 12;
-
 }
 
 message Runner {
   string id = 1; // required (generated)
   string name = 2; // required
-  map<string, string> accept_test_label_selectors = 3;
-  map<string, string> reject_test_label_selectors = 4;
+  repeated string namespace_selectors = 3; // required
+  map<string, string> accept_test_label_selectors = 4;
+  map<string, string> reject_test_label_selectors = 5;
 
   google.protobuf.Timestamp registered_at = 10; // required
   google.protobuf.Timestamp last_heartbeat_at = 11;
@@ -92,7 +92,8 @@ message AccessToken {
   string id = 1; // required (generated)
   string name = 2; // required
   string token = 3; // required (generated) will be present only on issuance, empty otherwise
-  repeated Scope scopes = 4; // required
+  repeated string namespace_selectors = 4; // required
+  repeated Scope scopes = 5; // required
 
   google.protobuf.Timestamp issued_at = 10; // required
   google.protobuf.Timestamp expires_at = 11;

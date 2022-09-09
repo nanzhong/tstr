@@ -63,7 +63,8 @@ CREATE TABLE public.access_tokens (
     scopes public.access_token_scope[],
     issued_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     expires_at timestamp with time zone,
-    revoked_at timestamp with time zone
+    revoked_at timestamp with time zone,
+    namespace_selectors character varying[]
 );
 
 
@@ -77,7 +78,8 @@ CREATE TABLE public.runners (
     accept_test_label_selectors jsonb,
     reject_test_label_selectors jsonb,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    namespace_selectors character varying[]
 );
 
 
@@ -123,7 +125,8 @@ CREATE TABLE public.tests (
     cron_schedule character varying,
     next_run_at timestamp with time zone,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    namespace character varying NOT NULL
 );
 
 
@@ -251,4 +254,5 @@ ALTER TABLE ONLY public.runs
 
 INSERT INTO public.schema_migrations (version) VALUES
     ('20220426134459'),
-    ('20220909000425');
+    ('20220909000425'),
+    ('20220909001359');

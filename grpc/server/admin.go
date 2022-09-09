@@ -6,6 +6,7 @@ import (
 	"crypto/sha512"
 	"database/sql"
 	"encoding/hex"
+	"regexp"
 	"time"
 
 	"github.com/google/uuid"
@@ -34,6 +35,12 @@ func NewAdminServer(pgxPool *pgxpool.Pool) adminv1.AdminServiceServer {
 }
 
 func (s *AdminServer) IssueAccessToken(ctx context.Context, req *adminv1.IssueAccessTokenRequest) (*adminv1.IssueAccessTokenResponse, error) {
+	for _, nsSel := range req.NamespaceSelectors {
+		if _, err := regexp.Compile(nsSel); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid namespace selectors")
+		}
+	}
+
 	var expiresAt sql.NullTime
 	if req.ValidDuration != nil {
 		expiresAt.Valid = true
@@ -56,10 +63,11 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *adminv1.IssueAc
 		textScopes[i] = string(s)
 	}
 	issuedToken, err := s.dbQuerier.IssueAccessToken(ctx, s.pgxPool, db.IssueAccessTokenParams{
-		Name:      req.Name,
-		TokenHash: tokenHash,
-		Scopes:    textScopes,
-		ExpiresAt: expiresAt,
+		Name:               req.Name,
+		TokenHash:          tokenHash,
+		NamespaceSelectors: req.NamespaceSelectors,
+		Scopes:             textScopes,
+		ExpiresAt:          expiresAt,
 	})
 	if err != nil {
 		log.Error().Err(err).Msg("failed to create access token in db")
@@ -68,8 +76,9 @@ func (s *AdminServer) IssueAccessToken(ctx context.Context, req *adminv1.IssueAc
 
 	return &adminv1.IssueAccessTokenResponse{
 		AccessToken: &commonv1.AccessToken{
-			Id:   issuedToken.ID.String(),
-			Name: issuedToken.Name,
+			Id:                 issuedToken.ID.String(),
+			Name:               issuedToken.Name,
+			NamespaceSelectors: issuedToken.NamespaceSelectors,
 			// TODO return actual scopes inserted, pending sqlc bug fix re enum arrays
 			// Scopes:    types.ToAccessTokenScopes(issuedToken.Scopes),
 			Scopes:    req.Scopes,
@@ -94,12 +103,13 @@ func (s *AdminServer) GetAccessToken(ctx context.Context, req *adminv1.GetAccess
 
 	return &adminv1.GetAccessTokenResponse{
 		AccessToken: &commonv1.AccessToken{
-			Id:        token.ID.String(),
-			Name:      token.Name,
-			Scopes:    types.ToAccessTokenScopes(token.Scopes),
-			IssuedAt:  types.ToProtoTimestamp(token.IssuedAt),
-			ExpiresAt: types.ToProtoTimestamp(token.ExpiresAt),
-			RevokedAt: types.ToProtoTimestamp(token.RevokedAt),
+			Id:                 token.ID.String(),
+			Name:               token.Name,
+			NamespaceSelectors: token.NamespaceSelectors,
+			Scopes:             types.ToAccessTokenScopes(token.Scopes),
+			IssuedAt:           types.ToProtoTimestamp(token.IssuedAt),
+			ExpiresAt:          types.ToProtoTimestamp(token.ExpiresAt),
+			RevokedAt:          types.ToProtoTimestamp(token.RevokedAt),
 		},
 	}, nil
 }
@@ -117,12 +127,13 @@ func (s *AdminServer) ListAccessTokens(ctx context.Context, req *adminv1.ListAcc
 	res := &adminv1.ListAccessTokensResponse{}
 	for _, token := range tokens {
 		res.AccessTokens = append(res.AccessTokens, &commonv1.AccessToken{
-			Id:        token.ID.String(),
-			Name:      token.Name,
-			Scopes:    types.ToAccessTokenScopes(token.Scopes),
-			IssuedAt:  types.ToProtoTimestamp(token.IssuedAt),
-			ExpiresAt: types.ToProtoTimestamp(token.ExpiresAt),
-			RevokedAt: types.ToProtoTimestamp(token.RevokedAt),
+			Id:                 token.ID.String(),
+			Name:               token.Name,
+			NamespaceSelectors: token.NamespaceSelectors,
+			Scopes:             types.ToAccessTokenScopes(token.Scopes),
+			IssuedAt:           types.ToProtoTimestamp(token.IssuedAt),
+			ExpiresAt:          types.ToProtoTimestamp(token.ExpiresAt),
+			RevokedAt:          types.ToProtoTimestamp(token.RevokedAt),
 		})
 	}
 

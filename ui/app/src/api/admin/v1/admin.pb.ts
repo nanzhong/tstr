@@ -9,6 +9,7 @@ import * as fm from "../../fetch.pb"
 import * as GoogleProtobufDuration from "../../google/protobuf/duration.pb"
 export type IssueAccessTokenRequest = {
   name?: string
+  namespaceSelectors?: string[]
   scopes?: TstrCommonV1Common.AccessTokenScope[]
   validDuration?: GoogleProtobufDuration.Duration
 }

@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
+	"regexp"
 	"strings"
 
 	"github.com/jackc/pgx/v4"
@@ -19,7 +20,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const mdAuthKey = "authorization"
+const MDKeyAuth = "authorization"
+const MDKeyNamespace = "namespace"
 
 // TODO We can probably be a bit smarter/less verbose here and instead of direct
 // string matches on the full method, build up the set of allowable tokens given
@@ -85,6 +87,25 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
 		}
 
+		namespace, err := namespaceFromMD(md)
+		if err != nil {
+			return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+		}
+		namespaceAllowed := false
+		for _, nsSel := range auth.NamespaceSelectors {
+			re, err := regexp.Compile(nsSel)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to authorize request: error validating namespace")
+			}
+			if re.MatchString(namespace) {
+				namespaceAllowed = true
+				break
+			}
+		}
+		if !namespaceAllowed {
+			return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+		}
+
 		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
@@ -119,6 +140,25 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Internal, "failed to authenticate request")
 		}
 
+		namespace, err := namespaceFromMD(md)
+		if err != nil {
+			return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+		}
+		namespaceAllowed := false
+		for _, nsSel := range auth.NamespaceSelectors {
+			re, err := regexp.Compile(nsSel)
+			if err != nil {
+				return status.Error(codes.Internal, "failed to authorize request: error validating namespace")
+			}
+			if re.MatchString(namespace) {
+				namespaceAllowed = true
+				break
+			}
+		}
+		if !namespaceAllowed {
+			return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+		}
+
 		for _, vs := range types.FromAccessTokenScopes(validScopes) {
 			for _, s := range auth.Scopes {
 				if string(vs) == s {
@@ -132,20 +172,20 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 
 func UnaryClientInterceptor(accessToken string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
+		ctx = metadata.AppendToOutgoingContext(ctx, MDKeyAuth, "bearer "+accessToken)
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
 func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
+		ctx = metadata.AppendToOutgoingContext(ctx, MDKeyAuth, "bearer "+accessToken)
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
 
 func tokenFromMD(md metadata.MD) (string, string, error) {
-	vals := md.Get(mdAuthKey)
+	vals := md.Get(MDKeyAuth)
 	if vals == nil || len(vals) != 1 {
 		return "", "", errors.New("invalid access token")
 	}
@@ -159,4 +199,12 @@ func tokenFromMD(md metadata.MD) (string, string, error) {
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	return token, tokenHash, nil
+}
+
+func namespaceFromMD(md metadata.MD) (string, error) {
+	vals := md.Get(MDKeyNamespace)
+	if vals == nil || len(vals) != 1 {
+		return "", errors.New("missing namespace")
+	}
+	return vals[0], nil
 }

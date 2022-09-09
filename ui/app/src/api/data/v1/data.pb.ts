@@ -35,23 +35,6 @@ export type QueryTestsResponse = {
   tests?: TstrCommonV1Common.Test[]
 }
 
-export type GetTestSuiteRequest = {
-  id?: string
-}
-
-export type GetTestSuiteResponse = {
-  testSuite?: TstrCommonV1Common.TestSuite
-}
-
-export type QueryTestSuitesRequest = {
-  ids?: string[]
-  labels?: {[key: string]: string}
-}
-
-export type QueryTestSuitesResponse = {
-  testSuites?: TstrCommonV1Common.TestSuite[]
-}
-
 export type GetRunRequest = {
   id?: string
 }
@@ -63,7 +46,6 @@ export type GetRunResponse = {
 export type QueryRunsRequest = {
   ids?: string[]
   testIds?: string[]
-  testSuiteIds?: string[]
   runnerIds?: string[]
   results?: TstrCommonV1Common.RunResult[]
   scheduledBefore?: GoogleProtobufTimestamp.Timestamp
@@ -145,12 +127,6 @@ export class DataService {
   }
   static QueryTests(req: QueryTestsRequest, initReq?: fm.InitReq): Promise<QueryTestsResponse> {
     return fm.fetchReq<QueryTestsRequest, QueryTestsResponse>(`/data/v1/tests?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
-  }
-  static GetTestSuite(req: GetTestSuiteRequest, initReq?: fm.InitReq): Promise<GetTestSuiteResponse> {
-    return fm.fetchReq<GetTestSuiteRequest, GetTestSuiteResponse>(`/data/v1/test_suites/${req["id"]}?${fm.renderURLSearchParams(req, ["id"])}`, {...initReq, method: "GET"})
-  }
-  static QueryTestSuites(req: QueryTestSuitesRequest, initReq?: fm.InitReq): Promise<QueryTestSuitesResponse> {
-    return fm.fetchReq<QueryTestSuitesRequest, QueryTestSuitesResponse>(`/data/v1/test_suites?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
   static GetRun(req: GetRunRequest, initReq?: fm.InitReq): Promise<GetRunResponse> {
     return fm.fetchReq<GetRunRequest, GetRunResponse>(`/data/v1/runs/${req["id"]}?${fm.renderURLSearchParams(req, ["id"])}`, {...initReq, method: "GET"})

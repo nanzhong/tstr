@@ -96,13 +96,6 @@ FROM runs
 WHERE
   (sqlc.narg('ids')::uuid[] IS NULL OR runs.id = ANY (sqlc.narg('ids')::uuid[])) AND
   (sqlc.narg('test_ids')::uuid[] IS NULL OR runs.test_id = ANY (sqlc.narg('test_ids')::uuid[])) AND
-  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR runs.test_id = ANY (
-      SELECT tests.id
-      FROM test_suites
-      JOIN tests
-      ON tests.labels @> test_suites.labels
-      WHERE test_suites.id = ANY (sqlc.narg('test_suite_ids')::uuid[])
-    )) AND
   (sqlc.narg('runner_ids')::uuid[] IS NULL OR runner_id = ANY (sqlc.narg('runner_ids')::uuid[])) AND
   (sqlc.narg('results')::text[] IS NULL OR result::text = ANY (sqlc.narg('results')::text[])) AND
   (sqlc.arg('scheduled_before')::timestamptz IS NULL OR scheduled_at < sqlc.narg('scheduled_before')::timestamptz) AND

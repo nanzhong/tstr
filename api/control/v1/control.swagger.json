@@ -127,14 +127,6 @@
         }
       }
     },
-    "v1DefineTestSuiteResponse": {
-      "type": "object",
-      "properties": {
-        "testSuite": {
-          "$ref": "#/definitions/v1TestSuite"
-        }
-      }
-    },
     "v1DeleteTestResponse": {
       "type": "object"
     },
@@ -162,14 +154,6 @@
         }
       }
     },
-    "v1GetTestSuiteResponse": {
-      "type": "object",
-      "properties": {
-        "testSuite": {
-          "$ref": "#/definitions/v1TestSuite"
-        }
-      }
-    },
     "v1ListRunnersResponse": {
       "type": "object",
       "properties": {
@@ -188,17 +172,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Run"
-          }
-        }
-      }
-    },
-    "v1ListTestSuitesResponse": {
-      "type": "object",
-      "properties": {
-        "testSuites": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1TestSuite"
           }
         }
       }
@@ -355,35 +328,7 @@
         }
       }
     },
-    "v1TestSuite": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
     "v1UpdateTestResponse": {
-      "type": "object"
-    },
-    "v1UpdateTestSuiteResponse": {
       "type": "object"
     }
   }

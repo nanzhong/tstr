@@ -189,28 +189,20 @@ FROM runs
 WHERE
   ($1::uuid[] IS NULL OR runs.id = ANY ($1::uuid[])) AND
   ($2::uuid[] IS NULL OR runs.test_id = ANY ($2::uuid[])) AND
-  ($3::uuid[] IS NULL OR runs.test_id = ANY (
-      SELECT tests.id
-      FROM test_suites
-      JOIN tests
-      ON tests.labels @> test_suites.labels
-      WHERE test_suites.id = ANY ($3::uuid[])
-    )) AND
-  ($4::uuid[] IS NULL OR runner_id = ANY ($4::uuid[])) AND
-  ($5::text[] IS NULL OR result::text = ANY ($5::text[])) AND
-  ($6::timestamptz IS NULL OR scheduled_at < $6::timestamptz) AND
-  ($7::timestamptz IS NULL OR scheduled_at > $7::timestamptz) AND
-  ($8::timestamptz IS NULL OR started_at < $8::timestamptz) AND
-  ($9::timestamptz IS NULL OR started_at > $9::timestamptz) AND
-  ($10::timestamptz IS NULL OR finished_at < $10::timestamptz) AND
-  ($11::timestamptz IS NULL OR finished_at > $11::timestamptz)
+  ($3::uuid[] IS NULL OR runner_id = ANY ($3::uuid[])) AND
+  ($4::text[] IS NULL OR result::text = ANY ($4::text[])) AND
+  ($5::timestamptz IS NULL OR scheduled_at < $5::timestamptz) AND
+  ($6::timestamptz IS NULL OR scheduled_at > $6::timestamptz) AND
+  ($7::timestamptz IS NULL OR started_at < $7::timestamptz) AND
+  ($8::timestamptz IS NULL OR started_at > $8::timestamptz) AND
+  ($9::timestamptz IS NULL OR finished_at < $9::timestamptz) AND
+  ($10::timestamptz IS NULL OR finished_at > $10::timestamptz)
 ORDER BY scheduled_at DESC
 `
 
 type QueryRunsParams struct {
 	Ids             []uuid.UUID
 	TestIds         []uuid.UUID
-	TestSuiteIds    []uuid.UUID
 	RunnerIds       []uuid.UUID
 	Results         []string
 	ScheduledBefore sql.NullTime
@@ -225,7 +217,6 @@ func (q *Queries) QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) (
 	rows, err := db.Query(ctx, queryRuns,
 		arg.Ids,
 		arg.TestIds,
-		arg.TestSuiteIds,
 		arg.RunnerIds,
 		arg.Results,
 		arg.ScheduledBefore,

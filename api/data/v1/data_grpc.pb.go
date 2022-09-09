@@ -24,8 +24,6 @@ const _ = grpc.SupportPackageIsVersion7
 type DataServiceClient interface {
 	GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*GetTestResponse, error)
 	QueryTests(ctx context.Context, in *QueryTestsRequest, opts ...grpc.CallOption) (*QueryTestsResponse, error)
-	GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error)
-	QueryTestSuites(ctx context.Context, in *QueryTestSuitesRequest, opts ...grpc.CallOption) (*QueryTestSuitesResponse, error)
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
 	QueryRuns(ctx context.Context, in *QueryRunsRequest, opts ...grpc.CallOption) (*QueryRunsResponse, error)
 	SummarizeRuns(ctx context.Context, in *SummarizeRunsRequest, opts ...grpc.CallOption) (*SummarizeRunsResponse, error)
@@ -53,24 +51,6 @@ func (c *dataServiceClient) GetTest(ctx context.Context, in *GetTestRequest, opt
 func (c *dataServiceClient) QueryTests(ctx context.Context, in *QueryTestsRequest, opts ...grpc.CallOption) (*QueryTestsResponse, error) {
 	out := new(QueryTestsResponse)
 	err := c.cc.Invoke(ctx, "/tstr.data.v1.DataService/QueryTests", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataServiceClient) GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error) {
-	out := new(GetTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.data.v1.DataService/GetTestSuite", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *dataServiceClient) QueryTestSuites(ctx context.Context, in *QueryTestSuitesRequest, opts ...grpc.CallOption) (*QueryTestSuitesResponse, error) {
-	out := new(QueryTestSuitesResponse)
-	err := c.cc.Invoke(ctx, "/tstr.data.v1.DataService/QueryTestSuites", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,8 +108,6 @@ func (c *dataServiceClient) QueryRunners(ctx context.Context, in *QueryRunnersRe
 type DataServiceServer interface {
 	GetTest(context.Context, *GetTestRequest) (*GetTestResponse, error)
 	QueryTests(context.Context, *QueryTestsRequest) (*QueryTestsResponse, error)
-	GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error)
-	QueryTestSuites(context.Context, *QueryTestSuitesRequest) (*QueryTestSuitesResponse, error)
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
 	QueryRuns(context.Context, *QueryRunsRequest) (*QueryRunsResponse, error)
 	SummarizeRuns(context.Context, *SummarizeRunsRequest) (*SummarizeRunsResponse, error)
@@ -147,12 +125,6 @@ func (UnimplementedDataServiceServer) GetTest(context.Context, *GetTestRequest) 
 }
 func (UnimplementedDataServiceServer) QueryTests(context.Context, *QueryTestsRequest) (*QueryTestsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method QueryTests not implemented")
-}
-func (UnimplementedDataServiceServer) GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTestSuite not implemented")
-}
-func (UnimplementedDataServiceServer) QueryTestSuites(context.Context, *QueryTestSuitesRequest) (*QueryTestSuitesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryTestSuites not implemented")
 }
 func (UnimplementedDataServiceServer) GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRun not implemented")
@@ -214,42 +186,6 @@ func _DataService_QueryTests_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DataServiceServer).QueryTests(ctx, req.(*QueryTestsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataService_GetTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTestSuiteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServiceServer).GetTestSuite(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.data.v1.DataService/GetTestSuite",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServiceServer).GetTestSuite(ctx, req.(*GetTestSuiteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _DataService_QueryTestSuites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryTestSuitesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(DataServiceServer).QueryTestSuites(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.data.v1.DataService/QueryTestSuites",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(DataServiceServer).QueryTestSuites(ctx, req.(*QueryTestSuitesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -358,14 +294,6 @@ var DataService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "QueryTests",
 			Handler:    _DataService_QueryTests_Handler,
-		},
-		{
-			MethodName: "GetTestSuite",
-			Handler:    _DataService_GetTestSuite_Handler,
-		},
-		{
-			MethodName: "QueryTestSuites",
-			Handler:    _DataService_QueryTestSuites_Handler,
 		},
 		{
 			MethodName: "GetRun",

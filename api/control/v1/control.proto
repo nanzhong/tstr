@@ -15,11 +15,6 @@ service ControlService {
   rpc ListTests(ListTestsRequest) returns (ListTestsResponse);
   rpc DeleteTest(DeleteTestRequest) returns (DeleteTestResponse);
 
-  rpc DefineTestSuite(DefineTestSuiteRequest) returns (DefineTestSuiteResponse);
-  rpc UpdateTestSuite(UpdateTestSuiteRequest) returns (UpdateTestSuiteResponse);
-  rpc GetTestSuite(GetTestSuiteRequest) returns (GetTestSuiteResponse);
-  rpc ListTestSuites(ListTestSuitesRequest) returns (ListTestSuitesResponse);
-
   rpc GetRun(GetRunRequest) returns (GetRunResponse);
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
   rpc ScheduleRun(ScheduleRunRequest) returns (ScheduleRunResponse);
@@ -75,45 +70,6 @@ message DeleteTestRequest {
 }
 
 message DeleteTestResponse {}
-
-message DefineTestSuiteRequest {
-  string name = 1; // required
-  map<string, string> labels = 2; // required
-}
-
-message DefineTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1; // required
-}
-
-message UpdateTestSuiteRequest {
-  google.protobuf.FieldMask field_mask = 1;
-
-  string id = 2; // required
-  string name = 3;
-  map<string, string> labels = 4;
-}
-
-message UpdateTestSuiteResponse {}
-
-message GetTestSuiteRequest {
-  string id = 1; // required
-}
-
-message GetTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1; // required
-}
-
-message ListTestSuitesRequest {}
-
-message ListTestSuitesResponse {
-  repeated tstr.common.v1.TestSuite test_suites = 1; // required
-}
-
-message ArchiveTestSuiteRequest {
-  string id = 1; // required
-}
-
-message ArchiveTestSuiteResponse {}
 
 message GetRunRequest {
   string id = 1; // required

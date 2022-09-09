@@ -126,25 +126,17 @@ SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registe
 FROM tests
 WHERE
   ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
-  ($2::uuid[] IS NULL OR tests.id = ANY (
-    SELECT tests.id
-    FROM test_suites
-    JOIN tests
-    ON tests.labels @> test_suites.labels
-    WHERE test_suites.id = ANY ($2::uuid[])
-    )) AND
-  ($3::jsonb IS NULL OR tests.labels @> $3::jsonb)
+  ($2::jsonb IS NULL OR tests.labels @> $2::jsonb)
 ORDER BY tests.name ASC
 `
 
 type QueryTestsParams struct {
-	Ids          []uuid.UUID
-	TestSuiteIds []uuid.UUID
-	Labels       pgtype.JSONB
+	Ids    []uuid.UUID
+	Labels pgtype.JSONB
 }
 
 func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]Test, error) {
-	rows, err := db.Query(ctx, queryTests, arg.Ids, arg.TestSuiteIds, arg.Labels)
+	rows, err := db.Query(ctx, queryTests, arg.Ids, arg.Labels)
 	if err != nil {
 		return nil, err
 	}

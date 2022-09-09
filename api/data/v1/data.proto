@@ -22,18 +22,6 @@ service DataService {
     };
   };
 
-  rpc GetTestSuite(GetTestSuiteRequest) returns (GetTestSuiteResponse) {
-    option (google.api.http) = {
-      get: "/data/v1/test_suites/{id}"
-    };
-  };
-
-  rpc QueryTestSuites(QueryTestSuitesRequest) returns (QueryTestSuitesResponse) {
-     option (google.api.http) = {
-      get: "/data/v1/test_suites"
-    };
-  };
-
   rpc GetRun(GetRunRequest) returns (GetRunResponse) {
     option (google.api.http) = {
       get: "/data/v1/runs/{id}"
@@ -90,27 +78,6 @@ message QueryTestsResponse {
   repeated tstr.common.v1.Test tests = 1;
 }
 
-message GetTestSuiteRequest {
-  string id = 1 [
-    (validate.rules).string.uuid = true
-  ];
-}
-
-message GetTestSuiteResponse {
-  tstr.common.v1.TestSuite test_suite = 1;
-}
-
-message QueryTestSuitesRequest {
-  repeated string ids = 1 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
-  ];
-  map<string, string> labels = 2;
-}
-
-message QueryTestSuitesResponse {
-  repeated tstr.common.v1.TestSuite test_suites = 1;
-}
-
 message GetRunRequest {
   string id = 1 [
     (validate.rules).string.uuid = true
@@ -128,20 +95,17 @@ message QueryRunsRequest {
   repeated string test_ids = 2 [
     (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
   ];
-  repeated string test_suite_ids = 3 [
+  repeated string runner_ids = 3 [
     (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
   ];
-  repeated string runner_ids = 4 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
-  ];
-  repeated tstr.common.v1.Run.Result results = 5;
-  google.protobuf.Timestamp scheduled_before = 6;
-  google.protobuf.Timestamp scheduled_after = 7;
-  google.protobuf.Timestamp started_before = 8;
-  google.protobuf.Timestamp started_after = 9;
-  google.protobuf.Timestamp finished_before = 10;
-  google.protobuf.Timestamp finished_after = 11;
-  bool include_logs = 12;
+  repeated tstr.common.v1.Run.Result results = 4;
+  google.protobuf.Timestamp scheduled_before = 5;
+  google.protobuf.Timestamp scheduled_after = 6;
+  google.protobuf.Timestamp started_before = 7;
+  google.protobuf.Timestamp started_after = 8;
+  google.protobuf.Timestamp finished_before = 9;
+  google.protobuf.Timestamp finished_after = 10;
+  bool include_logs = 11;
 }
 
 message QueryRunsResponse {

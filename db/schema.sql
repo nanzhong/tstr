@@ -111,19 +111,6 @@ CREATE TABLE public.schema_migrations (
 
 
 --
--- Name: test_suites; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.test_suites (
-    id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
-    name character varying NOT NULL,
-    labels jsonb,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
-);
-
-
---
 -- Name: tests; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -170,22 +157,6 @@ ALTER TABLE ONLY public.runs
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
-
-
---
--- Name: test_suites test_suites_name_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_suites
-    ADD CONSTRAINT test_suites_name_key UNIQUE (name);
-
-
---
--- Name: test_suites test_suites_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_suites
-    ADD CONSTRAINT test_suites_pkey PRIMARY KEY (id);
 
 
 --
@@ -279,4 +250,5 @@ ALTER TABLE ONLY public.runs
 --
 
 INSERT INTO public.schema_migrations (version) VALUES
-    ('20220426134459');
+    ('20220426134459'),
+    ('20220909000425');

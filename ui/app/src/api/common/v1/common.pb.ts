@@ -58,14 +58,6 @@ export type Test = {
   updatedAt?: GoogleProtobufTimestamp.Timestamp
 }
 
-export type TestSuite = {
-  id?: string
-  name?: string
-  labels?: {[key: string]: string}
-  createdAt?: GoogleProtobufTimestamp.Timestamp
-  updatedAt?: GoogleProtobufTimestamp.Timestamp
-}
-
 export type RunLog = {
   time?: string
   outputType?: RunLogOutput

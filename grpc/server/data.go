@@ -119,15 +119,6 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 		testIDs = append(testIDs, id)
 	}
 
-	var testSuiteIDs []uuid.UUID
-	for _, rid := range r.TestSuiteIds {
-		id, err := uuid.Parse(rid)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "failed to parse test suite id")
-		}
-		testSuiteIDs = append(testSuiteIDs, id)
-	}
-
 	labels := pgtype.JSONB{Status: pgtype.Null}
 	if r.Labels != nil {
 		if err := labels.Set(&r.Labels); err != nil {
@@ -137,9 +128,8 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 	}
 
 	tests, err := s.dbQuerier.QueryTests(ctx, s.pgxPool, db.QueryTestsParams{
-		Ids:          testIDs,
-		TestSuiteIds: testSuiteIDs,
-		Labels:       labels,
+		Ids:    testIDs,
+		Labels: labels,
 	})
 	if err != nil {
 		// NOTE []uuid.UUID can't be directly used as []fmt.Stringer
@@ -147,14 +137,9 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 		for i, s := range testIDs {
 			testIDStrings[i] = s.String()
 		}
-		testSuiteIDStrings := make([]string, len(testSuiteIDs))
-		for i, s := range testSuiteIDs {
-			testSuiteIDStrings[i] = s.String()
-		}
 		log.Error().
 			Err(err).
 			Strs("test_ids", testIDStrings).
-			Strs("test_suite_ids", testSuiteIDStrings).
 			Dict("labels", zerolog.Dict().Fields(labels)).
 			Msg("failed to query tests")
 	}
@@ -171,92 +156,6 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 
 	return &datav1.QueryTestsResponse{
 		Tests: pbTests,
-	}, nil
-}
-
-func (s *DataServer) GetTestSuite(ctx context.Context, r *datav1.GetTestSuiteRequest) (*datav1.GetTestSuiteResponse, error) {
-	id, err := uuid.Parse(r.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid test suite id")
-	}
-
-	testSuite, err := s.dbQuerier.GetTestSuite(ctx, s.pgxPool, id)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Stringer("test_suite_id", id).
-			Msg("failed to get test suite")
-		return nil, status.Error(codes.Internal, "failed to get test suite")
-	}
-
-	var labels map[string]string
-	if err := testSuite.Labels.AssignTo(&labels); err != nil {
-		log.Error().
-			Err(err).
-			Stringer("test_suite_id", testSuite.ID).
-			Msg("failed to parse labels")
-		return nil, status.Error(codes.Internal, "failed to format labels")
-	}
-	pbTestSuite := &commonv1.TestSuite{
-		Id:        testSuite.ID.String(),
-		Name:      testSuite.Name,
-		Labels:    labels,
-		CreatedAt: types.ToProtoTimestamp(testSuite.CreatedAt),
-		UpdatedAt: types.ToProtoTimestamp(testSuite.UpdatedAt),
-	}
-
-	return &datav1.GetTestSuiteResponse{
-		TestSuite: pbTestSuite,
-	}, nil
-}
-
-func (s *DataServer) QueryTestSuites(ctx context.Context, r *datav1.QueryTestSuitesRequest) (*datav1.QueryTestSuitesResponse, error) {
-	var testSuiteIDs []uuid.UUID
-	for _, rid := range r.Ids {
-		id, err := uuid.Parse(rid)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "failed to parse test suite id")
-		}
-		testSuiteIDs = append(testSuiteIDs, id)
-	}
-
-	labels := pgtype.JSONB{Status: pgtype.Null}
-	if r.Labels != nil {
-		if err := labels.Set(&r.Labels); err != nil {
-			log.Error().Err(err).Msg("failed to parse labels")
-			return nil, status.Error(codes.InvalidArgument, "failed to parse labels")
-		}
-	}
-
-	testSuites, err := s.dbQuerier.QueryTestSuites(ctx, s.pgxPool, db.QueryTestSuitesParams{
-		Ids:    testSuiteIDs,
-		Labels: labels,
-	})
-	if err != nil {
-		log.Error().
-			Err(err).
-			Dict("labels", zerolog.Dict().Fields(labels)).
-			Msg("failed to query test suites")
-		return nil, status.Error(codes.Internal, "failed to query test suites")
-	}
-	var pbTestSuites []*commonv1.TestSuite
-	for _, ts := range testSuites {
-		var pbLabels map[string]string
-		if err := ts.Labels.AssignTo(&pbLabels); err != nil {
-			log.Error().Err(err).Stringer("test_suite_id", ts.ID).Msg("failed to format labels")
-			return nil, status.Error(codes.Internal, "failed to format labels for test suite")
-		}
-		pbTestSuites = append(pbTestSuites, &commonv1.TestSuite{
-			Id:        ts.ID.String(),
-			Name:      ts.Name,
-			Labels:    pbLabels,
-			CreatedAt: types.ToProtoTimestamp(ts.CreatedAt),
-			UpdatedAt: types.ToProtoTimestamp(ts.UpdatedAt),
-		})
-	}
-
-	return &datav1.QueryTestSuitesResponse{
-		TestSuites: pbTestSuites,
 	}, nil
 }
 
@@ -325,15 +224,6 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 		testIDs = append(testIDs, id)
 	}
 
-	var testSuiteIDs []uuid.UUID
-	for _, rid := range r.TestSuiteIds {
-		id, err := uuid.Parse(rid)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "failed to parse test suite id")
-		}
-		testSuiteIDs = append(testSuiteIDs, id)
-	}
-
 	var runnerIDs []uuid.UUID
 	for _, rid := range r.RunnerIds {
 		id, err := uuid.Parse(rid)
@@ -354,7 +244,6 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 	runs, err := s.dbQuerier.QueryRuns(ctx, s.pgxPool, db.QueryRunsParams{
 		Ids:             runIDs,
 		TestIds:         testIDs,
-		TestSuiteIds:    testSuiteIDs,
 		RunnerIds:       runnerIDs,
 		Results:         results,
 		ScheduledBefore: scheduledBefore,
@@ -373,7 +262,6 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 			Err(err).
 			Strs("ids", r.Ids).
 			Strs("test_ids", r.TestIds).
-			Strs("test_suite_ids", r.TestSuiteIds).
 			Strs("results", resultStrings).
 			Time("scheduled_before", scheduledBefore.Time).
 			Time("scheduled_after", scheduledAfter.Time).

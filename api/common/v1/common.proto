@@ -32,15 +32,6 @@ message Test {
   google.protobuf.Timestamp updated_at = 11; // required
 }
 
-message TestSuite {
-  string id = 1; // required (generated)
-  string name = 2;
-  map<string, string> labels = 3;
-
-  google.protobuf.Timestamp created_at = 10; // required
-  google.protobuf.Timestamp updated_at = 11; // required
-}
-
 message Run {
   enum Result {
     UNKNOWN = 0;

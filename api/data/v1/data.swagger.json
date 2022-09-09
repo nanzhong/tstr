@@ -125,16 +125,6 @@
             "collectionFormat": "multi"
           },
           {
-            "name": "testSuiteIds",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
             "name": "runnerIds",
             "in": "query",
             "required": false,
@@ -272,70 +262,6 @@
             "description": "A successful response.",
             "schema": {
               "$ref": "#/definitions/v1GetRunResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "DataService"
-        ]
-      }
-    },
-    "/data/v1/test_suites": {
-      "get": {
-        "operationId": "DataService_QueryTestSuites",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1QueryTestSuitesResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "ids",
-            "in": "query",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          }
-        ],
-        "tags": [
-          "DataService"
-        ]
-      }
-    },
-    "/data/v1/test_suites/{id}": {
-      "get": {
-        "operationId": "DataService_GetTestSuite",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/v1GetTestSuiteResponse"
             }
           },
           "default": {
@@ -643,14 +569,6 @@
         }
       }
     },
-    "v1GetTestSuiteResponse": {
-      "type": "object",
-      "properties": {
-        "testSuite": {
-          "$ref": "#/definitions/v1TestSuite"
-        }
-      }
-    },
     "v1QueryRunnersResponse": {
       "type": "object",
       "properties": {
@@ -669,17 +587,6 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1Run"
-          }
-        }
-      }
-    },
-    "v1QueryTestSuitesResponse": {
-      "type": "object",
-      "properties": {
-        "testSuites": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1TestSuite"
           }
         }
       }
@@ -866,31 +773,6 @@
           "$ref": "#/definitions/TestMatrix"
         },
         "registeredAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "v1TestSuite": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "labels": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
           "type": "string",
           "format": "date-time"
         },

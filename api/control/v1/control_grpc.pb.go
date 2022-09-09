@@ -27,10 +27,6 @@ type ControlServiceClient interface {
 	GetTest(ctx context.Context, in *GetTestRequest, opts ...grpc.CallOption) (*GetTestResponse, error)
 	ListTests(ctx context.Context, in *ListTestsRequest, opts ...grpc.CallOption) (*ListTestsResponse, error)
 	DeleteTest(ctx context.Context, in *DeleteTestRequest, opts ...grpc.CallOption) (*DeleteTestResponse, error)
-	DefineTestSuite(ctx context.Context, in *DefineTestSuiteRequest, opts ...grpc.CallOption) (*DefineTestSuiteResponse, error)
-	UpdateTestSuite(ctx context.Context, in *UpdateTestSuiteRequest, opts ...grpc.CallOption) (*UpdateTestSuiteResponse, error)
-	GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error)
-	ListTestSuites(ctx context.Context, in *ListTestSuitesRequest, opts ...grpc.CallOption) (*ListTestSuitesResponse, error)
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
 	ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error)
 	ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error)
@@ -91,42 +87,6 @@ func (c *controlServiceClient) DeleteTest(ctx context.Context, in *DeleteTestReq
 	return out, nil
 }
 
-func (c *controlServiceClient) DefineTestSuite(ctx context.Context, in *DefineTestSuiteRequest, opts ...grpc.CallOption) (*DefineTestSuiteResponse, error) {
-	out := new(DefineTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/DefineTestSuite", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *controlServiceClient) UpdateTestSuite(ctx context.Context, in *UpdateTestSuiteRequest, opts ...grpc.CallOption) (*UpdateTestSuiteResponse, error) {
-	out := new(UpdateTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/UpdateTestSuite", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *controlServiceClient) GetTestSuite(ctx context.Context, in *GetTestSuiteRequest, opts ...grpc.CallOption) (*GetTestSuiteResponse, error) {
-	out := new(GetTestSuiteResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetTestSuite", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *controlServiceClient) ListTestSuites(ctx context.Context, in *ListTestSuitesRequest, opts ...grpc.CallOption) (*ListTestSuitesResponse, error) {
-	out := new(ListTestSuitesResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListTestSuites", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *controlServiceClient) GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error) {
 	out := new(GetRunResponse)
 	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetRun", in, out, opts...)
@@ -181,10 +141,6 @@ type ControlServiceServer interface {
 	GetTest(context.Context, *GetTestRequest) (*GetTestResponse, error)
 	ListTests(context.Context, *ListTestsRequest) (*ListTestsResponse, error)
 	DeleteTest(context.Context, *DeleteTestRequest) (*DeleteTestResponse, error)
-	DefineTestSuite(context.Context, *DefineTestSuiteRequest) (*DefineTestSuiteResponse, error)
-	UpdateTestSuite(context.Context, *UpdateTestSuiteRequest) (*UpdateTestSuiteResponse, error)
-	GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error)
-	ListTestSuites(context.Context, *ListTestSuitesRequest) (*ListTestSuitesResponse, error)
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
 	ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error)
 	ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error)
@@ -211,18 +167,6 @@ func (UnimplementedControlServiceServer) ListTests(context.Context, *ListTestsRe
 }
 func (UnimplementedControlServiceServer) DeleteTest(context.Context, *DeleteTestRequest) (*DeleteTestResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTest not implemented")
-}
-func (UnimplementedControlServiceServer) DefineTestSuite(context.Context, *DefineTestSuiteRequest) (*DefineTestSuiteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DefineTestSuite not implemented")
-}
-func (UnimplementedControlServiceServer) UpdateTestSuite(context.Context, *UpdateTestSuiteRequest) (*UpdateTestSuiteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateTestSuite not implemented")
-}
-func (UnimplementedControlServiceServer) GetTestSuite(context.Context, *GetTestSuiteRequest) (*GetTestSuiteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetTestSuite not implemented")
-}
-func (UnimplementedControlServiceServer) ListTestSuites(context.Context, *ListTestSuitesRequest) (*ListTestSuitesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListTestSuites not implemented")
 }
 func (UnimplementedControlServiceServer) GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRun not implemented")
@@ -338,78 +282,6 @@ func _ControlService_DeleteTest_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ControlServiceServer).DeleteTest(ctx, req.(*DeleteTestRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ControlService_DefineTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DefineTestSuiteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControlServiceServer).DefineTestSuite(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.control.v1.ControlService/DefineTestSuite",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlServiceServer).DefineTestSuite(ctx, req.(*DefineTestSuiteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ControlService_UpdateTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpdateTestSuiteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControlServiceServer).UpdateTestSuite(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.control.v1.ControlService/UpdateTestSuite",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlServiceServer).UpdateTestSuite(ctx, req.(*UpdateTestSuiteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ControlService_GetTestSuite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetTestSuiteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControlServiceServer).GetTestSuite(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.control.v1.ControlService/GetTestSuite",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlServiceServer).GetTestSuite(ctx, req.(*GetTestSuiteRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _ControlService_ListTestSuites_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListTestSuitesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControlServiceServer).ListTestSuites(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.control.v1.ControlService/ListTestSuites",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlServiceServer).ListTestSuites(ctx, req.(*ListTestSuitesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -530,22 +402,6 @@ var ControlService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTest",
 			Handler:    _ControlService_DeleteTest_Handler,
-		},
-		{
-			MethodName: "DefineTestSuite",
-			Handler:    _ControlService_DefineTestSuite_Handler,
-		},
-		{
-			MethodName: "UpdateTestSuite",
-			Handler:    _ControlService_UpdateTestSuite_Handler,
-		},
-		{
-			MethodName: "GetTestSuite",
-			Handler:    _ControlService_GetTestSuite_Handler,
-		},
-		{
-			MethodName: "ListTestSuites",
-			Handler:    _ControlService_ListTestSuites_Handler,
 		},
 		{
 			MethodName: "GetRun",

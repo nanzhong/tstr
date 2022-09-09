@@ -49,12 +49,5 @@ SELECT *
 FROM tests
 WHERE
   (sqlc.narg('ids')::uuid[] IS NULL OR tests.id = ANY (sqlc.narg('ids')::uuid[])) AND
-  (sqlc.narg('test_suite_ids')::uuid[] IS NULL OR tests.id = ANY (
-    SELECT tests.id
-    FROM test_suites
-    JOIN tests
-    ON tests.labels @> test_suites.labels
-    WHERE test_suites.id = ANY (sqlc.narg('test_suite_ids')::uuid[])
-    )) AND
   (sqlc.narg('labels')::jsonb IS NULL OR tests.labels @> sqlc.narg('labels')::jsonb)
 ORDER BY tests.name ASC;

@@ -55,47 +55,6 @@ export type DeleteTestRequest = {
 export type DeleteTestResponse = {
 }
 
-export type DefineTestSuiteRequest = {
-  name?: string
-  labels?: {[key: string]: string}
-}
-
-export type DefineTestSuiteResponse = {
-  testSuite?: TstrCommonV1Common.TestSuite
-}
-
-export type UpdateTestSuiteRequest = {
-  fieldMask?: GoogleProtobufField_mask.FieldMask
-  id?: string
-  name?: string
-  labels?: {[key: string]: string}
-}
-
-export type UpdateTestSuiteResponse = {
-}
-
-export type GetTestSuiteRequest = {
-  id?: string
-}
-
-export type GetTestSuiteResponse = {
-  testSuite?: TstrCommonV1Common.TestSuite
-}
-
-export type ListTestSuitesRequest = {
-}
-
-export type ListTestSuitesResponse = {
-  testSuites?: TstrCommonV1Common.TestSuite[]
-}
-
-export type ArchiveTestSuiteRequest = {
-  id?: string
-}
-
-export type ArchiveTestSuiteResponse = {
-}
-
 export type GetRunRequest = {
   id?: string
 }
@@ -161,18 +120,6 @@ export class ControlService {
   }
   static DeleteTest(req: DeleteTestRequest, initReq?: fm.InitReq): Promise<DeleteTestResponse> {
     return fm.fetchReq<DeleteTestRequest, DeleteTestResponse>(`/tstr.control.v1.ControlService/DeleteTest`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static DefineTestSuite(req: DefineTestSuiteRequest, initReq?: fm.InitReq): Promise<DefineTestSuiteResponse> {
-    return fm.fetchReq<DefineTestSuiteRequest, DefineTestSuiteResponse>(`/tstr.control.v1.ControlService/DefineTestSuite`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static UpdateTestSuite(req: UpdateTestSuiteRequest, initReq?: fm.InitReq): Promise<UpdateTestSuiteResponse> {
-    return fm.fetchReq<UpdateTestSuiteRequest, UpdateTestSuiteResponse>(`/tstr.control.v1.ControlService/UpdateTestSuite`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static GetTestSuite(req: GetTestSuiteRequest, initReq?: fm.InitReq): Promise<GetTestSuiteResponse> {
-    return fm.fetchReq<GetTestSuiteRequest, GetTestSuiteResponse>(`/tstr.control.v1.ControlService/GetTestSuite`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static ListTestSuites(req: ListTestSuitesRequest, initReq?: fm.InitReq): Promise<ListTestSuitesResponse> {
-    return fm.fetchReq<ListTestSuitesRequest, ListTestSuitesResponse>(`/tstr.control.v1.ControlService/ListTestSuites`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static GetRun(req: GetRunRequest, initReq?: fm.InitReq): Promise<GetRunResponse> {
     return fm.fetchReq<GetRunRequest, GetRunResponse>(`/tstr.control.v1.ControlService/GetRun`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

@@ -111,11 +111,12 @@ func (q *Queries) QueryRunners(ctx context.Context, db DBTX, arg QueryRunnersPar
 }
 
 const registerRunner = `-- name: RegisterRunner :one
-INSERT INTO runners (name, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
+INSERT INTO runners (name, namespace_selectors, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
 VALUES (
   $1,
   $2,
   $3,
+  $4,
   CURRENT_TIMESTAMP
 )
 RETURNING id, name, accept_test_label_selectors, reject_test_label_selectors, registered_at, last_heartbeat_at, namespace_selectors
@@ -123,12 +124,18 @@ RETURNING id, name, accept_test_label_selectors, reject_test_label_selectors, re
 
 type RegisterRunnerParams struct {
 	Name                     string
+	NamespaceSelectors       []string
 	AcceptTestLabelSelectors pgtype.JSONB
 	RejectTestLabelSelectors pgtype.JSONB
 }
 
 func (q *Queries) RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunnerParams) (Runner, error) {
-	row := db.QueryRow(ctx, registerRunner, arg.Name, arg.AcceptTestLabelSelectors, arg.RejectTestLabelSelectors)
+	row := db.QueryRow(ctx, registerRunner,
+		arg.Name,
+		arg.NamespaceSelectors,
+		arg.AcceptTestLabelSelectors,
+		arg.RejectTestLabelSelectors,
+	)
 	var i Runner
 	err := row.Scan(
 		&i.ID,

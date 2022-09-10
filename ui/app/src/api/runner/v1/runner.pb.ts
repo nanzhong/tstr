@@ -9,6 +9,7 @@ import * as fm from "../../fetch.pb"
 import * as GoogleProtobufTimestamp from "../../google/protobuf/timestamp.pb"
 export type RegisterRunnerRequest = {
   name?: string
+  namespaceSelectors?: string[]
   acceptTestLabelSelectors?: {[key: string]: string}
   rejectTestLabelSelectors?: {[key: string]: string}
 }

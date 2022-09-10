@@ -1,7 +1,8 @@
 -- name: RegisterRunner :one
-INSERT INTO runners (name, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
+INSERT INTO runners (name, namespace_selectors, accept_test_label_selectors, reject_test_label_selectors, last_heartbeat_at)
 VALUES (
   sqlc.arg('name'),
+  sqlc.arg('namespace_selectors'),
   sqlc.arg('accept_test_label_selectors'),
   sqlc.arg('reject_test_label_selectors'),
   CURRENT_TIMESTAMP

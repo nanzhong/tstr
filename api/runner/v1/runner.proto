@@ -15,8 +15,9 @@ service RunnerService {
 message RegisterRunnerRequest {
   string name = 1
     [(validate.rules).string = {min_len: 1, max_len: 200}];
-  map<string, string> accept_test_label_selectors = 2;
-  map<string, string> reject_test_label_selectors = 3;
+  repeated string namespace_selectors = 2;
+  map<string, string> accept_test_label_selectors = 3;
+  map<string, string> reject_test_label_selectors = 4;
 }
 
 message RegisterRunnerResponse {

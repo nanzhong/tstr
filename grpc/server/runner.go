@@ -39,6 +39,12 @@ func NewRunnerServer(pgxPool *pgxpool.Pool) runnerv1.RunnerServiceServer {
 }
 
 func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.RegisterRunnerRequest) (*runnerv1.RegisterRunnerResponse, error) {
+	for _, nsSel := range req.NamespaceSelectors {
+		if _, err := regexp.Compile(nsSel); err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid namespace selectors, must be valid RE")
+		}
+	}
+
 	for _, v := range req.AcceptTestLabelSelectors {
 		if _, err := regexp.Compile(v); err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid accept test label selectors, must be valid RE")
@@ -65,6 +71,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.Registe
 
 	regRunner, err := s.dbQuerier.RegisterRunner(ctx, s.pgxPool, db.RegisterRunnerParams{
 		Name:                     req.Name,
+		NamespaceSelectors:       req.NamespaceSelectors,
 		AcceptTestLabelSelectors: accept,
 		RejectTestLabelSelectors: reject,
 	})
@@ -91,6 +98,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.Registe
 		Runner: &commonv1.Runner{
 			Id:                       regRunner.ID.String(),
 			Name:                     regRunner.Name,
+			NamespaceSelectors:       regRunner.NamespaceSelectors,
 			AcceptTestLabelSelectors: acceptSelectors,
 			RejectTestLabelSelectors: rejectSelectors,
 			RegisteredAt:             types.ToProtoTimestamp(regRunner.RegisteredAt),

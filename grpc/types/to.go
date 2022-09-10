@@ -188,6 +188,7 @@ func ToProtoRunner(r *db.Runner) (*commonv1.Runner, error) {
 	return &commonv1.Runner{
 		Id:                       r.ID.String(),
 		Name:                     r.Name,
+		NamespaceSelectors:       r.NamespaceSelectors,
 		AcceptTestLabelSelectors: acceptSelectors,
 		RejectTestLabelSelectors: rejectSelectors,
 		RegisteredAt:             ToProtoTimestamp(r.RegisteredAt),

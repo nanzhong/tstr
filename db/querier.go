@@ -27,7 +27,7 @@ type Querier interface {
 	IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
-	ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error)
+	ListPendingRuns(ctx context.Context, db DBTX) ([]ListPendingRunsRow, error)
 	ListRunners(ctx context.Context, db DBTX) ([]Runner, error)
 	ListRuns(ctx context.Context, db DBTX) ([]Run, error)
 	ListTests(ctx context.Context, db DBTX) ([]Test, error)

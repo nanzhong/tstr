@@ -107,20 +107,38 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error
 }
 
 const listPendingRuns = `-- name: ListPendingRuns :many
-SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at, tests.namespace
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runner_id IS NULL
 `
 
-func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
+type ListPendingRunsRow struct {
+	ID            uuid.UUID
+	TestID        uuid.UUID
+	TestRunConfig pgtype.JSONB
+	TestMatrixID  uuid.NullUUID
+	Labels        pgtype.JSONB
+	RunnerID      uuid.NullUUID
+	Result        NullRunResult
+	Logs          pgtype.JSONB
+	ResultData    pgtype.JSONB
+	ScheduledAt   sql.NullTime
+	StartedAt     sql.NullTime
+	FinishedAt    sql.NullTime
+	Namespace     string
+}
+
+func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]ListPendingRunsRow, error) {
 	rows, err := db.Query(ctx, listPendingRuns)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Run
+	var items []ListPendingRunsRow
 	for rows.Next() {
-		var i Run
+		var i ListPendingRunsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
@@ -134,6 +152,7 @@ func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.Namespace,
 		); err != nil {
 			return nil, err
 		}

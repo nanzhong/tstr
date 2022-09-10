@@ -15,8 +15,10 @@ WHERE tests.id = sqlc.arg('test_id')
 RETURNING *;
 
 -- name: ListPendingRuns :many
-SELECT *
+SELECT runs.*, tests.namespace
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runner_id IS NULL;
 
 -- name: AssignRun :one

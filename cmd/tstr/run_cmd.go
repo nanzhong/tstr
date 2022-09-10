@@ -29,9 +29,11 @@ var runCmd = &cobra.Command{
 		grpclog.SetLoggerV2(grpczerolog.New(log.Logger.With().Str("component", "grpc").Logger()))
 
 		var (
+			namespaceSelectors   []string
 			acceptLabelSelectors = make(map[string]string)
 			rejectLabelSelectors = make(map[string]string)
 		)
+		namespaceSelectors = viper.GetViper().GetStringSlice("run.namespace-selectors")
 		for _, l := range viper.GetStringSlice("run.accept-label-selectors") {
 			parts := strings.Split(l, "=")
 			if len(parts) != 2 {
@@ -51,6 +53,7 @@ var runCmd = &cobra.Command{
 			runner, err := runner.New(
 				client,
 				viper.GetString("run.name"),
+				namespaceSelectors,
 				acceptLabelSelectors,
 				rejectLabelSelectors,
 			)
@@ -95,10 +98,13 @@ func init() {
 	runCmd.Flags().String("name", hostname, "Name of the runner.")
 	viper.BindPFlag("run.name", runCmd.Flags().Lookup("name"))
 
-	runCmd.Flags().StringArray("accept-label-selectors", nil, "Label selectors for test to accept.")
+	runCmd.Flags().StringArray("namespace-selectors", nil, "Namespace selectors for tests to accept")
+	viper.BindPFlag("run.namespace-selectors", runCmd.Flags().Lookup("namespace-selectors"))
+
+	runCmd.Flags().StringArray("accept-label-selectors", nil, "Label selectors for tests to accept.")
 	viper.BindPFlag("run.accept-label-selectors", runCmd.Flags().Lookup("accept-label-selectors"))
 
-	runCmd.Flags().StringArray("reject-label-selectors", nil, "Label selectors for test to reject.")
+	runCmd.Flags().StringArray("reject-label-selectors", nil, "Label selectors for tests to reject.")
 	viper.BindPFlag("run.reject-label-selectors", runCmd.Flags().Lookup("reject-label-selectors"))
 
 	runCmd.Flags().Duration("graceful-shutdown", 5*time.Minute, "Amount of time to allow for graceful shutdown.")

@@ -37,6 +37,7 @@ type Runner struct {
 
 	id                   string
 	name                 string
+	namespaceSelectors   []string
 	allowLabelSelectors  map[string]string
 	rejectLabelSelectors map[string]string
 
@@ -48,6 +49,7 @@ type Runner struct {
 func New(
 	runnerClient runnerv1.RunnerServiceClient,
 	name string,
+	namespaceSelectors []string,
 	allowLabelSelectors map[string]string,
 	rejectLabelSelectors map[string]string,
 ) (*Runner, error) {
@@ -63,6 +65,7 @@ func New(
 		clock:        clock.New(),
 
 		name:                 name,
+		namespaceSelectors:   namespaceSelectors,
 		allowLabelSelectors:  allowLabelSelectors,
 		rejectLabelSelectors: rejectLabelSelectors,
 
@@ -90,6 +93,7 @@ func (r *Runner) Run() error {
 	defer registerCancel()
 	regRes, err := r.runnerClient.RegisterRunner(registerCtx, &runnerv1.RegisterRunnerRequest{
 		Name:                     r.name,
+		NamespaceSelectors:       r.namespaceSelectors,
 		AcceptTestLabelSelectors: r.allowLabelSelectors,
 		RejectTestLabelSelectors: r.rejectLabelSelectors,
 	})

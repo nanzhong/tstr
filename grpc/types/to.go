@@ -124,6 +124,7 @@ func ToProtoTest(t *db.Test) (*commonv1.Test, error) {
 	}
 
 	return &commonv1.Test{
+		Namespace:    t.Namespace,
 		Id:           t.ID.String(),
 		Name:         t.Name,
 		Labels:       labels,

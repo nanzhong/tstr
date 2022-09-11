@@ -17,20 +17,20 @@ type Querier interface {
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
 	DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UUID) error
-	DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error
+	DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) error
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error)
-	GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error)
+	GetRun(ctx context.Context, db DBTX, arg GetRunParams) (Run, error)
 	GetRunner(ctx context.Context, db DBTX, id uuid.UUID) (Runner, error)
-	GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, error)
+	GetTest(ctx context.Context, db DBTX, arg GetTestParams) (Test, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	IssueAccessToken(ctx context.Context, db DBTX, arg IssueAccessTokenParams) (IssueAccessTokenRow, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	ListAccessTokens(ctx context.Context, db DBTX, arg ListAccessTokensParams) ([]ListAccessTokensRow, error)
 	ListPendingRuns(ctx context.Context, db DBTX) ([]ListPendingRunsRow, error)
 	ListRunners(ctx context.Context, db DBTX) ([]Runner, error)
-	ListRuns(ctx context.Context, db DBTX) ([]Run, error)
-	ListTests(ctx context.Context, db DBTX) ([]Test, error)
+	ListRuns(ctx context.Context, db DBTX, namespace string) ([]Run, error)
+	ListTests(ctx context.Context, db DBTX, namespace string) ([]Test, error)
 	ListTestsToSchedule(ctx context.Context, db DBTX) ([]Test, error)
 	QueryRunners(ctx context.Context, db DBTX, arg QueryRunnersParams) ([]Runner, error)
 	QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) ([]Run, error)

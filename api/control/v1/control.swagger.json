@@ -138,14 +138,6 @@
         }
       }
     },
-    "v1GetRunnerResponse": {
-      "type": "object",
-      "properties": {
-        "runner": {
-          "$ref": "#/definitions/v1Runner"
-        }
-      }
-    },
     "v1GetTestResponse": {
       "type": "object",
       "properties": {

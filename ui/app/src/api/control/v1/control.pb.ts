@@ -90,14 +90,6 @@ export type ScheduleRunResponse = {
   runs?: TstrCommonV1Common.Run[]
 }
 
-export type GetRunnerRequest = {
-  id?: string
-}
-
-export type GetRunnerResponse = {
-  runner?: TstrCommonV1Common.Runner
-}
-
 export type ListRunnersRequest = {
 }
 
@@ -129,9 +121,6 @@ export class ControlService {
   }
   static ScheduleRun(req: ScheduleRunRequest, initReq?: fm.InitReq): Promise<ScheduleRunResponse> {
     return fm.fetchReq<ScheduleRunRequest, ScheduleRunResponse>(`/tstr.control.v1.ControlService/ScheduleRun`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
-  }
-  static GetRunner(req: GetRunnerRequest, initReq?: fm.InitReq): Promise<GetRunnerResponse> {
-    return fm.fetchReq<GetRunnerRequest, GetRunnerResponse>(`/tstr.control.v1.ControlService/GetRunner`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})
   }
   static ListRunners(req: ListRunnersRequest, initReq?: fm.InitReq): Promise<ListRunnersResponse> {
     return fm.fetchReq<ListRunnersRequest, ListRunnersResponse>(`/tstr.control.v1.ControlService/ListRunners`, {...initReq, method: "POST", body: JSON.stringify(req, fm.replacer)})

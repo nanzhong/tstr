@@ -228,6 +228,13 @@ CREATE INDEX tests_labels_idx ON public.tests USING gin (labels);
 
 
 --
+-- Name: tests_namespace_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tests_namespace_idx ON public.tests USING btree (namespace);
+
+
+--
 -- Name: runs runs_runner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 

@@ -15,22 +15,32 @@ import (
 
 const deleteTest = `-- name: DeleteTest :exec
 DELETE FROM tests
-WHERE id = $1::uuid
+WHERE id = $1::uuid AND tests.namespace = $2
 `
 
-func (q *Queries) DeleteTest(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, deleteTest, id)
+type DeleteTestParams struct {
+	ID        uuid.UUID
+	Namespace string
+}
+
+func (q *Queries) DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) error {
+	_, err := db.Exec(ctx, deleteTest, arg.ID, arg.Namespace)
 	return err
 }
 
 const getTest = `-- name: GetTest :one
 SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
-WHERE tests.id = $1
+WHERE tests.id = $1 AND tests.namespace = $2
 `
 
-func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, error) {
-	row := db.QueryRow(ctx, getTest, id)
+type GetTestParams struct {
+	ID        uuid.UUID
+	Namespace string
+}
+
+func (q *Queries) GetTest(ctx context.Context, db DBTX, arg GetTestParams) (Test, error) {
+	row := db.QueryRow(ctx, getTest, arg.ID, arg.Namespace)
 	var i Test
 	err := row.Scan(
 		&i.ID,
@@ -50,11 +60,12 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, id uuid.UUID) (Test, err
 const listTests = `-- name: ListTests :many
 SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
+WHERE tests.namespace = $1
 ORDER BY tests.name ASC
 `
 
-func (q *Queries) ListTests(ctx context.Context, db DBTX) ([]Test, error) {
-	rows, err := db.Query(ctx, listTests)
+func (q *Queries) ListTests(ctx context.Context, db DBTX, namespace string) ([]Test, error) {
+	rows, err := db.Query(ctx, listTests, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -128,18 +139,20 @@ const queryTests = `-- name: QueryTests :many
 SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests
 WHERE
-  ($1::uuid[] IS NULL OR tests.id = ANY ($1::uuid[])) AND
-  ($2::jsonb IS NULL OR tests.labels @> $2::jsonb)
+  tests.namespace = $1 AND
+  ($2::uuid[] IS NULL OR tests.id = ANY ($2::uuid[])) AND
+  ($3::jsonb IS NULL OR tests.labels @> $3::jsonb)
 ORDER BY tests.name ASC
 `
 
 type QueryTestsParams struct {
-	Ids    []uuid.UUID
-	Labels pgtype.JSONB
+	Namespace string
+	Ids       []uuid.UUID
+	Labels    pgtype.JSONB
 }
 
 func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams) ([]Test, error) {
-	rows, err := db.Query(ctx, queryTests, arg.Ids, arg.Labels)
+	rows, err := db.Query(ctx, queryTests, arg.Namespace, arg.Ids, arg.Labels)
 	if err != nil {
 		return nil, err
 	}
@@ -170,19 +183,21 @@ func (q *Queries) QueryTests(ctx context.Context, db DBTX, arg QueryTestsParams)
 }
 
 const registerTest = `-- name: RegisterTest :one
-INSERT INTO tests (name, run_config, labels, matrix, cron_schedule, next_run_at)
+INSERT INTO tests (namespace, name, run_config, labels, matrix, cron_schedule, next_run_at)
 VALUES (
   $1,
   $2,
   $3,
   $4,
   $5,
-  $6
+  $6,
+  $7
 )
 RETURNING id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 `
 
 type RegisterTestParams struct {
+	Namespace    string
 	Name         string
 	RunConfig    pgtype.JSONB
 	Labels       pgtype.JSONB
@@ -193,6 +208,7 @@ type RegisterTestParams struct {
 
 func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestParams) (Test, error) {
 	row := db.QueryRow(ctx, registerTest,
+		arg.Namespace,
 		arg.Name,
 		arg.RunConfig,
 		arg.Labels,
@@ -226,7 +242,7 @@ SET
   cron_schedule = $5::varchar,
   next_run_at = $6::timestamptz,
   updated_at = CURRENT_TIMESTAMP
-WHERE id = $7::uuid
+WHERE id = $7::uuid AND tests.namespace = $8
 `
 
 type UpdateTestParams struct {
@@ -237,6 +253,7 @@ type UpdateTestParams struct {
 	CronSchedule sql.NullString
 	NextRunAt    sql.NullTime
 	ID           uuid.UUID
+	Namespace    string
 }
 
 func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error {
@@ -248,6 +265,7 @@ func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams)
 		arg.CronSchedule,
 		arg.NextRunAt,
 		arg.ID,
+		arg.Namespace,
 	)
 	return err
 }

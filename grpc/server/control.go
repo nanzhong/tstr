@@ -40,6 +40,11 @@ func NewControlServer(pgxPool *pgxpool.Pool) controlv1.ControlServiceServer {
 }
 
 func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterTestRequest) (*controlv1.RegisterTestResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	labels := pgtype.JSONB{}
 	if err := labels.Set(r.Labels); err != nil {
 		log.Error().Err(err).Msg("failed to parse test labels")
@@ -69,9 +74,10 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 	}
 
 	var test db.Test
-	err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		var err error
 		test, err = s.dbQuerier.RegisterTest(ctx, tx, db.RegisterTestParams{
+			Namespace:    ns,
 			Name:         r.Name,
 			Labels:       labels,
 			Matrix:       matrix,
@@ -110,15 +116,24 @@ func (s *ControlServer) RegisterTest(ctx context.Context, r *controlv1.RegisterT
 }
 
 func (s *ControlServer) GetTest(ctx context.Context, r *controlv1.GetTestRequest) (*controlv1.GetTestResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
 	}
 
-	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, id)
+	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, db.GetTestParams{
+		ID:        id,
+		Namespace: ns,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("test_id", id).
 			Msg("failed to get test")
 		return nil, status.Error(codes.Internal, "failed to get test")
@@ -139,8 +154,17 @@ func (s *ControlServer) GetTest(ctx context.Context, r *controlv1.GetTestRequest
 }
 
 func (s *ControlServer) ListTests(ctx context.Context, r *controlv1.ListTestsRequest) (*controlv1.ListTestsResponse, error) {
-	tests, err := s.dbQuerier.ListTests(ctx, s.pgxPool)
+	ns, err := namespaceFromContext(ctx)
 	if err != nil {
+		return nil, err
+	}
+
+	tests, err := s.dbQuerier.ListTests(ctx, s.pgxPool, ns)
+	if err != nil {
+		log.Error().
+			Err(err).
+			Str("namespace", ns).
+			Msg("failed to list tests")
 		return nil, status.Error(codes.Internal, "failed to list tests")
 	}
 
@@ -163,18 +187,27 @@ func (s *ControlServer) ListTests(ctx context.Context, r *controlv1.ListTestsReq
 }
 
 func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestRequest) (*controlv1.UpdateTestResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
 	}
 
-	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, id)
+	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, db.GetTestParams{
+		ID:        id,
+		Namespace: ns,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("test_id", id).
 			Msg("failed to get test")
-		return nil, status.Error(codes.Internal, "failed to get test")
+		return nil, status.Error(codes.Internal, "failed to get test for update")
 	}
 
 	var runConfig db.TestRunConfig
@@ -231,13 +264,14 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 
 	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
+			Namespace:    test.Namespace,
+			ID:           id,
 			Name:         test.Name,
 			Labels:       test.Labels,
 			Matrix:       test.Matrix,
 			RunConfig:    test.RunConfig,
 			CronSchedule: test.CronSchedule,
 			NextRunAt:    test.NextRunAt,
-			ID:           id,
 		})
 		if err != nil {
 			return fmt.Errorf("updating test: %w", err)
@@ -258,16 +292,36 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 }
 
 func (s *ControlServer) DeleteTest(ctx context.Context, r *controlv1.DeleteTestRequest) (*controlv1.DeleteTestResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
+	}
+
+	if _, err := s.dbQuerier.GetTest(ctx, s.pgxPool, db.GetTestParams{
+		ID:        id,
+		Namespace: ns,
+	}); err != nil {
+		log.Error().
+			Err(err).
+			Str("namespace", ns).
+			Stringer("test_id", id).
+			Msg("failed to get test for delete")
+		return nil, status.Error(codes.Internal, "failed to get test for delete")
 	}
 
 	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		if err := s.dbQuerier.DeleteRunsForTest(ctx, tx, id); err != nil {
 			return err
 		}
-		if err := s.dbQuerier.DeleteTest(ctx, tx, id); err != nil {
+		if err := s.dbQuerier.DeleteTest(ctx, tx, db.DeleteTestParams{
+			ID:        id,
+			Namespace: ns,
+		}); err != nil {
 			return err
 		}
 		return nil
@@ -281,15 +335,24 @@ func (s *ControlServer) DeleteTest(ctx context.Context, r *controlv1.DeleteTestR
 }
 
 func (s *ControlServer) GetRun(ctx context.Context, r *controlv1.GetRunRequest) (*controlv1.GetRunResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid run id")
 	}
 
-	run, err := s.dbQuerier.GetRun(ctx, s.pgxPool, id)
+	run, err := s.dbQuerier.GetRun(ctx, s.pgxPool, db.GetRunParams{
+		Namespace: ns,
+		ID:        id,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("run_id", run.ID).
 			Msg("failed to get run")
 		return nil, status.Error(codes.Internal, "failed to get run")
@@ -299,6 +362,7 @@ func (s *ControlServer) GetRun(ctx context.Context, r *controlv1.GetRunRequest) 
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("run_id", run.ID).
 			Msg("failed to format run")
 		return nil, status.Error(codes.Internal, "failed to format run")
@@ -310,10 +374,16 @@ func (s *ControlServer) GetRun(ctx context.Context, r *controlv1.GetRunRequest) 
 }
 
 func (s *ControlServer) ListRuns(ctx context.Context, r *controlv1.ListRunsRequest) (*controlv1.ListRunsResponse, error) {
-	runs, err := s.dbQuerier.ListRuns(ctx, s.pgxPool)
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	runs, err := s.dbQuerier.ListRuns(ctx, s.pgxPool, ns)
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Msg("failed to list runs")
 		return nil, status.Error(codes.Internal, "failed to list runs")
 	}
@@ -324,6 +394,7 @@ func (s *ControlServer) ListRuns(ctx context.Context, r *controlv1.ListRunsReque
 		if err != nil {
 			log.Error().
 				Err(err).
+				Str("namespace", ns).
 				Stringer("run_id", run.ID).
 				Msg("failed to format run")
 			return nil, status.Error(codes.Internal, "failed to format run")
@@ -337,14 +408,26 @@ func (s *ControlServer) ListRuns(ctx context.Context, r *controlv1.ListRunsReque
 }
 
 func (s *ControlServer) ScheduleRun(ctx context.Context, r *controlv1.ScheduleRunRequest) (*controlv1.ScheduleRunResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	testID, err := uuid.Parse(r.TestId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
 	}
 
-	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, testID)
+	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, db.GetTestParams{
+		ID:        testID,
+		Namespace: ns,
+	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to lookup test to schedule run for")
+	}
+
+	if test.Namespace != ns {
+		return nil, status.Error(codes.NotFound, "failed to find test")
 	}
 
 	var labels pgtype.JSONB
@@ -392,36 +475,12 @@ func (s *ControlServer) ScheduleRun(ctx context.Context, r *controlv1.ScheduleRu
 	}, nil
 }
 
-func (s *ControlServer) GetRunner(ctx context.Context, r *controlv1.GetRunnerRequest) (*controlv1.GetRunnerResponse, error) {
-	runnerID, err := uuid.Parse(r.Id)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
-	}
-
-	runner, err := s.dbQuerier.GetRunner(ctx, s.pgxPool, runnerID)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Stringer("runner_id", runnerID).
-			Msg("failed to get runner")
-		return nil, status.Error(codes.Internal, "failed to get runner")
-	}
-
-	pbRunner, err := types.ToProtoRunner(&runner)
-	if err != nil {
-		log.Error().
-			Err(err).
-			Stringer("runner_id", runnerID).
-			Msg("failed to format runner")
-		return nil, status.Error(codes.Internal, "failed to format runner")
-	}
-
-	return &controlv1.GetRunnerResponse{
-		Runner: pbRunner,
-	}, nil
-}
-
 func (s *ControlServer) ListRunners(ctx context.Context, r *controlv1.ListRunnersRequest) (*controlv1.ListRunnersResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	runners, err := s.dbQuerier.ListRunners(ctx, s.pgxPool)
 	if err != nil {
 		log.Error().
@@ -432,6 +491,18 @@ func (s *ControlServer) ListRunners(ctx context.Context, r *controlv1.ListRunner
 
 	var pbRunners []*commonv1.Runner
 	for _, runner := range runners {
+		nsMatch, err := matchNamespace(runner.NamespaceSelectors, ns)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Stringer("runner_id", runner.ID).
+				Msg("failed to compile namespace selector")
+			return nil, status.Error(codes.Internal, "failed to list runners")
+		}
+		if !nsMatch {
+			continue
+		}
+
 		pbRun, err := types.ToProtoRunner(&runner)
 		if err != nil {
 			log.Error().

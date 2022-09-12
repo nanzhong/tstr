@@ -13,7 +13,7 @@ import (
 )
 
 const authAccessToken = `-- name: AuthAccessToken :one
-SELECT namespace_selectors, scopes::text[], expires_at
+SELECT namespace_selectors, scopes::text[], issued_at, expires_at
 FROM access_tokens
 WHERE
   token_hash = $1 AND
@@ -23,6 +23,7 @@ WHERE
 type AuthAccessTokenRow struct {
 	NamespaceSelectors []string
 	Scopes             []string
+	IssuedAt           sql.NullTime
 	ExpiresAt          sql.NullTime
 }
 
@@ -30,7 +31,12 @@ type AuthAccessTokenRow struct {
 func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error) {
 	row := db.QueryRow(ctx, authAccessToken, tokenHash)
 	var i AuthAccessTokenRow
-	err := row.Scan(&i.NamespaceSelectors, &i.Scopes, &i.ExpiresAt)
+	err := row.Scan(
+		&i.NamespaceSelectors,
+		&i.Scopes,
+		&i.IssuedAt,
+		&i.ExpiresAt,
+	)
 	return i, err
 }
 

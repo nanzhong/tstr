@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package tstr.identity.v1;
+
+import "common/v1/common.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/api/annotations.proto";
+import "google/api/field_behavior.proto";
+import "validate/validate.proto";
+
+service IdentityService {
+  rpc Identity(IdentityRequest) returns (IdentityResponse) {
+    option (google.api.http) = {
+      get: "/identity/v1/identity"
+    };
+  };
+}
+
+message IdentityRequest {}
+
+message IdentityResponse {
+  repeated tstr.common.v1.AccessToken.Scope scopes = 1;
+  repeated string namespace_selectors = 2;
+
+  google.protobuf.Timestamp issued_at = 10;
+  google.protobuf.Timestamp expires_at = 11;
+}

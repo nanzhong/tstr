@@ -21,13 +21,23 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const MDKeyAuth = "authorization"
-const MDKeyNamespace = "namespace"
+const (
+	MDKeyAuth      = "authorization"
+	MDKeyNamespace = "namespace"
+)
 
 // TODO We can probably be a bit smarter/less verbose here and instead of direct
 // string matches on the full method, build up the set of allowable tokens given
 // a full method and a list of regexes (or something like that)
 var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
+	"/tstr.identity.v1.IdentityService/Identity": {
+		commonv1.AccessToken_ADMIN,
+		commonv1.AccessToken_CONTROL_RW,
+		commonv1.AccessToken_CONTROL_R,
+		commonv1.AccessToken_RUNNER,
+		commonv1.AccessToken_DATA,
+	},
+
 	"/tstr.control.v1.ControlService/RegisterTest": {commonv1.AccessToken_CONTROL_RW},
 	"/tstr.control.v1.ControlService/UpdateTest":   {commonv1.AccessToken_CONTROL_RW},
 	"/tstr.control.v1.ControlService/GetTest":      {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
@@ -68,7 +78,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: missing access token")
 		}
 
-		_, tokenHash, err := tokenFromMD(md)
+		_, tokenHash, err := AccessTokenFromMD(md)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
 		}
@@ -90,7 +100,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 
 		if strings.HasPrefix(info.FullMethod, "/tstr.control.v1") ||
 			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
-			namespace, err := namespaceFromMD(md)
+			namespace, err := NamespaceFromMD(md)
 			if err != nil {
 				return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
 			}
@@ -115,7 +125,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Unauthenticated, "failed to authenticate request: missing access token")
 		}
 
-		_, tokenHash, err := tokenFromMD(md)
+		_, tokenHash, err := AccessTokenFromMD(md)
 		if err != nil {
 			return status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
 		}
@@ -137,7 +147,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 
 		if strings.HasPrefix(info.FullMethod, "/tstr.control.v1") ||
 			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
-			namespace, err := namespaceFromMD(md)
+			namespace, err := NamespaceFromMD(md)
 			if err != nil {
 				return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
 			}
@@ -199,7 +209,7 @@ func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 	}
 }
 
-func tokenFromMD(md metadata.MD) (string, string, error) {
+func AccessTokenFromMD(md metadata.MD) (string, string, error) {
 	vals := md.Get(MDKeyAuth)
 	if vals == nil || len(vals) != 1 {
 		return "", "", errors.New("invalid access token")
@@ -216,7 +226,16 @@ func tokenFromMD(md metadata.MD) (string, string, error) {
 	return token, tokenHash, nil
 }
 
-func namespaceFromMD(md metadata.MD) (string, error) {
+func AccessTokenFromContext(ctx context.Context) (string, string, error) {
+	md, exists := metadata.FromIncomingContext(ctx)
+	if !exists {
+		return "", "", errors.New("context missing metadata")
+	}
+
+	return AccessTokenFromMD(md)
+}
+
+func NamespaceFromMD(md metadata.MD) (string, error) {
 	vals := md.Get(MDKeyNamespace)
 	if vals == nil || len(vals) != 1 {
 		return "", errors.New("metadata missing namespace")
@@ -230,7 +249,7 @@ func NamespaceFromContext(ctx context.Context) (string, error) {
 		return "", errors.New("context missing metadata")
 	}
 
-	ns, err := namespaceFromMD(md)
+	ns, err := NamespaceFromMD(md)
 	if err != nil {
 		return "", fmt.Errorf("getting namespace from context: %w", err)
 	}

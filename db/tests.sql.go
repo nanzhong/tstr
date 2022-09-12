@@ -57,6 +57,31 @@ func (q *Queries) GetTest(ctx context.Context, db DBTX, arg GetTestParams) (Test
 	return i, err
 }
 
+const listAllNamespaces = `-- name: ListAllNamespaces :many
+SELECT DISTINCT(namespace)
+FROM tests
+`
+
+func (q *Queries) ListAllNamespaces(ctx context.Context, db DBTX) ([]string, error) {
+	rows, err := db.Query(ctx, listAllNamespaces)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var namespace string
+		if err := rows.Scan(&namespace); err != nil {
+			return nil, err
+		}
+		items = append(items, namespace)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTests = `-- name: ListTests :many
 SELECT id, name, run_config, labels, matrix, cron_schedule, next_run_at, registered_at, updated_at, namespace
 FROM tests

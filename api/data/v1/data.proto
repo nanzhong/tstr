@@ -53,6 +53,12 @@ service DataService {
   };
 }
 
+message ListNamespacesRequest {}
+
+message ListNamespacesResponse {
+  repeated string namespaces = 1;
+}
+
 message GetTestRequest {
   string id = 1 [
     (validate.rules).string.uuid = true

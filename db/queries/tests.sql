@@ -54,3 +54,7 @@ WHERE
   (sqlc.narg('ids')::uuid[] IS NULL OR tests.id = ANY (sqlc.narg('ids')::uuid[])) AND
   (sqlc.narg('labels')::jsonb IS NULL OR tests.labels @> sqlc.narg('labels')::jsonb)
 ORDER BY tests.name ASC;
+
+-- name: ListAllNamespaces :many
+SELECT DISTINCT(namespace)
+FROM tests;

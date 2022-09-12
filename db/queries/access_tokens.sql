@@ -12,7 +12,7 @@ RETURNING id, name, namespace_selectors, scopes::text[], issued_at, expires_at;
 
 -- name: AuthAccessToken :one
 -- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-SELECT namespace_selectors, scopes::text[], expires_at
+SELECT namespace_selectors, scopes::text[], issued_at, expires_at
 FROM access_tokens
 WHERE
   token_hash = sqlc.arg('token_hash') AND

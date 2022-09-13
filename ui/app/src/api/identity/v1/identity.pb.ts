@@ -6,15 +6,12 @@
 
 import * as TstrCommonV1Common from "../../common/v1/common.pb"
 import * as fm from "../../fetch.pb"
-import * as GoogleProtobufTimestamp from "../../google/protobuf/timestamp.pb"
 export type IdentityRequest = {
 }
 
 export type IdentityResponse = {
-  scopes?: TstrCommonV1Common.AccessTokenScope[]
-  namespaceSelectors?: string[]
-  issuedAt?: GoogleProtobufTimestamp.Timestamp
-  expiresAt?: GoogleProtobufTimestamp.Timestamp
+  accessToken?: TstrCommonV1Common.AccessToken
+  accessibleNamespaces?: string[]
 }
 
 export class IdentityService {

@@ -20,9 +20,6 @@ service IdentityService {
 message IdentityRequest {}
 
 message IdentityResponse {
-  repeated tstr.common.v1.AccessToken.Scope scopes = 1;
-  repeated string namespace_selectors = 2;
-
-  google.protobuf.Timestamp issued_at = 10;
-  google.protobuf.Timestamp expires_at = 11;
+  tstr.common.v1.AccessToken access_token = 1;
+  repeated string accessible_namespaces = 2;
 }

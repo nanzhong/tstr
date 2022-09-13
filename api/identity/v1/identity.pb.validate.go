@@ -17,8 +17,6 @@ import (
 	"unicode/utf8"
 
 	"google.golang.org/protobuf/types/known/anypb"
-
-	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 )
 
 // ensure the imports are used
@@ -35,8 +33,6 @@ var (
 	_ = (*mail.Address)(nil)
 	_ = anypb.Any{}
 	_ = sort.Sort
-
-	_ = commonv1.AccessToken_Scope(0)
 )
 
 // Validate checks the field values on IdentityRequest with the rules defined
@@ -162,11 +158,11 @@ func (m *IdentityResponse) validate(all bool) error {
 	var errors []error
 
 	if all {
-		switch v := interface{}(m.GetIssuedAt()).(type) {
+		switch v := interface{}(m.GetAccessToken()).(type) {
 		case interface{ ValidateAll() error }:
 			if err := v.ValidateAll(); err != nil {
 				errors = append(errors, IdentityResponseValidationError{
-					field:  "IssuedAt",
+					field:  "AccessToken",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
@@ -174,45 +170,16 @@ func (m *IdentityResponse) validate(all bool) error {
 		case interface{ Validate() error }:
 			if err := v.Validate(); err != nil {
 				errors = append(errors, IdentityResponseValidationError{
-					field:  "IssuedAt",
+					field:  "AccessToken",
 					reason: "embedded message failed validation",
 					cause:  err,
 				})
 			}
 		}
-	} else if v, ok := interface{}(m.GetIssuedAt()).(interface{ Validate() error }); ok {
+	} else if v, ok := interface{}(m.GetAccessToken()).(interface{ Validate() error }); ok {
 		if err := v.Validate(); err != nil {
 			return IdentityResponseValidationError{
-				field:  "IssuedAt",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
-		}
-	}
-
-	if all {
-		switch v := interface{}(m.GetExpiresAt()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, IdentityResponseValidationError{
-					field:  "ExpiresAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, IdentityResponseValidationError{
-					field:  "ExpiresAt",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		}
-	} else if v, ok := interface{}(m.GetExpiresAt()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return IdentityResponseValidationError{
-				field:  "ExpiresAt",
+				field:  "AccessToken",
 				reason: "embedded message failed validation",
 				cause:  err,
 			}

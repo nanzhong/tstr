@@ -13,7 +13,7 @@ import (
 )
 
 const authAccessToken = `-- name: AuthAccessToken :one
-SELECT namespace_selectors, scopes::text[], issued_at, expires_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   token_hash = $1 AND
@@ -21,10 +21,13 @@ WHERE
 `
 
 type AuthAccessTokenRow struct {
+	ID                 uuid.UUID
+	Name               string
 	NamespaceSelectors []string
 	Scopes             []string
 	IssuedAt           sql.NullTime
 	ExpiresAt          sql.NullTime
+	RevokedAt          sql.NullTime
 }
 
 // TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
@@ -32,10 +35,13 @@ func (q *Queries) AuthAccessToken(ctx context.Context, db DBTX, tokenHash string
 	row := db.QueryRow(ctx, authAccessToken, tokenHash)
 	var i AuthAccessTokenRow
 	err := row.Scan(
+		&i.ID,
+		&i.Name,
 		&i.NamespaceSelectors,
 		&i.Scopes,
 		&i.IssuedAt,
 		&i.ExpiresAt,
+		&i.RevokedAt,
 	)
 	return i, err
 }

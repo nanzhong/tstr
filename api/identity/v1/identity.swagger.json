@@ -79,19 +79,28 @@
         }
       }
     },
-    "v1IdentityResponse": {
+    "v1AccessToken": {
       "type": "object",
       "properties": {
-        "scopes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/AccessTokenScope"
-          }
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
         },
         "namespaceSelectors": {
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AccessTokenScope"
           }
         },
         "issuedAt": {
@@ -101,6 +110,24 @@
         "expiresAt": {
           "type": "string",
           "format": "date-time"
+        },
+        "revokedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "v1IdentityResponse": {
+      "type": "object",
+      "properties": {
+        "accessToken": {
+          "$ref": "#/definitions/v1AccessToken"
+        },
+        "accessibleNamespaces": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

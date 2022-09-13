@@ -64,7 +64,7 @@ CREATE TABLE public.access_tokens (
     issued_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     expires_at timestamp with time zone,
     revoked_at timestamp with time zone,
-    namespace_selectors character varying[]
+    namespace_selectors character varying[] NOT NULL
 );
 
 
@@ -79,7 +79,7 @@ CREATE TABLE public.runners (
     reject_test_label_selectors jsonb,
     registered_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     last_heartbeat_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    namespace_selectors character varying[]
+    namespace_selectors character varying[] NOT NULL
 );
 
 

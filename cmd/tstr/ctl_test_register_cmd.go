@@ -9,7 +9,9 @@ import (
 
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/fieldmaskpb"
@@ -127,6 +129,7 @@ var (
 				if test.Id == "" {
 					fmt.Printf("Registering new test: %s\n", test.Name)
 
+					ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
 					res, err := client.RegisterTest(ctx, &controlv1.RegisterTestRequest{
 						Name:         test.Name,
 						Labels:       test.Labels,

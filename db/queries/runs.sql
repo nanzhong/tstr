@@ -124,10 +124,10 @@ WITH intervals AS (
 )
 SELECT 
   intervals.start::timestamptz,
-  COUNT(id) FILTER (WHERE result = 'pass') as pass,
-  COUNT(id) FILTER (WHERE result = 'fail') as fail,
-  COUNT(id) FILTER (WHERE result = 'error') as error,
-  COUNT(id) FILTER (WHERE result = 'unknown') as unknown
+  COUNT(runs.id) FILTER (WHERE result = 'pass') as pass,
+  COUNT(runs.id) FILTER (WHERE result = 'fail') as fail,
+  COUNT(runs.id) FILTER (WHERE result = 'error') as error,
+  COUNT(runs.id) FILTER (WHERE result = 'unknown') as unknown
 FROM intervals
 LEFT JOIN runs
 ON

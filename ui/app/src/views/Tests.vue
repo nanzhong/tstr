@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import dayjs from "dayjs";
-import { InitReq } from "../api/fetch.pb";
+import { useInitReq } from "../api/init";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
 import { RunResult } from "../api/common/v1/common.pb";
 import TestCard from "../components/TestCard.vue";
 
-const initReq: InitReq = inject('dataInitReq')!;
-
+const initReq = useInitReq();
 const now = dayjs();
 const runSummary = (await DataService.SummarizeRuns({
   scheduledAfter: now.subtract(1, "day").toISOString(),

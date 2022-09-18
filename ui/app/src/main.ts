@@ -1,9 +1,12 @@
 import { createApp, defineAsyncComponent } from "vue";
 import { createRouter, createWebHashHistory } from "vue-router";
+import { createPinia, storeToRefs } from "pinia";
+import { useNamespaceStore } from "./stores/namespace";
 import App from "./App.vue";
 import "./index.css";
 
 const Header = () => import("./components/Header.vue");
+const NamespaceSelection = () => import("./views/NamespaceSelection.vue");
 const Dashboard = () => import("./views/Dashboard.vue");
 const RunDetails = () => import("./views/RunDetails.vue");
 const RunnerDetails = () => import("./views/RunnerDetails.vue");
@@ -13,7 +16,9 @@ const TestDetails = () => import("./views/TestDetails.vue");
 const Tests = () => import("./views/Tests.vue");
 
 const app = createApp(App);
-app.provide("dataInitReq", { pathPrefix: "/api" });
+const pinia = createPinia();
+app.use(pinia);
+app.provide("apiPathPrefix", "/api");
 app.config.globalProperties.$initReq = {
   pathPrefix: "/api",
 };
@@ -23,6 +28,17 @@ const routes = [
     path: "/",
     name: "home",
     redirect: "/dashboard",
+  },
+  {
+    path: "/namespaces",
+    name: "namespace-selection",
+    props: {
+      header: { title: "Select a Namespace" },
+    },
+    components: {
+      default: NamespaceSelection,
+      header: Header,
+    },
   },
   {
     path: "/dashboard",
@@ -106,6 +122,14 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
+});
+
+router.beforeEach((to, from) => {
+  const nsStore = useNamespaceStore();
+  const { currentNamespace } = storeToRefs(nsStore);
+  if (to.name !== "namespace-selection" && currentNamespace.value === "") {
+    return { name: "namespace-selection" };
+  }
 });
 
 app.use(router);

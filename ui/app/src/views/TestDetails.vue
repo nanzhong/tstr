@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { InitReq } from "../api/fetch.pb";
+import { useInitReq } from "../api/init";
 import { DataService } from "../api/data/v1/data.pb";
 import RunSummariesPlot from "../components/RunSummariesPlot.vue";
 import Labels from "../components/Labels.vue";
@@ -11,8 +10,8 @@ import MatrixLabels from "../components/MatrixLabels.vue";
 
 dayjs.extend(relativeTime);
 
+const initReq = useInitReq();
 const route = useRoute();
-const initReq: InitReq = inject('dataInitReq')!;
 const testData = await DataService.GetTest({ id: route.params.id as string }, initReq);
 const test = testData.test!;
 const runSummaries = testData.runSummaries!;

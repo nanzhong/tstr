@@ -1,22 +1,21 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import Plotly from "plotly.js-dist/plotly";
 import { LightningBoltIcon, EmojiHappyIcon, EmojiSadIcon, ExclamationCircleIcon } from '@heroicons/vue/outline';
+import { useInitReq } from "../api/init";
 import { RunResult } from "../api/common/v1/common.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
-import { InitReq } from "../api/fetch.pb";
 import RunsTable from "../components/RunsTable.vue";
 import TestRunCountsTable from "../components/TestRunCountsTable.vue";
 
-const initReq: InitReq = inject('dataInitReq')!;
-
+const initReq = useInitReq();
 const now = dayjs();
 const dayAgoCeil = now.startOf("hour").subtract(23, "hour");
 const runs = (await DataService.QueryRuns({ scheduledAfter: dayAgoCeil.toISOString() }, initReq)).runs;
 const runSummary = (await DataService.SummarizeRuns({
   scheduledAfter: now.subtract(1, "day").toISOString(),
-  window: `${24*60*60}s`,
+  window: `${24 * 60 * 60}s`,
   interval: SummarizeRunsRequestInterval.HOUR,
 }, initReq));
 
@@ -40,14 +39,14 @@ const testRunCounts: { [key: string]: { testID: string, testName: string, runCou
 runSummary.intervalStats?.forEach(s => {
   hourBuckets.push(dayjs(s.startTime!).toISOString());
   s.resultCount?.forEach(c => {
-    switch(c.result!) {
+    switch (c.result!) {
       case RunResult.PASS:
       case RunResult.FAIL:
       case RunResult.ERROR:
       case RunResult.UNKNOWN:
         runDataSeries[c.result!].y.push(c.count || 0);
         runCounts[c.result!] += (c.count! || 0);
-      break;
+        break;
       default:
         runDataSeries[RunResult.UNKNOWN].y.push(c.count || 0);
         runCounts[RunResult.UNKNOWN] += (c.count! || 0);
@@ -69,7 +68,7 @@ runSummary.intervalStats?.forEach(s => {
     }
 
     c.resultCount?.forEach(rc => {
-      switch(rc.result!) {
+      switch (rc.result!) {
         case RunResult.PASS:
         case RunResult.FAIL:
         case RunResult.ERROR:
@@ -77,7 +76,7 @@ runSummary.intervalStats?.forEach(s => {
           testRunCounts[c.testId!].runCounts[rc.result!] += (rc.count! || 0);
           break;
         default:
-        testRunCounts[c.testId!].runCounts[RunResult.UNKNOWN] += (rc.count! || 0);
+          testRunCounts[c.testId!].runCounts[RunResult.UNKNOWN] += (rc.count! || 0);
       }
     });
   });
@@ -94,19 +93,19 @@ const stats = {
   passRate: {
     name: 'Pass Rate',
     icon: EmojiHappyIcon,
-    stat: `${(runCounts[RunResult.PASS] / totalRunCount * 100).toFixed(2)}%`,
+    stat: totalRunCount === 0 ? "0%" : `${(runCounts[RunResult.PASS] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-green-500'
   },
   FailRate: {
     name: 'Fail Rate',
     icon: EmojiSadIcon,
-    stat: `${(runCounts[RunResult.FAIL] / totalRunCount * 100).toFixed(2)}%`,
+    stat: totalRunCount === 0 ? "0%" : `${(runCounts[RunResult.FAIL] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-red-500'
   },
   errorRate: {
     name: 'Error Rate',
     icon: ExclamationCircleIcon,
-    stat: `${(runCounts[RunResult.ERROR] / totalRunCount * 100).toFixed(2)}%`,
+    stat: totalRunCount === 0 ? "0%" : `${(runCounts[RunResult.ERROR] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-pink-500'
   },
 }
@@ -147,7 +146,8 @@ onMounted(() => {
         </div>
       </div>
 
-      <dl class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-4 md:divide-y-0 md:divide-x">
+      <dl
+        class="mt-5 grid grid-cols-1 rounded-lg bg-white overflow-hidden shadow divide-y divide-gray-200 md:grid-cols-4 md:divide-y-0 md:divide-x">
         <div v-for="item in stats" :key="item.name" class="px-4 py-5 sm:p-6">
           <dt>
             <div class="absolute bg-indigo-500 rounded-md p-3">
@@ -156,7 +156,7 @@ onMounted(() => {
             <p class="ml-16 text-sm font-medium text-gray-500">{{ item.name }}</p>
           </dt>
           <dd class="ml-16 flex items-baseline">
-            <p :class="[ item.colour ? item.colour: '', 'text-2xl font-semibold']">
+            <p :class="[item.colour ? item.colour : '', 'text-2xl font-semibold']">
               {{ item.stat }}
             </p>
           </dd>
@@ -180,7 +180,7 @@ onMounted(() => {
           <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
             <div class="inline-block min-w-full py-2 align-middle">
               <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
-                <RunsTable :runs="runs!.slice(0, 5)" />
+                <RunsTable :runs="(runs || [])!.slice(0, 5)" />
               </div>
             </div>
           </div>

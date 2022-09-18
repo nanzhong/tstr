@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import dayjs from "dayjs";
 import relativeTime from 'dayjs/plugin/relativeTime';
+import { useInitReq } from "../api/init";
 import { Run, Test } from "../api/common/v1/common.pb";
 import { DataService, RunSummary } from "../api/data/v1/data.pb";
 import RunResult from "./RunResult.vue";
 import Labels from "./Labels.vue";
-import { InitReq } from "../api/fetch.pb";
 import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
@@ -15,7 +14,7 @@ const props = defineProps<{
   runs: Run[] | RunSummary[]
 }>();
 
-const initReq: InitReq = inject('dataInitReq')!;
+const initReq = useInitReq();
 const testIDSet = new Set<string>();
 props.runs.forEach(r => testIDSet.add(r.testId!));
 

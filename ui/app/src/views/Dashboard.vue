@@ -174,14 +174,12 @@ onMounted(() => {
 
       <div ref="recentRunsPlot"></div>
 
-      <div class="mt-2">
-        <h3 class="text-md font-medium text-gray-900">Last 5 Runs</h3>
-        <div class="mt-5 flex flex-col">
-          <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
-            <div class="inline-block min-w-full py-2 align-middle">
-              <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
-                <RunsTable :runs="(runs || [])!.slice(0, 5)" />
-              </div>
+      <h3 class="mt-2 text-md font-medium text-gray-900">Last 5 Runs</h3>
+      <div class="mt-5 flex flex-col">
+        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-6">
+          <div class="inline-block min-w-full py-2 align-middle">
+            <div class="overflow-hidden shadow-sm ring-1 ring-black ring-opacity-5">
+              <RunsTable :runs="(runs || [])!.slice(0, 5)" />
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { storeToRefs } from "pinia";
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from "@headlessui/vue";
-import { CheckIcon, ChevronDownIcon } from "@heroicons/vue/solid";
+import { CheckIcon, ChevronUpDownIcon } from "@heroicons/vue/24/solid";
 import { useNamespaceStore } from "../stores/namespace";
 import { useInitReq } from "../api/init";
 import { IdentityService } from "../api/identity/v1/identity.pb";
@@ -33,7 +33,7 @@ const selected = ref(namespaces.value.find(ns => ns === namespace.value));
       <ListboxButton class="relative w-full cursor-default rounded-md border border-gray-300 bg-white py-1 pl-3 pr-10 text-left shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm">
         <span class="block truncate">{{ selected }}</span>
         <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-          <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
         </span>
       </ListboxButton>
 

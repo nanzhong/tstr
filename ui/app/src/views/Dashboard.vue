@@ -2,7 +2,7 @@
 import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import Plotly from "plotly.js-dist/plotly";
-import { LightningBoltIcon, EmojiHappyIcon, EmojiSadIcon, ExclamationCircleIcon } from '@heroicons/vue/outline';
+import { BoltIcon, FaceSmileIcon, FaceFrownIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline';
 import { useInitReq } from "../api/init";
 import { RunResult } from "../api/common/v1/common.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";
@@ -86,19 +86,19 @@ const totalRunCount = runCounts[RunResult.PASS] + runCounts[RunResult.FAIL] + ru
 const stats = {
   totalRuns: {
     name: 'Runs Scheduled',
-    icon: LightningBoltIcon,
+    icon: BoltIcon,
     stat: totalRunCount,
     colour: 'text-indigo-500'
   },
   passRate: {
     name: 'Pass Rate',
-    icon: EmojiHappyIcon,
+    icon: FaceSmileIcon,
     stat: totalRunCount === 0 ? "0%" : `${(runCounts[RunResult.PASS] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-green-500'
   },
   FailRate: {
     name: 'Fail Rate',
-    icon: EmojiSadIcon,
+    icon: FaceFrownIcon,
     stat: totalRunCount === 0 ? "0%" : `${(runCounts[RunResult.FAIL] / totalRunCount * 100).toFixed(2)}%`,
     colour: 'text-red-500'
   },

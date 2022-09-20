@@ -19,6 +19,7 @@ import (
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
 	datav1 "github.com/nanzhong/tstr/api/data/v1"
+	identityv1 "github.com/nanzhong/tstr/api/identity/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
@@ -62,10 +63,11 @@ var apiCmd = &cobra.Command{
 				textScopes = append(textScopes, string(s))
 			}
 			_, err := db.New().IssueAccessToken(ctx, pgxPool, db.IssueAccessTokenParams{
-				Name:      "bootstrap-token",
-				TokenHash: tokenHash,
-				Scopes:    textScopes,
-				ExpiresAt: sql.NullTime{Valid: true, Time: time.Now().Add(24 * time.Hour)},
+				Name:               "bootstrap-token",
+				TokenHash:          tokenHash,
+				Scopes:             textScopes,
+				NamespaceSelectors: []string{".*"},
+				ExpiresAt:          sql.NullTime{Valid: true, Time: time.Now().Add(24 * time.Hour)},
 			})
 			if err != nil {
 				log.Fatal().
@@ -102,6 +104,9 @@ var apiCmd = &cobra.Command{
 
 		scheduler := scheduler.New(pgxPool)
 
+		identityServer := server.NewIdentityServer(pgxPool)
+		identityv1.RegisterIdentityServiceServer(grpcServer, identityServer)
+
 		controlServer := server.NewControlServer(pgxPool)
 		controlv1.RegisterControlServiceServer(grpcServer, controlServer)
 
@@ -123,6 +128,7 @@ var apiCmd = &cobra.Command{
 			},
 		}))
 		gwOpts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+		identityv1.RegisterIdentityServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("api.grpc-addr"), gwOpts)
 		datav1.RegisterDataServiceHandlerFromEndpoint(ctx, grpcgwMux, viper.GetString("api.grpc-addr"), gwOpts)
 		grpcgwServer := http.Server{
 			Handler: hlog.NewHandler(log.Logger)(grpcgwMux),

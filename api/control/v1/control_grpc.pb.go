@@ -30,7 +30,6 @@ type ControlServiceClient interface {
 	GetRun(ctx context.Context, in *GetRunRequest, opts ...grpc.CallOption) (*GetRunResponse, error)
 	ListRuns(ctx context.Context, in *ListRunsRequest, opts ...grpc.CallOption) (*ListRunsResponse, error)
 	ScheduleRun(ctx context.Context, in *ScheduleRunRequest, opts ...grpc.CallOption) (*ScheduleRunResponse, error)
-	GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error)
 	ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error)
 }
 
@@ -114,15 +113,6 @@ func (c *controlServiceClient) ScheduleRun(ctx context.Context, in *ScheduleRunR
 	return out, nil
 }
 
-func (c *controlServiceClient) GetRunner(ctx context.Context, in *GetRunnerRequest, opts ...grpc.CallOption) (*GetRunnerResponse, error) {
-	out := new(GetRunnerResponse)
-	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/GetRunner", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *controlServiceClient) ListRunners(ctx context.Context, in *ListRunnersRequest, opts ...grpc.CallOption) (*ListRunnersResponse, error) {
 	out := new(ListRunnersResponse)
 	err := c.cc.Invoke(ctx, "/tstr.control.v1.ControlService/ListRunners", in, out, opts...)
@@ -144,7 +134,6 @@ type ControlServiceServer interface {
 	GetRun(context.Context, *GetRunRequest) (*GetRunResponse, error)
 	ListRuns(context.Context, *ListRunsRequest) (*ListRunsResponse, error)
 	ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error)
-	GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error)
 	ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error)
 	mustEmbedUnimplementedControlServiceServer()
 }
@@ -176,9 +165,6 @@ func (UnimplementedControlServiceServer) ListRuns(context.Context, *ListRunsRequ
 }
 func (UnimplementedControlServiceServer) ScheduleRun(context.Context, *ScheduleRunRequest) (*ScheduleRunResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ScheduleRun not implemented")
-}
-func (UnimplementedControlServiceServer) GetRunner(context.Context, *GetRunnerRequest) (*GetRunnerResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRunner not implemented")
 }
 func (UnimplementedControlServiceServer) ListRunners(context.Context, *ListRunnersRequest) (*ListRunnersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListRunners not implemented")
@@ -340,24 +326,6 @@ func _ControlService_ScheduleRun_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ControlService_GetRunner_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRunnerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ControlServiceServer).GetRunner(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/tstr.control.v1.ControlService/GetRunner",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ControlServiceServer).GetRunner(ctx, req.(*GetRunnerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _ControlService_ListRunners_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRunnersRequest)
 	if err := dec(in); err != nil {
@@ -414,10 +382,6 @@ var ControlService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ScheduleRun",
 			Handler:    _ControlService_ScheduleRun_Handler,
-		},
-		{
-			MethodName: "GetRunner",
-			Handler:    _ControlService_GetRunner_Handler,
 		},
 		{
 			MethodName: "ListRunners",

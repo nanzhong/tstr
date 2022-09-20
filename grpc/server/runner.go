@@ -16,6 +16,7 @@ import (
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -39,6 +40,18 @@ func NewRunnerServer(pgxPool *pgxpool.Pool) runnerv1.RunnerServiceServer {
 }
 
 func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.RegisterRunnerRequest) (*runnerv1.RegisterRunnerResponse, error) {
+	_, tokenHash, err := auth.AccessTokenFromContext(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get identity from metadata")
+		return nil, status.Error(codes.Internal, "failed to get identity")
+	}
+
+	token, err := s.dbQuerier.AuthAccessToken(ctx, s.pgxPool, tokenHash)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get identity")
+		return nil, status.Error(codes.Internal, "failed to get identity")
+	}
+
 	for _, v := range req.AcceptTestLabelSelectors {
 		if _, err := regexp.Compile(v); err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid accept test label selectors, must be valid RE")
@@ -65,6 +78,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.Registe
 
 	regRunner, err := s.dbQuerier.RegisterRunner(ctx, s.pgxPool, db.RegisterRunnerParams{
 		Name:                     req.Name,
+		NamespaceSelectors:       token.NamespaceSelectors,
 		AcceptTestLabelSelectors: accept,
 		RejectTestLabelSelectors: reject,
 	})
@@ -91,6 +105,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.Registe
 		Runner: &commonv1.Runner{
 			Id:                       regRunner.ID.String(),
 			Name:                     regRunner.Name,
+			NamespaceSelectors:       regRunner.NamespaceSelectors,
 			AcceptTestLabelSelectors: acceptSelectors,
 			RejectTestLabelSelectors: rejectSelectors,
 			RegisteredAt:             types.ToProtoTimestamp(regRunner.RegisteredAt),
@@ -124,11 +139,23 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 	}
 
 	var (
-		acceptSelectors   map[string]string
-		acceptSelectorsRE = make(map[string]*regexp.Regexp)
-		rejectSelectors   map[string]string
-		rejectSelectorsRE = make(map[string]*regexp.Regexp)
+		namespaceSelectorsRE []*regexp.Regexp
+		acceptSelectors      map[string]string
+		acceptSelectorsRE    = make(map[string]*regexp.Regexp)
+		rejectSelectors      map[string]string
+		rejectSelectorsRE    = make(map[string]*regexp.Regexp)
 	)
+	for _, nsSel := range dbRunner.NamespaceSelectors {
+		re, err := regexp.Compile(nsSel)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Msg("failed to parse namespace selectors")
+			return nil, status.Error(codes.Internal, "failed to load runner info")
+		}
+		namespaceSelectorsRE = append(namespaceSelectorsRE, re)
+	}
+
 	if err := dbRunner.AcceptTestLabelSelectors.AssignTo(&acceptSelectors); err != nil {
 		log.Error().
 			Err(err).
@@ -176,6 +203,17 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 
 	var matchingRunIDs []uuid.UUID
 	for _, run := range runs {
+		matchesNamespaces := false
+		for _, nsSel := range namespaceSelectorsRE {
+			if nsSel.MatchString(run.Namespace) {
+				matchesNamespaces = true
+				break
+			}
+		}
+		if !matchesNamespaces {
+			continue
+		}
+
 		var labels map[string]string
 		if err := run.Labels.AssignTo(&labels); err != nil {
 			log.Error().
@@ -199,8 +237,8 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		}
 
 		// Then check that we match all the accept selectors
-		// Start with assuming a match and invalidate
-		match := true
+		// Start with assuming a match (if we have accept selectors) and invalidate
+		match := len(labels) > 0
 		for k, v := range labels {
 			re, exists := acceptSelectorsRE[k]
 			if !exists {

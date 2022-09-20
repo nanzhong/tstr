@@ -39,15 +39,24 @@ func NewDataServer(pgxPool *pgxpool.Pool) datav1.DataServiceServer {
 }
 
 func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*datav1.GetTestResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid test id")
 	}
 
-	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, id)
+	test, err := s.dbQuerier.GetTest(ctx, s.pgxPool, db.GetTestParams{
+		ID:        id,
+		Namespace: ns,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("test_id", id).
 			Msg("failed to get test")
 		return nil, status.Error(codes.Internal, "failed to get test")
@@ -60,12 +69,17 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 	}
 
 	runSummaries, err := s.dbQuerier.RunSummariesForTest(ctx, s.pgxPool, db.RunSummariesForTestParams{
-		TestID: test.ID,
+		Namespace: ns,
+		TestID:    test.ID,
 		// TODO Configure default + query param handling
 		ScheduledAfter: sql.NullTime{Valid: true, Time: s.clock.Now().Add(-24 * time.Hour)},
 	})
 	if err != nil {
-		log.Error().Err(err).Stringer("test_id", test.ID).Msg("failed to summarize runs for test")
+		log.Error().
+			Err(err).
+			Str("namespace", ns).
+			Stringer("test_id", test.ID).
+			Msg("failed to summarize runs for test")
 		return nil, status.Error(codes.Internal, "failed to summarize runs for test")
 	}
 	var pbRunSummaries []*datav1.RunSummary
@@ -110,6 +124,11 @@ func (s *DataServer) GetTest(ctx context.Context, r *datav1.GetTestRequest) (*da
 }
 
 func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest) (*datav1.QueryTestsResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var testIDs []uuid.UUID
 	for _, rid := range r.Ids {
 		id, err := uuid.Parse(rid)
@@ -128,8 +147,9 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 	}
 
 	tests, err := s.dbQuerier.QueryTests(ctx, s.pgxPool, db.QueryTestsParams{
-		Ids:    testIDs,
-		Labels: labels,
+		Namespace: ns,
+		Ids:       testIDs,
+		Labels:    labels,
 	})
 	if err != nil {
 		// NOTE []uuid.UUID can't be directly used as []fmt.Stringer
@@ -139,6 +159,7 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 		}
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Strs("test_ids", testIDStrings).
 			Dict("labels", zerolog.Dict().Fields(labels)).
 			Msg("failed to query tests")
@@ -160,15 +181,24 @@ func (s *DataServer) QueryTests(ctx context.Context, r *datav1.QueryTestsRequest
 }
 
 func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*datav1.GetRunResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid run id")
 	}
 
-	run, err := s.dbQuerier.GetRun(ctx, s.pgxPool, id)
+	run, err := s.dbQuerier.GetRun(ctx, s.pgxPool, db.GetRunParams{
+		Namespace: ns,
+		ID:        id,
+	})
 	if err != nil {
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Stringer("run_id", id).
 			Msg("failed to get run")
 		return nil, status.Error(codes.Internal, "failed to get run")
@@ -206,6 +236,11 @@ func (s *DataServer) GetRun(ctx context.Context, r *datav1.GetRunRequest) (*data
 }
 
 func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) (*datav1.QueryRunsResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var runIDs []uuid.UUID
 	for _, rid := range r.Ids {
 		id, err := uuid.Parse(rid)
@@ -242,6 +277,7 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 	finishedAfter := types.FromProtoTimestampAsNullTime(r.FinishedAfter)
 
 	runs, err := s.dbQuerier.QueryRuns(ctx, s.pgxPool, db.QueryRunsParams{
+		Namespace:       ns,
 		Ids:             runIDs,
 		TestIds:         testIDs,
 		RunnerIds:       runnerIDs,
@@ -260,6 +296,7 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 		}
 		log.Error().
 			Err(err).
+			Str("namespace", ns).
 			Strs("ids", r.Ids).
 			Strs("test_ids", r.TestIds).
 			Strs("results", resultStrings).
@@ -299,6 +336,11 @@ func (s *DataServer) QueryRuns(ctx context.Context, r *datav1.QueryRunsRequest) 
 }
 
 func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) (*datav1.GetRunnerResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	id, err := uuid.Parse(r.Id)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid runner id")
@@ -308,6 +350,15 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 	if err != nil {
 		log.Error().Err(err).Stringer("runner_id", id).Msg("failed to get runner")
 		return nil, status.Error(codes.Internal, "failed to get runner")
+	}
+
+	nsMatch, err := matchNamespace(runner.NamespaceSelectors, ns)
+	if err != nil {
+		log.Error().Err(err).Stringer("runner_id", id).Msg("failed to compile namespace selector")
+		return nil, status.Error(codes.Internal, "failed to get runner")
+	}
+	if !nsMatch {
+		return nil, status.Errorf(codes.NotFound, "runner with id %s matching namespace %s not found", r.Id, ns)
 	}
 
 	pbRunner, err := types.ToProtoRunner(&runner)
@@ -369,6 +420,11 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 }
 
 func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersRequest) (*datav1.QueryRunnersResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var runnerIDs []uuid.UUID
 	for _, rid := range r.Ids {
 		id, err := uuid.Parse(rid)
@@ -394,6 +450,18 @@ func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersReq
 	}
 	var pbRunners []*commonv1.Runner
 	for _, r := range runners {
+		nsMatch, err := matchNamespace(r.NamespaceSelectors, ns)
+		if err != nil {
+			log.Error().
+				Err(err).
+				Stringer("runner_id", r.ID).
+				Msg("failed to compile namespace selector")
+			return nil, status.Error(codes.Internal, "failed to query runners")
+		}
+		if !nsMatch {
+			continue
+		}
+
 		pbRunner, err := types.ToProtoRunner(&r)
 		if err != nil {
 			log.Error().
@@ -412,6 +480,11 @@ func (s *DataServer) QueryRunners(ctx context.Context, r *datav1.QueryRunnersReq
 }
 
 func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsRequest) (*datav1.SummarizeRunsResponse, error) {
+	ns, err := namespaceFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var precision string
 	var interval time.Duration
 	switch r.Interval {
@@ -432,8 +505,9 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 	endTime := r.ScheduledAfter.AsTime().Add(r.Window.AsDuration())
 
 	var stats []*datav1.SummarizeRunsResponse_IntervalStats
-	err := s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
+	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		log := log.With().
+			Str("namespace", ns).
 			Str("precision", precision).
 			Time("start_time", startTime).
 			Time("end_time", endTime).
@@ -441,6 +515,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 			Logger()
 
 		resultBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownResult(ctx, tx, db.SummarizeRunsBreakdownResultParams{
+			Namepsace: ns,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},
@@ -454,6 +529,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 		}
 
 		testBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownTest(ctx, tx, db.SummarizeRunsBreakdownTestParams{
+			Namepsace: ns,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},

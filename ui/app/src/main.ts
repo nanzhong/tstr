@@ -1,9 +1,11 @@
-import { createApp, defineAsyncComponent } from "vue";
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createApp } from "vue";
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+import { createPinia } from "pinia";
 import App from "./App.vue";
 import "./index.css";
 
 const Header = () => import("./components/Header.vue");
+const NamespaceSelection = () => import("./views/NamespaceSelection.vue");
 const Dashboard = () => import("./views/Dashboard.vue");
 const RunDetails = () => import("./views/RunDetails.vue");
 const RunnerDetails = () => import("./views/RunnerDetails.vue");
@@ -13,94 +15,116 @@ const TestDetails = () => import("./views/TestDetails.vue");
 const Tests = () => import("./views/Tests.vue");
 
 const app = createApp(App);
-app.provide("dataInitReq", { pathPrefix: "/api" });
+const pinia = createPinia();
+app.use(pinia);
+app.provide("apiPathPrefix", "/api");
 app.config.globalProperties.$initReq = {
   pathPrefix: "/api",
 };
+
+function prefixRoutes(prefix: string, routes: RouteRecordRaw[]) {
+  return routes.map((route) => {
+    route.path = prefix + "/" + route.path;
+    return route;
+  })
+}
 
 const routes = [
   {
     path: "/",
     name: "home",
-    redirect: "/dashboard",
+    redirect: "/nss",
   },
   {
-    path: "/dashboard",
-    name: "dashboard",
-    props: { 
-      header: { title: "Dashboard" },
-    },
-    components: {
-      default: Dashboard,
-      header: Header,
-    },
-  },
-  {
-    path: "/tests",
-    name: "tests",
+    path: "/nss",
+    name: "namespace-selection",
     props: {
-      header: { title: "Tests" },
+      header: { title: "Select a Namespace" },
     },
     components: {
-      default: Tests,
+      default: NamespaceSelection,
       header: Header,
-    }
-  },
-  {
-    path: "/runs",
-    name: "runs",
-    props: {
-      header: { title: "Runs" }
     },
-    components: {
-      default: Runs,
-      header: Header,
-    }
   },
-  {
-    path: "/runners",
-    name: "runners",
-    props: {
-      header: { title: "Runners" }
+  ...prefixRoutes("/ns/:namespace", [
+    {
+      path: "dashboard",
+      name: "dashboard",
+      props: { 
+        header: { title: "Dashboard" },
+      },
+      components: {
+        default: Dashboard,
+        header: Header,
+      },
     },
-    components: {
-      default: Runners,
-      header: Header,
-    }
-  },
-  {
-    name: "test-details",
-    path: "/tests/:id",
-    props: {
-      header: { title: "Test Details" }
+    {
+      path: "tests",
+      name: "tests",
+      props: {
+        header: { title: "Tests" },
+      },
+      components: {
+        default: Tests,
+        header: Header,
+      }
     },
-    components: {
-      default: TestDetails,
-      header: Header,
-    }
-  },
-  {
-    name: "run-details",
-    path: "/runs/:id",
-    props: {
-      header: { title: "Run Details" }
+    {
+      path: "runs",
+      name: "runs",
+      props: {
+        header: { title: "Runs" }
+      },
+      components: {
+        default: Runs,
+        header: Header,
+      }
     },
-    components: {
-      default: RunDetails,
-      header: Header,
-    }
-  },
-  {
-    name: "runner-details",
-    path: "/runners/:id",
-    props: {
-      header: { title: "Runner Details" }
+    {
+      path: "runners",
+      name: "runners",
+      props: {
+        header: { title: "Runners" }
+      },
+      components: {
+        default: Runners,
+        header: Header,
+      }
     },
-    components: {
-      default: RunnerDetails,
-      header: Header,
-    }
-  },
+    {
+      path: "tests/:id",
+      name: "test-details",
+      props: {
+        header: { title: "Test Details" }
+      },
+      components: {
+        default: TestDetails,
+        header: Header,
+      }
+    },
+    {
+      path: "runs/:id",
+      name: "run-details",
+      props: {
+        header: { title: "Run Details" }
+      },
+      components: {
+        default: RunDetails,
+        header: Header,
+      }
+    },
+    {
+      path: "runners/:id",
+      name: "runner-details",
+      props: {
+        header: { title: "Runner Details" }
+      },
+      components: {
+        default: RunnerDetails,
+        header: Header,
+      }
+    },
+  ]),
 ];
 
 const router = createRouter({

@@ -1,22 +1,28 @@
 -- name: GetRun :one
-SELECT *
+SELECT runs.*
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE runs.id = sqlc.arg('id');
 
 -- name: ListRuns :many
-SELECT *
-FROM runs;
+SELECT runs.*
+FROM runs
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace');
 
 -- name: ScheduleRun :one
 INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
 SELECT tests.id, tests.run_config, sqlc.arg('labels'), sqlc.narg('test_matrix_id')
 FROM tests
-WHERE tests.id = sqlc.arg('test_id')
+WHERE tests.id = sqlc.arg('test_id') AND tests.namespace = sqlc.arg('namepsace')
 RETURNING *;
 
 -- name: ListPendingRuns :many
-SELECT *
+SELECT runs.*, tests.namespace
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runner_id IS NULL;
 
 -- name: AssignRun :one
@@ -75,24 +81,26 @@ WHERE
   CURRENT_TIMESTAMP > started_at + make_interval(secs => COALESCE(test_run_config['timeout_seconds']::int, sqlc.arg('default_timeout')::int));
 
 -- name: RunSummariesForTest :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.namespace AS test_namespace, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
-ON runs.test_id = tests.id
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE runs.test_id = sqlc.arg('test_id') AND runs.scheduled_at > sqlc.arg('scheduled_after')
 ORDER by runs.scheduled_at desc;
 
 -- name: RunSummariesForRunner :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.namespace AS test_namespace, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
-ON runs.test_id = tests.id
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE runs.runner_id = sqlc.arg('runner_id') AND runs.scheduled_at > sqlc.arg('scheduled_after')
 ORDER by runs.scheduled_at desc;
 
 -- name: QueryRuns :many
-SELECT *
+SELECT runs.*
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE
   (sqlc.narg('ids')::uuid[] IS NULL OR runs.id = ANY (sqlc.narg('ids')::uuid[])) AND
   (sqlc.narg('test_ids')::uuid[] IS NULL OR runs.test_id = ANY (sqlc.narg('test_ids')::uuid[])) AND
@@ -116,16 +124,18 @@ WITH intervals AS (
 )
 SELECT 
   intervals.start::timestamptz,
-  COUNT(id) FILTER (WHERE result = 'pass') as pass,
-  COUNT(id) FILTER (WHERE result = 'fail') as fail,
-  COUNT(id) FILTER (WHERE result = 'error') as error,
-  COUNT(id) FILTER (WHERE result = 'unknown') as unknown
+  COUNT(runs.id) FILTER (WHERE result = 'pass') as pass,
+  COUNT(runs.id) FILTER (WHERE result = 'fail') as fail,
+  COUNT(runs.id) FILTER (WHERE result = 'error') as error,
+  COUNT(runs.id) FILTER (WHERE result = 'unknown') as unknown
 FROM intervals
 LEFT JOIN runs
 ON
   intervals.start = date_trunc(sqlc.arg('precision'), runs.scheduled_at) AND
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namepsace')
 GROUP BY intervals.start
 ORDER BY intervals.start ASC;
 
@@ -152,6 +162,6 @@ ON
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
 JOIN tests
-ON runs.test_id = tests.id
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namepsace')
 GROUP BY intervals.start, tests.id
 ORDER BY intervals.start ASC;

@@ -5,6 +5,8 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/jackc/pgx/v4"
@@ -19,25 +21,32 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const mdAuthKey = "authorization"
+const (
+	MDKeyAuth      = "authorization"
+	MDKeyNamespace = "namespace"
+)
 
 // TODO We can probably be a bit smarter/less verbose here and instead of direct
 // string matches on the full method, build up the set of allowable tokens given
 // a full method and a list of regexes (or something like that)
 var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
-	"/tstr.control.v1.ControlService/RegisterTest":    {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateTest":      {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTest":         {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTests":       {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/DeleteTest":      {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/DefineTestSuite": {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateSuite":     {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTestSuite":    {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTestSuites":  {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/DeleteTestSuite": {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetRun":          {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListRuns":        {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ScheduleRun":     {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.identity.v1.IdentityService/Identity": {
+		commonv1.AccessToken_ADMIN,
+		commonv1.AccessToken_CONTROL_RW,
+		commonv1.AccessToken_CONTROL_R,
+		commonv1.AccessToken_RUNNER,
+		commonv1.AccessToken_DATA,
+	},
+
+	"/tstr.control.v1.ControlService/RegisterTest": {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/UpdateTest":   {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetTest":      {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListTests":    {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/DeleteTest":   {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/GetRun":       {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ListRuns":     {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/ScheduleRun":  {commonv1.AccessToken_CONTROL_RW},
+	"/tstr.control.v1.ControlService/ListRunners":  {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
 
 	"/tstr.admin.v1.AdminService/IssueAccessToken":  {commonv1.AccessToken_ADMIN},
 	"/tstr.admin.v1.AdminService/GetAccessToken":    {commonv1.AccessToken_ADMIN},
@@ -69,7 +78,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: missing access token")
 		}
 
-		_, tokenHash, err := tokenFromMD(md)
+		_, tokenHash, err := AccessTokenFromMD(md)
 		if err != nil {
 			return nil, status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
 		}
@@ -85,14 +94,27 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range types.FromAccessTokenScopes(validScopes) {
-			for _, s := range auth.Scopes {
-				if string(vs) == s {
-					return handler(ctx, req)
-				}
+		if !authorizeScope(auth, validScopes) {
+			return nil, status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
+		}
+
+		if strings.HasPrefix(info.FullMethod, "/tstr.control.v1") ||
+			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
+			namespace, err := NamespaceFromMD(md)
+			if err != nil {
+				return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+			}
+
+			allowed, err := authorizeNamespace(auth, namespace)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to authorize request")
+			}
+			if !allowed {
+				return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namespace")
 			}
 		}
-		return nil, status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
+
+		return handler(ctx, req)
 	}
 }
 
@@ -103,7 +125,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Unauthenticated, "failed to authenticate request: missing access token")
 		}
 
-		_, tokenHash, err := tokenFromMD(md)
+		_, tokenHash, err := AccessTokenFromMD(md)
 		if err != nil {
 			return status.Error(codes.Unauthenticated, "failed to authenticate request: invalid access token")
 		}
@@ -119,33 +141,76 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			return status.Error(codes.Internal, "failed to authenticate request")
 		}
 
-		for _, vs := range types.FromAccessTokenScopes(validScopes) {
-			for _, s := range auth.Scopes {
-				if string(vs) == s {
-					return handler(srv, ss)
-				}
+		if !authorizeScope(auth, validScopes) {
+			return status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
+		}
+
+		if strings.HasPrefix(info.FullMethod, "/tstr.control.v1") ||
+			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
+			namespace, err := NamespaceFromMD(md)
+			if err != nil {
+				return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+			}
+
+			allowed, err := authorizeNamespace(auth, namespace)
+			if err != nil {
+				return status.Error(codes.Internal, "failed to authorize request")
+			}
+			if !allowed {
+				return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namespace")
 			}
 		}
-		return status.Error(codes.PermissionDenied, "failed to authenticate request: invalid access token scopes")
+
+		return handler(srv, ss)
 	}
+}
+
+func authorizeScope(auth db.AuthAccessTokenRow, validScopes []commonv1.AccessToken_Scope) bool {
+	for _, vs := range types.FromAccessTokenScopes(validScopes) {
+		for _, s := range auth.Scopes {
+			if string(vs) == s {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func authorizeNamespace(auth db.AuthAccessTokenRow, namespace string) (bool, error) {
+	namespaceAllowed := false
+	for _, nsSel := range auth.NamespaceSelectors {
+		re, err := regexp.Compile(nsSel)
+		if err != nil {
+			return false, status.Error(codes.Internal, "failed to authorize request: error validating namespace")
+		}
+		if re.MatchString(namespace) {
+			namespaceAllowed = true
+			break
+		}
+	}
+	if !namespaceAllowed {
+		return false, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+	}
+
+	return true, nil
 }
 
 func UnaryClientInterceptor(accessToken string) grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
+		ctx = metadata.AppendToOutgoingContext(ctx, MDKeyAuth, "bearer "+accessToken)
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
 }
 
 func StreamClientInterceptor(accessToken string) grpc.StreamClientInterceptor {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		ctx = metadata.AppendToOutgoingContext(ctx, mdAuthKey, "bearer "+accessToken)
+		ctx = metadata.AppendToOutgoingContext(ctx, MDKeyAuth, "bearer "+accessToken)
 		return streamer(ctx, desc, cc, method, opts...)
 	}
 }
 
-func tokenFromMD(md metadata.MD) (string, string, error) {
-	vals := md.Get(mdAuthKey)
+func AccessTokenFromMD(md metadata.MD) (string, string, error) {
+	vals := md.Get(MDKeyAuth)
 	if vals == nil || len(vals) != 1 {
 		return "", "", errors.New("invalid access token")
 	}
@@ -159,4 +224,34 @@ func tokenFromMD(md metadata.MD) (string, string, error) {
 	tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 	return token, tokenHash, nil
+}
+
+func AccessTokenFromContext(ctx context.Context) (string, string, error) {
+	md, exists := metadata.FromIncomingContext(ctx)
+	if !exists {
+		return "", "", errors.New("context missing metadata")
+	}
+
+	return AccessTokenFromMD(md)
+}
+
+func NamespaceFromMD(md metadata.MD) (string, error) {
+	vals := md.Get(MDKeyNamespace)
+	if vals == nil || len(vals) != 1 {
+		return "", errors.New("metadata missing namespace")
+	}
+	return vals[0], nil
+}
+
+func NamespaceFromContext(ctx context.Context) (string, error) {
+	md, exists := metadata.FromIncomingContext(ctx)
+	if !exists {
+		return "", errors.New("context missing metadata")
+	}
+
+	ns, err := NamespaceFromMD(md)
+	if err != nil {
+		return "", fmt.Errorf("getting namespace from context: %w", err)
+	}
+	return ns, nil
 }

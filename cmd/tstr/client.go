@@ -7,6 +7,7 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	identityv1 "github.com/nanzhong/tstr/api/identity/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,23 @@ func clientDialOpts(secure bool, accessToken string) []grpc.DialOption {
 		),
 	)
 	return opts
+}
+
+func withIdentityClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, identityv1.IdentityServiceClient) error) error {
+	log.Debug().Str("addr", apiAddr).Msg("dialing identity service")
+
+	conn, err := grpc.DialContext(
+		ctx,
+		apiAddr,
+		clientDialOpts(secure, accessToken)...,
+	)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client := identityv1.NewIdentityServiceClient(conn)
+	return fn(ctx, client)
 }
 
 func withControlClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, controlv1.ControlServiceClient) error) error {
@@ -88,6 +106,13 @@ func withRunnerClient(ctx context.Context, apiAddr string, secure bool, accessTo
 
 	client := runnerv1.NewRunnerServiceClient(conn)
 	return fn(ctx, client)
+}
+
+func withCtlIdentityClient(ctx context.Context, fn func(context.Context, identityv1.IdentityServiceClient) error) error {
+	ctx, cancel := context.WithTimeout(ctx, viper.GetDuration("ctl.timeout"))
+	defer cancel()
+
+	return withIdentityClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), fn)
 }
 
 func withCtlControlClient(ctx context.Context, fn func(context.Context, controlv1.ControlServiceClient) error) error {

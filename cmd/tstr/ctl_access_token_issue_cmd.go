@@ -15,10 +15,11 @@ import (
 )
 
 var (
-	ctlAccessTokenIssueName     string
-	ctlAccessTokenValidDuration time.Duration
-	ctlAccessTokenScopes        []string
-	accessTokenIssueCmd         = &cobra.Command{
+	ctlAccessTokenIssueName               string
+	ctlAccessTokenIssueValidDuration      time.Duration
+	ctlAccessTokenIssueNamespaceSelectors []string
+	ctlAccessTokenIssueScopes             []string
+	accessTokenIssueCmd                   = &cobra.Command{
 		Use:   "issue",
 		Short: "Issue a new access token",
 		Args:  cobra.ExactArgs(0),
@@ -27,10 +28,11 @@ var (
 			defer cancel()
 
 			req := &adminv1.IssueAccessTokenRequest{
-				Name: ctlAccessTokenIssueName,
+				Name:               ctlAccessTokenIssueName,
+				NamespaceSelectors: ctlAccessTokenIssueNamespaceSelectors,
 			}
 
-			for _, s := range ctlAccessTokenScopes {
+			for _, s := range ctlAccessTokenIssueScopes {
 				switch strings.ToLower(s) {
 				case "admin":
 					req.Scopes = append(req.Scopes, commonv1.AccessToken_ADMIN)
@@ -47,8 +49,8 @@ var (
 				}
 			}
 
-			if ctlAccessTokenValidDuration != 0 {
-				req.ValidDuration = durationpb.New(ctlAccessTokenValidDuration)
+			if ctlAccessTokenIssueValidDuration != 0 {
+				req.ValidDuration = durationpb.New(ctlAccessTokenIssueValidDuration)
 			}
 
 			return withAdminClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client adminv1.AdminServiceClient) error {
@@ -67,8 +69,10 @@ var (
 func init() {
 	accessTokenIssueCmd.Flags().StringVar(&ctlAccessTokenIssueName, "name", "", "The name for the access token.")
 	accessTokenIssueCmd.MarkFlagRequired("name")
-	accessTokenIssueCmd.Flags().DurationVar(&ctlAccessTokenValidDuration, "valid-duration", 7*24*time.Hour, "How long the token should be valid for (0 for non-expiring token).")
-	accessTokenIssueCmd.Flags().StringArrayVar(&ctlAccessTokenScopes, "scopes", []string{"admin"}, "The scopes to attach to the access token.")
+	accessTokenIssueCmd.Flags().DurationVar(&ctlAccessTokenIssueValidDuration, "valid-duration", 7*24*time.Hour, "How long the token should be valid for (0 for non-expiring token).")
+	accessTokenIssueCmd.Flags().StringArrayVar(&ctlAccessTokenIssueNamespaceSelectors, "namespace-selectors", nil, "The namespace selectors for the access token.")
+	accessTokenIssueCmd.MarkFlagRequired("namespace-selectors")
+	accessTokenIssueCmd.Flags().StringArrayVar(&ctlAccessTokenIssueScopes, "scopes", []string{"admin"}, "The scopes to attach to the access token.")
 
 	accessTokenCmd.AddCommand(accessTokenIssueCmd)
 }

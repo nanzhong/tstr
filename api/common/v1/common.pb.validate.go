@@ -58,6 +58,8 @@ func (m *Test) validate(all bool) error {
 
 	// no validation rules for Id
 
+	// no validation rules for Namespace
+
 	// no validation rules for Name
 
 	if all {

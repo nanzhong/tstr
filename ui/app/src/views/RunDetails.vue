@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import { useRoute } from "vue-router";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import duration from "dayjs/plugin/duration";
-import { InitReq } from "../api/fetch.pb";
+import { useInitReq } from "../api/init";
 import { DataService } from "../api/data/v1/data.pb";
 import { RunLogOutput, Runner } from "../api/common/v1/common.pb";
 import RunResult from "../components/RunResult.vue";
@@ -15,8 +14,7 @@ dayjs.extend(relativeTime);
 dayjs.extend(duration)
 
 const route = useRoute();
-const initReq: InitReq = inject('dataInitReq')!;
-
+const initReq = useInitReq();
 const run = (await DataService.GetRun({ id: route.params.id as string }, initReq)).run!;
 const test = (await DataService.GetTest({ id: run.testId }, initReq)).test!;
 let runner: Runner | undefined;

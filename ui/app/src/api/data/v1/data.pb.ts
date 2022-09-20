@@ -16,6 +16,13 @@ export enum SummarizeRunsRequestInterval {
   WEEK = "WEEK",
 }
 
+export type ListNamespacesRequest = {
+}
+
+export type ListNamespacesResponse = {
+  namespaces?: string[]
+}
+
 export type GetTestRequest = {
   id?: string
 }

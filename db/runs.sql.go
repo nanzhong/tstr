@@ -81,13 +81,20 @@ func (q *Queries) DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UU
 }
 
 const getRun = `-- name: GetRun :one
-SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
 FROM runs
-WHERE runs.id = $1
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = $1
+WHERE runs.id = $2
 `
 
-func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error) {
-	row := db.QueryRow(ctx, getRun, id)
+type GetRunParams struct {
+	Namespace string
+	ID        uuid.UUID
+}
+
+func (q *Queries) GetRun(ctx context.Context, db DBTX, arg GetRunParams) (Run, error) {
+	row := db.QueryRow(ctx, getRun, arg.Namespace, arg.ID)
 	var i Run
 	err := row.Scan(
 		&i.ID,
@@ -107,20 +114,38 @@ func (q *Queries) GetRun(ctx context.Context, db DBTX, id uuid.UUID) (Run, error
 }
 
 const listPendingRuns = `-- name: ListPendingRuns :many
-SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at, tests.namespace
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id
 WHERE runner_id IS NULL
 `
 
-func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
+type ListPendingRunsRow struct {
+	ID            uuid.UUID
+	TestID        uuid.UUID
+	TestRunConfig pgtype.JSONB
+	TestMatrixID  uuid.NullUUID
+	Labels        pgtype.JSONB
+	RunnerID      uuid.NullUUID
+	Result        NullRunResult
+	Logs          pgtype.JSONB
+	ResultData    pgtype.JSONB
+	ScheduledAt   sql.NullTime
+	StartedAt     sql.NullTime
+	FinishedAt    sql.NullTime
+	Namespace     string
+}
+
+func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]ListPendingRunsRow, error) {
 	rows, err := db.Query(ctx, listPendingRuns)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Run
+	var items []ListPendingRunsRow
 	for rows.Next() {
-		var i Run
+		var i ListPendingRunsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.TestID,
@@ -134,6 +159,7 @@ func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
 			&i.ScheduledAt,
 			&i.StartedAt,
 			&i.FinishedAt,
+			&i.Namespace,
 		); err != nil {
 			return nil, err
 		}
@@ -146,12 +172,14 @@ func (q *Queries) ListPendingRuns(ctx context.Context, db DBTX) ([]Run, error) {
 }
 
 const listRuns = `-- name: ListRuns :many
-SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = $1
 `
 
-func (q *Queries) ListRuns(ctx context.Context, db DBTX) ([]Run, error) {
-	rows, err := db.Query(ctx, listRuns)
+func (q *Queries) ListRuns(ctx context.Context, db DBTX, namespace string) ([]Run, error) {
+	rows, err := db.Query(ctx, listRuns, namespace)
 	if err != nil {
 		return nil, err
 	}
@@ -184,23 +212,26 @@ func (q *Queries) ListRuns(ctx context.Context, db DBTX) ([]Run, error) {
 }
 
 const queryRuns = `-- name: QueryRuns :many
-SELECT id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
+SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.labels, runs.runner_id, runs.result, runs.logs, runs.result_data, runs.scheduled_at, runs.started_at, runs.finished_at
 FROM runs
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = $1
 WHERE
-  ($1::uuid[] IS NULL OR runs.id = ANY ($1::uuid[])) AND
-  ($2::uuid[] IS NULL OR runs.test_id = ANY ($2::uuid[])) AND
-  ($3::uuid[] IS NULL OR runner_id = ANY ($3::uuid[])) AND
-  ($4::text[] IS NULL OR result::text = ANY ($4::text[])) AND
-  ($5::timestamptz IS NULL OR scheduled_at < $5::timestamptz) AND
-  ($6::timestamptz IS NULL OR scheduled_at > $6::timestamptz) AND
-  ($7::timestamptz IS NULL OR started_at < $7::timestamptz) AND
-  ($8::timestamptz IS NULL OR started_at > $8::timestamptz) AND
-  ($9::timestamptz IS NULL OR finished_at < $9::timestamptz) AND
-  ($10::timestamptz IS NULL OR finished_at > $10::timestamptz)
+  ($2::uuid[] IS NULL OR runs.id = ANY ($2::uuid[])) AND
+  ($3::uuid[] IS NULL OR runs.test_id = ANY ($3::uuid[])) AND
+  ($4::uuid[] IS NULL OR runner_id = ANY ($4::uuid[])) AND
+  ($5::text[] IS NULL OR result::text = ANY ($5::text[])) AND
+  ($6::timestamptz IS NULL OR scheduled_at < $6::timestamptz) AND
+  ($7::timestamptz IS NULL OR scheduled_at > $7::timestamptz) AND
+  ($8::timestamptz IS NULL OR started_at < $8::timestamptz) AND
+  ($9::timestamptz IS NULL OR started_at > $9::timestamptz) AND
+  ($10::timestamptz IS NULL OR finished_at < $10::timestamptz) AND
+  ($11::timestamptz IS NULL OR finished_at > $11::timestamptz)
 ORDER BY scheduled_at DESC
 `
 
 type QueryRunsParams struct {
+	Namespace       string
 	Ids             []uuid.UUID
 	TestIds         []uuid.UUID
 	RunnerIds       []uuid.UUID
@@ -215,6 +246,7 @@ type QueryRunsParams struct {
 
 func (q *Queries) QueryRuns(ctx context.Context, db DBTX, arg QueryRunsParams) ([]Run, error) {
 	rows, err := db.Query(ctx, queryRuns,
+		arg.Namespace,
 		arg.Ids,
 		arg.TestIds,
 		arg.RunnerIds,
@@ -272,21 +304,23 @@ func (q *Queries) ResetOrphanedRuns(ctx context.Context, db DBTX, before time.Ti
 }
 
 const runSummariesForRunner = `-- name: RunSummariesForRunner :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.namespace AS test_namespace, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
-ON runs.test_id = tests.id
-WHERE runs.runner_id = $1 AND runs.scheduled_at > $2
+ON runs.test_id = tests.id AND tests.namespace = $1
+WHERE runs.runner_id = $2 AND runs.scheduled_at > $3
 ORDER by runs.scheduled_at desc
 `
 
 type RunSummariesForRunnerParams struct {
+	Namespace      string
 	RunnerID       uuid.NullUUID
 	ScheduledAfter sql.NullTime
 }
 
 type RunSummariesForRunnerRow struct {
 	ID            uuid.UUID
+	TestNamespace string
 	TestID        uuid.UUID
 	TestName      string
 	TestRunConfig pgtype.JSONB
@@ -300,7 +334,7 @@ type RunSummariesForRunnerRow struct {
 }
 
 func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSummariesForRunnerParams) ([]RunSummariesForRunnerRow, error) {
-	rows, err := db.Query(ctx, runSummariesForRunner, arg.RunnerID, arg.ScheduledAfter)
+	rows, err := db.Query(ctx, runSummariesForRunner, arg.Namespace, arg.RunnerID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
@@ -310,6 +344,7 @@ func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSum
 		var i RunSummariesForRunnerRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.TestNamespace,
 			&i.TestID,
 			&i.TestName,
 			&i.TestRunConfig,
@@ -332,21 +367,23 @@ func (q *Queries) RunSummariesForRunner(ctx context.Context, db DBTX, arg RunSum
 }
 
 const runSummariesForTest = `-- name: RunSummariesForTest :many
-SELECT runs.id, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
+SELECT runs.id, tests.namespace AS test_namespace, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
 FROM runs
 JOIN tests
-ON runs.test_id = tests.id
-WHERE runs.test_id = $1 AND runs.scheduled_at > $2
+ON runs.test_id = tests.id AND tests.namespace = $1
+WHERE runs.test_id = $2 AND runs.scheduled_at > $3
 ORDER by runs.scheduled_at desc
 `
 
 type RunSummariesForTestParams struct {
+	Namespace      string
 	TestID         uuid.UUID
 	ScheduledAfter sql.NullTime
 }
 
 type RunSummariesForTestRow struct {
 	ID            uuid.UUID
+	TestNamespace string
 	TestID        uuid.UUID
 	TestName      string
 	TestRunConfig pgtype.JSONB
@@ -360,7 +397,7 @@ type RunSummariesForTestRow struct {
 }
 
 func (q *Queries) RunSummariesForTest(ctx context.Context, db DBTX, arg RunSummariesForTestParams) ([]RunSummariesForTestRow, error) {
-	rows, err := db.Query(ctx, runSummariesForTest, arg.TestID, arg.ScheduledAfter)
+	rows, err := db.Query(ctx, runSummariesForTest, arg.Namespace, arg.TestID, arg.ScheduledAfter)
 	if err != nil {
 		return nil, err
 	}
@@ -370,6 +407,7 @@ func (q *Queries) RunSummariesForTest(ctx context.Context, db DBTX, arg RunSumma
 		var i RunSummariesForTestRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.TestNamespace,
 			&i.TestID,
 			&i.TestName,
 			&i.TestRunConfig,
@@ -395,7 +433,7 @@ const scheduleRun = `-- name: ScheduleRun :one
 INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
 SELECT tests.id, tests.run_config, $1, $2
 FROM tests
-WHERE tests.id = $3
+WHERE tests.id = $3 AND tests.namespace = $4
 RETURNING id, test_id, test_run_config, test_matrix_id, labels, runner_id, result, logs, result_data, scheduled_at, started_at, finished_at
 `
 
@@ -403,10 +441,16 @@ type ScheduleRunParams struct {
 	Labels       pgtype.JSONB
 	TestMatrixID uuid.NullUUID
 	TestID       uuid.UUID
+	Namepsace    string
 }
 
 func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error) {
-	row := db.QueryRow(ctx, scheduleRun, arg.Labels, arg.TestMatrixID, arg.TestID)
+	row := db.QueryRow(ctx, scheduleRun,
+		arg.Labels,
+		arg.TestMatrixID,
+		arg.TestID,
+		arg.Namepsace,
+	)
 	var i Run
 	err := row.Scan(
 		&i.ID,
@@ -428,23 +472,25 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 const summarizeRunsBreakdownResult = `-- name: SummarizeRunsBreakdownResult :many
 WITH intervals AS (
   SELECT generate_series(
-    date_trunc($1, $2::timestamptz) + make_interval(secs => $4),
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $5),
     date_trunc($1, $3::timestamptz),
-    make_interval(secs => $4)
+    make_interval(secs => $5)
   ) as start
 )
 SELECT 
   intervals.start::timestamptz,
-  COUNT(id) FILTER (WHERE result = 'pass') as pass,
-  COUNT(id) FILTER (WHERE result = 'fail') as fail,
-  COUNT(id) FILTER (WHERE result = 'error') as error,
-  COUNT(id) FILTER (WHERE result = 'unknown') as unknown
+  COUNT(runs.id) FILTER (WHERE result = 'pass') as pass,
+  COUNT(runs.id) FILTER (WHERE result = 'fail') as fail,
+  COUNT(runs.id) FILTER (WHERE result = 'error') as error,
+  COUNT(runs.id) FILTER (WHERE result = 'unknown') as unknown
 FROM intervals
 LEFT JOIN runs
 ON
   intervals.start = date_trunc($1, runs.scheduled_at) AND
   runs.scheduled_at > $2 AND
   runs.scheduled_at < $3
+JOIN tests
+ON runs.test_id = tests.id AND tests.namespace = $4
 GROUP BY intervals.start
 ORDER BY intervals.start ASC
 `
@@ -453,6 +499,7 @@ type SummarizeRunsBreakdownResultParams struct {
 	Precision string
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
+	Namepsace string
 	Interval  float64
 }
 
@@ -469,6 +516,7 @@ func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg
 		arg.Precision,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Namepsace,
 		arg.Interval,
 	)
 	if err != nil {
@@ -498,9 +546,9 @@ func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg
 const summarizeRunsBreakdownTest = `-- name: SummarizeRunsBreakdownTest :many
 WITH intervals AS (
   SELECT generate_series(
-    date_trunc($1, $2::timestamptz) + make_interval(secs => $4),
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $5),
     date_trunc($1, $3::timestamptz),
-    make_interval(secs => $4)
+    make_interval(secs => $5)
   ) as start
 )
 SELECT 
@@ -518,7 +566,7 @@ ON
   runs.scheduled_at > $2 AND
   runs.scheduled_at < $3
 JOIN tests
-ON runs.test_id = tests.id
+ON runs.test_id = tests.id AND tests.namespace = $4
 GROUP BY intervals.start, tests.id
 ORDER BY intervals.start ASC
 `
@@ -527,6 +575,7 @@ type SummarizeRunsBreakdownTestParams struct {
 	Precision string
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
+	Namepsace string
 	Interval  float64
 }
 
@@ -545,6 +594,7 @@ func (q *Queries) SummarizeRunsBreakdownTest(ctx context.Context, db DBTX, arg S
 		arg.Precision,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Namepsace,
 		arg.Interval,
 	)
 	if err != nil {

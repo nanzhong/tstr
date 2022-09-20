@@ -138,14 +138,6 @@
         }
       }
     },
-    "v1GetRunnerResponse": {
-      "type": "object",
-      "properties": {
-        "runner": {
-          "$ref": "#/definitions/v1Runner"
-        }
-      }
-    },
     "v1GetTestResponse": {
       "type": "object",
       "properties": {
@@ -257,6 +249,12 @@
         "name": {
           "type": "string"
         },
+        "namespaceSelectors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "acceptTestLabelSelectors": {
           "type": "object",
           "additionalProperties": {
@@ -294,6 +292,9 @@
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "namespace": {
           "type": "string"
         },
         "name": {

@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import dayjs from "dayjs";
 import RunsTable from "../components/RunsTable.vue";
-import { InitReq } from "../api/fetch.pb";
+import { useInitReq } from "../api/init";
 import { DataService } from "../api/data/v1/data.pb";
 
-const initReq: InitReq = inject('dataInitReq')!;
-
+const initReq = useInitReq();
 const now = dayjs();
 const runs = (await DataService.QueryRuns({ scheduledAfter: now.subtract(24, "hour").toISOString() }, initReq)).runs || [];
 </script>

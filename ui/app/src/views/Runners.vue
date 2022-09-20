@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { inject } from "vue";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { InitReq } from "../api/fetch.pb";
+import { useInitReq } from "../api/init";
 import { Runner } from "../api/common/v1/common.pb";
 import { DataService } from "../api/data/v1/data.pb";
 import Labels from "../components/Labels.vue";
@@ -10,7 +9,7 @@ import TimeWithTooltip from "../components/TimeWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 
-const initReq: InitReq = inject('dataInitReq')!;
+const initReq = useInitReq();
 
 const runners: Runner[] = (await DataService.QueryRunners({ lastHeartbeatWithin: `${24*60*60}s` }, initReq)).runners || [];
 </script>

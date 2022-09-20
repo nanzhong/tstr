@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useRoute } from "vue-router";
 import { RunResult } from "../api/common/v1/common.pb";
 
+const route = useRoute();
 const props = defineProps<{
   testRunCounts: { testID: string, testName: string, runCounts: { [key in RunResult]: number } }[]
 }>();
@@ -20,7 +22,7 @@ const props = defineProps<{
     </thead>
     <tbody class="divide-y divide-gray-200 bg-white">
       <tr v-for="count in testRunCounts" :key="count.testID" :set="totalRunCount=count.runCounts[RunResult.PASS] + count.runCounts[RunResult.FAIL] + count.runCounts[RunResult.ERROR] + count.runCounts[RunResult.UNKNOWN]">
-        <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"><router-link :to="{ name: 'test-details', params: { id: count.testID! } }">{{ count.testName }}</router-link></td>
+        <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6"><router-link :to="{ name: 'test-details', params: { namespace: route.params.namespace, id: count.testID! } }">{{ count.testName }}</router-link></td>
         <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500 tabular-nums">{{ totalRunCount }}</td>
         <td class="whitespace-nowrap px-2 py-2 text-sm text-green-500 tabular-nums">{{ count.runCounts[RunResult.PASS] }}</td>
         <td class="whitespace-nowrap px-2 py-2 text-sm text-red-500 tabular-nums">{{ count.runCounts[RunResult.FAIL] }}</td>

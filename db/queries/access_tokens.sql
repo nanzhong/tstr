@@ -1,12 +1,18 @@
 -- name: IssueAccessToken :one
 -- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-INSERT INTO access_tokens (name, token_hash, scopes, expires_at)
-VALUES (sqlc.arg('name'), sqlc.arg('token_hash'), sqlc.arg('scopes')::text[]::access_token_scope[], sqlc.arg('expires_at'))
-RETURNING id, name, scopes::text[], issued_at, expires_at;
+INSERT INTO access_tokens (name, token_hash, namespace_selectors, scopes, expires_at)
+VALUES (
+  sqlc.arg('name'), 
+  sqlc.arg('token_hash'), 
+  sqlc.arg('namespace_selectors'),
+  sqlc.arg('scopes')::text[]::access_token_scope[], 
+  sqlc.arg('expires_at')
+)
+RETURNING id, name, namespace_selectors, scopes::text[], issued_at, expires_at;
 
 -- name: AuthAccessToken :one
 -- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-SELECT scopes::text[], expires_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   token_hash = sqlc.arg('token_hash') AND
@@ -14,13 +20,13 @@ WHERE
 
 -- name: GetAccessToken :one
 -- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE id = sqlc.arg('id');
 
 -- name: ListAccessTokens :many
 -- TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
-SELECT id, name, scopes::text[], issued_at, expires_at, revoked_at
+SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, revoked_at
 FROM access_tokens
 WHERE
   CASE WHEN sqlc.arg('include_expired')::bool

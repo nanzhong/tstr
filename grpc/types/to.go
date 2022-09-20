@@ -124,6 +124,7 @@ func ToProtoTest(t *db.Test) (*commonv1.Test, error) {
 	}
 
 	return &commonv1.Test{
+		Namespace:    t.Namespace,
 		Id:           t.ID.String(),
 		Name:         t.Name,
 		Labels:       labels,
@@ -187,6 +188,7 @@ func ToProtoRunner(r *db.Runner) (*commonv1.Runner, error) {
 	return &commonv1.Runner{
 		Id:                       r.ID.String(),
 		Name:                     r.Name,
+		NamespaceSelectors:       r.NamespaceSelectors,
 		AcceptTestLabelSelectors: acceptSelectors,
 		RejectTestLabelSelectors: rejectSelectors,
 		RegisteredAt:             ToProtoTimestamp(r.RegisteredAt),

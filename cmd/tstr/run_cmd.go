@@ -95,10 +95,10 @@ func init() {
 	runCmd.Flags().String("name", hostname, "Name of the runner.")
 	viper.BindPFlag("run.name", runCmd.Flags().Lookup("name"))
 
-	runCmd.Flags().StringArray("accept-label-selectors", nil, "Label selectors for test to accept.")
+	runCmd.Flags().StringArray("accept-label-selectors", nil, "Label selectors for tests to accept.")
 	viper.BindPFlag("run.accept-label-selectors", runCmd.Flags().Lookup("accept-label-selectors"))
 
-	runCmd.Flags().StringArray("reject-label-selectors", nil, "Label selectors for test to reject.")
+	runCmd.Flags().StringArray("reject-label-selectors", nil, "Label selectors for tests to reject.")
 	viper.BindPFlag("run.reject-label-selectors", runCmd.Flags().Lookup("reject-label-selectors"))
 
 	runCmd.Flags().Duration("graceful-shutdown", 5*time.Minute, "Amount of time to allow for graceful shutdown.")

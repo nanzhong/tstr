@@ -19,7 +19,6 @@ service ControlService {
   rpc ListRuns(ListRunsRequest) returns (ListRunsResponse);
   rpc ScheduleRun(ScheduleRunRequest) returns (ScheduleRunResponse);
 
-  rpc GetRunner(GetRunnerRequest) returns (GetRunnerResponse);
   rpc ListRunners(ListRunnersRequest) returns (ListRunnersResponse);
 }
 
@@ -104,14 +103,6 @@ message ScheduleRunRequest {
 
 message ScheduleRunResponse {
   repeated tstr.common.v1.Run runs = 1; // required
-}
-
-message GetRunnerRequest {
-  string id = 1; // required
-}
-
-message GetRunnerResponse {
-  tstr.common.v1.Runner runner = 1; // required
 }
 
 message ListRunnersRequest {

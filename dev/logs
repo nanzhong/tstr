@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-overmind echo
+# shellcheck source=dev/common.sh
+source dev/common.sh
+
+overmind echo --socket "$dev_overmind_sock"

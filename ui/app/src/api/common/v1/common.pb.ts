@@ -48,6 +48,7 @@ export type TestMatrix = {
 
 export type Test = {
   id?: string
+  namespace?: string
   name?: string
   runConfig?: TestRunConfig
   labels?: {[key: string]: string}
@@ -82,6 +83,7 @@ export type Run = {
 export type Runner = {
   id?: string
   name?: string
+  namespaceSelectors?: string[]
   acceptTestLabelSelectors?: {[key: string]: string}
   rejectTestLabelSelectors?: {[key: string]: string}
   registeredAt?: GoogleProtobufTimestamp.Timestamp
@@ -92,6 +94,7 @@ export type AccessToken = {
   id?: string
   name?: string
   token?: string
+  namespaceSelectors?: string[]
   scopes?: AccessTokenScope[]
   issuedAt?: GoogleProtobufTimestamp.Timestamp
   expiresAt?: GoogleProtobufTimestamp.Timestamp

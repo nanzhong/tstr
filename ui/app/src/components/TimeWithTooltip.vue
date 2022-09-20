@@ -14,7 +14,7 @@ const parsedTime = dayjs(props.time);
 </script>
 
 <template>
-  <span class="has-tooltip">
+  <span class="has-tooltip relative">
     <span class="tooltip rounded shadow-lg p-2 bg-gray-500 text-white -mt-10">{{ relative ? parsedTime.toISOString() : parsedTime.fromNow() }}</span>
     <span>{{ relative ? parsedTime.fromNow() : parsedTime.toISOString() }}</span>
   </span>

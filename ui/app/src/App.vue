@@ -13,11 +13,9 @@ const navigation = [
 ];
 
 const route = useRoute();
-console.log(route);
 const namespaceSelected = computed(() => {
   return route.params.namespace ? true : false;
 });
-console.log(namespaceSelected.value)
 </script>
 
 <template>
@@ -74,9 +72,16 @@ console.log(namespaceSelected.value)
                 :class="[isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'block px-3 py-2 rounded-md text-base font-medium']"
                 :aria-current="isActive ? 'page' : undefined" @click="navigate">{{ item.name }}</DisclosureButton>
             </router-link>
+
+            <div class="mt-2 px-3 pt-4 pb-2 border-t border-gray-700" v-if="namespaceSelected">
+              <Suspense>
+                <NamespaceSelector />
+              </Suspense>
+            </div>
           </div>
         </DisclosurePanel>
       </Disclosure>
+
       <header class="py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <router-view name="header"></router-view>

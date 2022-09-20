@@ -1,21 +1,17 @@
 import { inject } from "vue";
-import { storeToRefs } from "pinia";
-import { useNamespaceStore } from "../stores/namespace";
+import { useRoute } from "vue-router";
 import { InitReq } from "./fetch.pb";
 
 export const useInitReq = (): InitReq => {
-  const nsStore = useNamespaceStore();
-  const { currentNamespace } = storeToRefs(nsStore);
+  const route = useRoute();
 
   const req: InitReq = {
     pathPrefix: inject('apiPathPrefix'),
   };
 
-  console.log(`current namespace: ${currentNamespace.value}`);
-
-  if (currentNamespace.value !== "") {
+  if (route.params.namespace !== "") {
     req.headers = {
-      "Grpc-Metadata-namespace": currentNamespace.value,
+      "Grpc-Metadata-namespace": route.params.namespace as string,
     }
   }
 

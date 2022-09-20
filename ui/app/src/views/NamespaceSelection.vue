@@ -1,24 +1,17 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { useNamespaceStore } from "../stores/namespace";
 import { useInitReq } from "../api/init";
 import { IdentityService } from "../api/identity/v1/identity.pb";
 
-const router = useRouter();
 const nsStore = useNamespaceStore();
 const { namespaces } = storeToRefs(nsStore);
-const { updateNamespaces, setCurrentNamespace } = nsStore;
+const { updateNamespaces } = nsStore;
+
 const initReq = useInitReq();
 const identityRes = (await IdentityService.Identity({}, initReq));
 
 updateNamespaces(identityRes.accessibleNamespaces || []);
-
-const selectNamespace = (ns: string) => {
-  setCurrentNamespace(ns);
-  router.push({ name: "dashboard" });
-};
-
 </script>
 
 <template>
@@ -29,9 +22,12 @@ const selectNamespace = (ns: string) => {
           <div v-for="namespace in namespaces" :key="namespace"
             class="rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:border-gray-400">
             <div class="min-w-0 flex-1">
-              <a href="#" class="focus:outline-none" @click="selectNamespace(namespace)">
-                <p class="text-lg font-bold text-gray-900">{{ namespace }}</p>
-              </a>
+              <div class="flex align-baseline">
+                <p class="grow text-lg font-bold text-gray-900">{{ namespace }}</p>
+                <router-link :to="{ name: 'dashboard', params: { namespace: namespace } }" class="focus:outline-none">
+                  <button type="button" class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-2 py-1 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Select</button>
+                </router-link>
+              </div>
             </div>
           </div>
         </div>

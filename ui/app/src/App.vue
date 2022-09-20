@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 import { useRoute } from 'vue-router';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue';
 import { SparklesIcon, MenuIcon, XIcon } from '@heroicons/vue/outline';
+import NamespaceSelector from "./components/NamespaceSelector.vue";
 
 const navigation = [
   { name: 'Dashboard', route: 'dashboard' },
@@ -11,11 +12,12 @@ const navigation = [
   { name: 'Runners', route: 'runners' },
 ];
 
-const currentRoute = computed((path) => {
-  const route = useRoute();
-  return route;
+const route = useRoute();
+console.log(route);
+const namespaceSelected = computed(() => {
+  return route.params.namespace ? true : false;
 });
-
+console.log(namespaceSelected.value)
 </script>
 
 <template>
@@ -32,9 +34,10 @@ const currentRoute = computed((path) => {
                 <div class="flex-shrink-0">
                   <span class="ml-4 text-white text-xl font-extrabold">tstr</span>
                 </div>
-                <div class="hidden md:block">
+
+                <div class="hidden md:block" v-if="namespaceSelected">
                   <div class="ml-10 flex items-baseline space-x-4">
-                    <router-link v-for="item in navigation" :key="item.route" :to="{ name: item.route }" custom v-slot="{ href, isActive, navigate }">
+                    <router-link v-for="item in navigation" :key="item.route" :to="{ name: item.route, params: { namespace: route.params.namespace } }" custom v-slot="{ href, isActive, navigate }">
                       <a :href="href" @click="navigate"
                         :class="[isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'px-3 py-2 rounded-md text-sm font-medium']"
                         :aria-current="isActive ? 'page' : undefined">{{ item.name }}</a>
@@ -42,8 +45,16 @@ const currentRoute = computed((path) => {
                   </div>
                 </div>
               </div>
-              <div class="-mr-2 flex md:hidden">
-                <!-- Mobile menu button -->
+
+              <div class="hidden md:block" v-if="namespaceSelected">
+                <div class="ml-4 md:ml-6">
+                  <Suspense>
+                    <NamespaceSelector />
+                  </Suspense>
+                </div>
+              </div>
+
+              <div class="-mr-2 flex md:hidden" v-if="namespaceSelected">
                 <DisclosureButton
                   class="bg-gray-800 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
                   <span class="sr-only">Open main menu</span>
@@ -57,7 +68,7 @@ const currentRoute = computed((path) => {
 
         <DisclosurePanel class="border-b border-gray-700 md:hidden">
           <div class="px-2 py-3 space-y-1 sm:px-3">
-            <router-link v-for="item in navigation" :key="item.name" :to="{ name: item.route }" custom
+            <router-link v-for="item in navigation" :key="item.name" :to="{ name: item.route, params: { namespace: route.params.namespace } }" custom
               v-slot="{ href, navigate, isActive }">
               <DisclosureButton as="a" :href="href"
                 :class="[isActive ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white', 'block px-3 py-2 rounded-md text-base font-medium']"
@@ -74,11 +85,11 @@ const currentRoute = computed((path) => {
     </div>
 
     <main class="-mt-32">
-      <router-view v-slot="{ Component, route }">
+      <router-view name="default" v-slot="{ Component, route }">
         <template v-if="Component">
           <Transition name="fade">
             <Suspense>
-              <component :is="Component" :key="route.path" />
+              <component :is="Component" :key="route.fullPath" />
 
               <template #fallback>
                 <div class="max-w-7xl mx-auto pb-12 px-4 sm:px-6 lg:px-8">

@@ -1,7 +1,6 @@
-import { createApp, defineAsyncComponent } from "vue";
-import { createRouter, createWebHashHistory } from "vue-router";
-import { createPinia, storeToRefs } from "pinia";
-import { useNamespaceStore } from "./stores/namespace";
+import { createApp } from "vue";
+import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
+import { createPinia } from "pinia";
 import App from "./App.vue";
 import "./index.css";
 
@@ -23,14 +22,21 @@ app.config.globalProperties.$initReq = {
   pathPrefix: "/api",
 };
 
+function prefixRoutes(prefix: string, routes: RouteRecordRaw[]) {
+  return routes.map((route) => {
+    route.path = prefix + "/" + route.path;
+    return route;
+  })
+}
+
 const routes = [
   {
     path: "/",
     name: "home",
-    redirect: "/dashboard",
+    redirect: "/nss",
   },
   {
-    path: "/namespaces",
+    path: "/nss",
     name: "namespace-selection",
     props: {
       header: { title: "Select a Namespace" },
@@ -40,96 +46,90 @@ const routes = [
       header: Header,
     },
   },
-  {
-    path: "/dashboard",
-    name: "dashboard",
-    props: { 
-      header: { title: "Dashboard" },
+  ...prefixRoutes("/ns/:namespace", [
+    {
+      path: "dashboard",
+      name: "dashboard",
+      props: { 
+        header: { title: "Dashboard" },
+      },
+      components: {
+        default: Dashboard,
+        header: Header,
+      },
     },
-    components: {
-      default: Dashboard,
-      header: Header,
+    {
+      path: "tests",
+      name: "tests",
+      props: {
+        header: { title: "Tests" },
+      },
+      components: {
+        default: Tests,
+        header: Header,
+      }
     },
-  },
-  {
-    path: "/tests",
-    name: "tests",
-    props: {
-      header: { title: "Tests" },
+    {
+      path: "runs",
+      name: "runs",
+      props: {
+        header: { title: "Runs" }
+      },
+      components: {
+        default: Runs,
+        header: Header,
+      }
     },
-    components: {
-      default: Tests,
-      header: Header,
-    }
-  },
-  {
-    path: "/runs",
-    name: "runs",
-    props: {
-      header: { title: "Runs" }
+    {
+      path: "runners",
+      name: "runners",
+      props: {
+        header: { title: "Runners" }
+      },
+      components: {
+        default: Runners,
+        header: Header,
+      }
     },
-    components: {
-      default: Runs,
-      header: Header,
-    }
-  },
-  {
-    path: "/runners",
-    name: "runners",
-    props: {
-      header: { title: "Runners" }
+    {
+      path: "tests/:id",
+      name: "test-details",
+      props: {
+        header: { title: "Test Details" }
+      },
+      components: {
+        default: TestDetails,
+        header: Header,
+      }
     },
-    components: {
-      default: Runners,
-      header: Header,
-    }
-  },
-  {
-    name: "test-details",
-    path: "/tests/:id",
-    props: {
-      header: { title: "Test Details" }
+    {
+      path: "runs/:id",
+      name: "run-details",
+      props: {
+        header: { title: "Run Details" }
+      },
+      components: {
+        default: RunDetails,
+        header: Header,
+      }
     },
-    components: {
-      default: TestDetails,
-      header: Header,
-    }
-  },
-  {
-    name: "run-details",
-    path: "/runs/:id",
-    props: {
-      header: { title: "Run Details" }
+    {
+      path: "runners/:id",
+      name: "runner-details",
+      props: {
+        header: { title: "Runner Details" }
+      },
+      components: {
+        default: RunnerDetails,
+        header: Header,
+      }
     },
-    components: {
-      default: RunDetails,
-      header: Header,
-    }
-  },
-  {
-    name: "runner-details",
-    path: "/runners/:id",
-    props: {
-      header: { title: "Runner Details" }
-    },
-    components: {
-      default: RunnerDetails,
-      header: Header,
-    }
-  },
+  ]),
 ];
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes,
-});
-
-router.beforeEach((to, from) => {
-  const nsStore = useNamespaceStore();
-  const { currentNamespace } = storeToRefs(nsStore);
-  if (to.name !== "namespace-selection" && currentNamespace.value === "") {
-    return { name: "namespace-selection" };
-  }
 });
 
 app.use(router);

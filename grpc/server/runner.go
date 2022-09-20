@@ -16,6 +16,7 @@ import (
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/db"
+	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
@@ -39,10 +40,16 @@ func NewRunnerServer(pgxPool *pgxpool.Pool) runnerv1.RunnerServiceServer {
 }
 
 func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.RegisterRunnerRequest) (*runnerv1.RegisterRunnerResponse, error) {
-	for _, nsSel := range req.NamespaceSelectors {
-		if _, err := regexp.Compile(nsSel); err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid namespace selectors, must be valid RE")
-		}
+	_, tokenHash, err := auth.AccessTokenFromContext(ctx)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get identity from metadata")
+		return nil, status.Error(codes.Internal, "failed to get identity")
+	}
+
+	token, err := s.dbQuerier.AuthAccessToken(ctx, s.pgxPool, tokenHash)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to get identity")
+		return nil, status.Error(codes.Internal, "failed to get identity")
 	}
 
 	for _, v := range req.AcceptTestLabelSelectors {
@@ -71,7 +78,7 @@ func (s *RunnerServer) RegisterRunner(ctx context.Context, req *runnerv1.Registe
 
 	regRunner, err := s.dbQuerier.RegisterRunner(ctx, s.pgxPool, db.RegisterRunnerParams{
 		Name:                     req.Name,
-		NamespaceSelectors:       req.NamespaceSelectors,
+		NamespaceSelectors:       token.NamespaceSelectors,
 		AcceptTestLabelSelectors: accept,
 		RejectTestLabelSelectors: reject,
 	})

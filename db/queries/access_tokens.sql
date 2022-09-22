@@ -36,7 +36,8 @@ WHERE
   CASE WHEN sqlc.arg('include_revoked')::bool
    THEN TRUE
    ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
-  END;
+  END
+ORDER BY issued_at ASC;
 
 -- name: RevokeAccessToken :exec
 UPDATE access_tokens

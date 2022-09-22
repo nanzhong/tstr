@@ -220,8 +220,7 @@ func AccessTokenFromMD(md metadata.MD) (string, string, error) {
 	}
 
 	token := parts[1]
-	tokenHashBytes := sha512.Sum512([]byte(token))
-	tokenHash := hex.EncodeToString(tokenHashBytes[:])
+	tokenHash := HashToken(token)
 
 	return token, tokenHash, nil
 }
@@ -254,4 +253,9 @@ func NamespaceFromContext(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("getting namespace from context: %w", err)
 	}
 	return ns, nil
+}
+
+func HashToken(token string) string {
+	tokenHashBytes := sha512.Sum512([]byte(token))
+	return hex.EncodeToString(tokenHashBytes[:])
 }

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# shellcheck source=dev/common.sh
+source dev/common.sh
+# shellcheck source=scripts/common.sh
+source scripts/common.sh
+
+run "Resetting test db" dbmate -e TEST_DATABASE_URL drop
+run "Recreating test db" dbmate -e TEST_DATABASE_URL --no-dump-schema up
+run "Run tests" go test -cover -tags integration ./...

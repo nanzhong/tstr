@@ -140,6 +140,7 @@ WHERE
    THEN TRUE
    ELSE revoked_at IS NULL OR revoked_at > CURRENT_TIMESTAMP
   END
+ORDER BY issued_at ASC
 `
 
 type ListAccessTokensParams struct {

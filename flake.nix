@@ -139,6 +139,7 @@
                 gopls
                 grpcurl
                 kustomize
+                mockgen
                 nodePackages.vls
                 postgresql_14
                 protobuf

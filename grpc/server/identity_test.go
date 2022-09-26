@@ -4,15 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"testing"
-	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
-	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	identityv1 "github.com/nanzhong/tstr/api/identity/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
-	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/metadata"
@@ -35,14 +32,10 @@ func TestIdentityServer_Identity(t *testing.T) {
 	tokenHash := auth.HashToken(tokenString)
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(auth.MDKeyAuth, "bearer "+tokenString))
 
-	tokenID := uuid.New()
-	token := &commonv1.AccessToken{
-		Id:                 tokenID.String(),
-		Name:               "name",
-		NamespaceSelectors: []string{"ns-0"},
-		Scopes:             []commonv1.AccessToken_Scope{commonv1.AccessToken_ADMIN},
-		IssuedAt:           types.ToProtoTimestamp(time.Now()),
-		ExpiresAt:          types.ToProtoTimestamp(time.Now().Add(time.Hour)),
+	token := NewAccessTokenBuilder().Build()
+	tokenID, err := uuid.Parse(token.Id)
+	if err != nil {
+		t.Skip("unable to parse the token id", token.Id)
 	}
 
 	mockQuerier.EXPECT().AuthAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenHash).Return(db.AuthAccessTokenRow{

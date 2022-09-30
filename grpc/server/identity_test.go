@@ -35,7 +35,7 @@ func TestIdentityServer_Identity(t *testing.T) {
 	token := NewAccessTokenBuilder().Build()
 	tokenID, err := uuid.Parse(token.Id)
 	if err != nil {
-		t.Skip("unable to parse the token id", token.Id)
+		t.Error("unable to parse the token id", token.Id)
 	}
 
 	mockQuerier.EXPECT().AuthAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenHash).Return(db.AuthAccessTokenRow{

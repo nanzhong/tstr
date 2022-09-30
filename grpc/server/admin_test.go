@@ -31,28 +31,45 @@ func newTestAdminServer(t *testing.T) (*AdminServer, *db.MockQuerier) {
 
 func TestAdminServer_GetAccessToken(t *testing.T) {
 	tests := []struct {
-		name    string
-		token   *commonv1.AccessToken
-		errCode codes.Code
-		errMsg  string
+		name              string
+		token             *commonv1.AccessToken
+		errCode           codes.Code
+		errMsg            string
+		mockQuerierReturn func(*commonv1.AccessToken) (db.GetAccessTokenRow, error)
 	}{
 		{
-			"valid acces token uuid in the request",
-			NewAccessTokenBuilder().WithRevokedAt().Build(),
-			codes.OK,
-			"",
+			name:    "valid acces token uuid in the request",
+			token:   NewAccessTokenBuilder().WithRevokedAt().Build(),
+			errCode: codes.OK,
+			errMsg:  "",
+			mockQuerierReturn: func(token *commonv1.AccessToken) (db.GetAccessTokenRow, error) {
+				tokenID, _ := uuid.Parse(token.Id)
+				return db.GetAccessTokenRow{
+					ID:                 tokenID,
+					Name:               token.Name,
+					NamespaceSelectors: token.NamespaceSelectors,
+					Scopes:             []string{"admin"},
+					IssuedAt:           sql.NullTime{Valid: true, Time: token.IssuedAt.AsTime()},
+					ExpiresAt:          sql.NullTime{Valid: true, Time: token.ExpiresAt.AsTime()},
+					RevokedAt:          sql.NullTime{Valid: true, Time: token.RevokedAt.AsTime()},
+				}, nil
+			},
 		},
 		{
-			"invalid acces token uuid in the request, multiple scopes",
-			NewAccessTokenBuilder().WithRevokedAt().WithId("invalid").Build(),
-			codes.InvalidArgument,
-			"invalid access token id",
+			name:              "invalid access token uuid in the request",
+			token:             NewAccessTokenBuilder().WithRevokedAt().WithId("invalid").Build(),
+			errCode:           codes.InvalidArgument,
+			errMsg:            "invalid access token id",
+			mockQuerierReturn: nil,
 		},
 		{
-			"fail query for access token",
-			nil,
-			codes.Internal,
-			"failed to get access token",
+			name:    "fail query for access token",
+			token:   NewAccessTokenBuilder().Build(),
+			errCode: codes.Internal,
+			errMsg:  "failed to get access token",
+			mockQuerierReturn: func(token *commonv1.AccessToken) (db.GetAccessTokenRow, error) {
+				return db.GetAccessTokenRow{}, errors.New("Dummy Error")
+			},
 		},
 	}
 
@@ -63,38 +80,21 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var request *adminv1.GetAccessTokenRequest
-			if tt.token != nil {
-				tokenID, err := uuid.Parse(tt.token.Id)
-				if err == nil {
-					mockQuerier.EXPECT().GetAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenID).Return(db.GetAccessTokenRow{
-						ID:                 tokenID,
-						Name:               tt.token.Name,
-						NamespaceSelectors: tt.token.NamespaceSelectors,
-						Scopes:             []string{"admin"},
-						IssuedAt:           sql.NullTime{Valid: true, Time: tt.token.IssuedAt.AsTime()},
-						ExpiresAt:          sql.NullTime{Valid: true, Time: tt.token.ExpiresAt.AsTime()},
-						RevokedAt:          sql.NullTime{Valid: true, Time: tt.token.RevokedAt.AsTime()},
-					}, nil)
-				}
-				request = &adminv1.GetAccessTokenRequest{Id: tt.token.Id}
-			} else {
-				tokenID := uuid.New()
-				mockQuerier.EXPECT().GetAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenID).Return(db.GetAccessTokenRow{}, errors.New("Dummy Error"))
-				request = &adminv1.GetAccessTokenRequest{Id: tokenID.String()}
+			if tt.mockQuerierReturn != nil {
+				tokenID, _ := uuid.Parse(tt.token.Id)
+				mockQuerier.EXPECT().GetAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenID).Return(tt.mockQuerierReturn(tt.token))
 			}
 
+			request = &adminv1.GetAccessTokenRequest{Id: tt.token.Id}
 			res, err := server.GetAccessToken(ctx, request)
+
 			if res != nil {
 				require.NoError(t, err)
 				assert.Equal(t, &adminv1.GetAccessTokenResponse{AccessToken: tt.token}, res)
 			} else {
 				if er, ok := status.FromError(err); ok {
-					if er.Code() != tt.errCode {
-						t.Error("error code: expected", tt.errCode, "received", er.Code())
-					}
-					if er.Message() != tt.errMsg {
-						t.Error("error message: expected", tt.errMsg, "received", er.Message())
-					}
+					assert.Equal(t, er.Code(), tt.errCode)
+					assert.Equal(t, er.Message(), tt.errMsg)
 				}
 			}
 		})

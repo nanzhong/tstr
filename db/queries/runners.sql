@@ -21,7 +21,7 @@ ORDER by last_heartbeat_at DESC, registered_at;
 
 -- name: UpdateRunnerHeartbeat :exec
 UPDATE runners
-SET last_heartbeat_at = CURRENT_TIMESTAMP
+SET last_heartbeat_at = sqlc.arg('timestamp')
 WHERE id = sqlc.arg('id');
 
 -- name: QueryRunners :many

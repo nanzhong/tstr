@@ -17,6 +17,7 @@ SELECT id, name, namespace_selectors, scopes::text[], issued_at, expires_at, rev
 FROM access_tokens
 WHERE
   token_hash = $1 AND
+  revoked_at IS NULL AND
   (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
 `
 

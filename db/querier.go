@@ -48,7 +48,7 @@ type Querier interface {
 	TimeoutRuns(ctx context.Context, db DBTX, arg TimeoutRunsParams) error
 	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
-	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error
+	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, arg UpdateRunnerHeartbeatParams) error
 	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error
 }
 

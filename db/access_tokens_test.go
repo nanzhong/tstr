@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAccessTokenQueries(t *testing.T) {
+func TestAccessTokensQueries(t *testing.T) {
 	ctx := context.Background()
 
 	withTestDB(t, func(db DBTX) {
@@ -77,16 +77,6 @@ func TestAccessTokenQueries(t *testing.T) {
 				assert.Equal(t, validToken.Scopes, token.Scopes)
 				assert.Equal(t, validToken.IssuedAt, token.IssuedAt)
 				assert.Equal(t, validToken.ExpiresAt, token.ExpiresAt)
-			})
-
-			t.Run("expired token", func(t *testing.T) {
-				_, err := querier.GetAccessToken(ctx, db, expiredToken.ID)
-				assert.Error(t, err)
-			})
-
-			t.Run("revoked token", func(t *testing.T) {
-				_, err := querier.GetAccessToken(ctx, db, revokedToken.ID)
-				assert.Error(t, err)
 			})
 		})
 

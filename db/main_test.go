@@ -41,6 +41,9 @@ func withTestDB(tb testing.TB, fn func(db DBTX)) {
 	if err != nil {
 		tb.Fatalf("failed to create test transaction: %s", err)
 	}
+
+	fn(tx)
+
 	if err := tx.Rollback(context.Background()); err != nil {
 		tb.Fatalf("failed to rollback test transaction: %s", err)
 	}

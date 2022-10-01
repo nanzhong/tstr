@@ -129,7 +129,10 @@ func (s *RunnerServer) NextRun(ctx context.Context, req *runnerv1.NextRunRequest
 		return nil, status.Error(codes.Internal, "failed to find runner info")
 	}
 
-	err = s.dbQuerier.UpdateRunnerHeartbeat(ctx, s.pgxPool, runnerID)
+	err = s.dbQuerier.UpdateRunnerHeartbeat(ctx, s.pgxPool, db.UpdateRunnerHeartbeatParams{
+		ID:        runnerID,
+		Timestamp: sql.NullTime{Valid: true, Time: s.clock.Now()},
+	})
 	if err != nil {
 		log.Error().
 			Err(err).

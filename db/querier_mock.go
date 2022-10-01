@@ -509,17 +509,17 @@ func (mr *MockQuerierMockRecorder) UpdateRun(ctx, db, arg interface{}) *gomock.C
 }
 
 // UpdateRunnerHeartbeat mocks base method.
-func (m *MockQuerier) UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error {
+func (m *MockQuerier) UpdateRunnerHeartbeat(ctx context.Context, db DBTX, arg UpdateRunnerHeartbeatParams) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateRunnerHeartbeat", ctx, db, id)
+	ret := m.ctrl.Call(m, "UpdateRunnerHeartbeat", ctx, db, arg)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // UpdateRunnerHeartbeat indicates an expected call of UpdateRunnerHeartbeat.
-func (mr *MockQuerierMockRecorder) UpdateRunnerHeartbeat(ctx, db, id interface{}) *gomock.Call {
+func (mr *MockQuerierMockRecorder) UpdateRunnerHeartbeat(ctx, db, arg interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRunnerHeartbeat", reflect.TypeOf((*MockQuerier)(nil).UpdateRunnerHeartbeat), ctx, db, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateRunnerHeartbeat", reflect.TypeOf((*MockQuerier)(nil).UpdateRunnerHeartbeat), ctx, db, arg)
 }
 
 // UpdateTest mocks base method.

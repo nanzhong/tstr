@@ -151,11 +151,16 @@ func (q *Queries) RegisterRunner(ctx context.Context, db DBTX, arg RegisterRunne
 
 const updateRunnerHeartbeat = `-- name: UpdateRunnerHeartbeat :exec
 UPDATE runners
-SET last_heartbeat_at = CURRENT_TIMESTAMP
-WHERE id = $1
+SET last_heartbeat_at = $1
+WHERE id = $2
 `
 
-func (q *Queries) UpdateRunnerHeartbeat(ctx context.Context, db DBTX, id uuid.UUID) error {
-	_, err := db.Exec(ctx, updateRunnerHeartbeat, id)
+type UpdateRunnerHeartbeatParams struct {
+	Timestamp sql.NullTime
+	ID        uuid.UUID
+}
+
+func (q *Queries) UpdateRunnerHeartbeat(ctx context.Context, db DBTX, arg UpdateRunnerHeartbeatParams) error {
+	_, err := db.Exec(ctx, updateRunnerHeartbeat, arg.Timestamp, arg.ID)
 	return err
 }

@@ -11,6 +11,7 @@ import (
 
 	gomock "github.com/golang/mock/gomock"
 	uuid "github.com/google/uuid"
+	pgconn "github.com/jackc/pgconn"
 )
 
 // MockQuerier is a mock of Querier interface.
@@ -95,11 +96,12 @@ func (mr *MockQuerierMockRecorder) DeleteRunsForTest(ctx, db, testID interface{}
 }
 
 // DeleteTest mocks base method.
-func (m *MockQuerier) DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) error {
+func (m *MockQuerier) DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) (pgconn.CommandTag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteTest", ctx, db, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(pgconn.CommandTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // DeleteTest indicates an expected call of DeleteTest.
@@ -523,11 +525,12 @@ func (mr *MockQuerierMockRecorder) UpdateRunnerHeartbeat(ctx, db, arg interface{
 }
 
 // UpdateTest mocks base method.
-func (m *MockQuerier) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error {
+func (m *MockQuerier) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) (pgconn.CommandTag, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateTest", ctx, db, arg)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(pgconn.CommandTag)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // UpdateTest indicates an expected call of UpdateTest.

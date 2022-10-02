@@ -22,7 +22,7 @@ FROM tests
 WHERE tests.namespace = sqlc.arg('namespace')
 ORDER BY tests.name ASC;
 
--- name: UpdateTest :exec
+-- name: UpdateTest :execresult
 UPDATE tests
 SET
   name = sqlc.arg('name')::varchar,
@@ -34,7 +34,7 @@ SET
   updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')::uuid AND tests.namespace = sqlc.arg('namespace');
 
--- name: DeleteTest :exec
+-- name: DeleteTest :execresult
 DELETE FROM tests
 WHERE id = sqlc.arg('id')::uuid AND tests.namespace = sqlc.arg('namespace');
 
@@ -44,6 +44,7 @@ FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
 WHERE tests.next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+ORDER BY tests.next_run_at ASC
 FOR UPDATE OF tests SKIP LOCKED;
 
 -- name: QueryTests :many

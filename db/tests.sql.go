@@ -10,10 +10,11 @@ import (
 	"database/sql"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgconn"
 	"github.com/jackc/pgtype"
 )
 
-const deleteTest = `-- name: DeleteTest :exec
+const deleteTest = `-- name: DeleteTest :execresult
 DELETE FROM tests
 WHERE id = $1::uuid AND tests.namespace = $2
 `
@@ -23,9 +24,8 @@ type DeleteTestParams struct {
 	Namespace string
 }
 
-func (q *Queries) DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) error {
-	_, err := db.Exec(ctx, deleteTest, arg.ID, arg.Namespace)
-	return err
+func (q *Queries) DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) (pgconn.CommandTag, error) {
+	return db.Exec(ctx, deleteTest, arg.ID, arg.Namespace)
 }
 
 const getTest = `-- name: GetTest :one
@@ -126,6 +126,7 @@ FROM tests
 LEFT JOIN runs
 ON runs.test_id = tests.id AND runs.result = 'unknown' AND runs.started_at IS NULL
 WHERE tests.next_run_at < CURRENT_TIMESTAMP AND runs.id IS NULL
+ORDER BY tests.next_run_at ASC
 FOR UPDATE OF tests SKIP LOCKED
 `
 
@@ -257,7 +258,7 @@ func (q *Queries) RegisterTest(ctx context.Context, db DBTX, arg RegisterTestPar
 	return i, err
 }
 
-const updateTest = `-- name: UpdateTest :exec
+const updateTest = `-- name: UpdateTest :execresult
 UPDATE tests
 SET
   name = $1::varchar,
@@ -281,8 +282,8 @@ type UpdateTestParams struct {
 	Namespace    string
 }
 
-func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error {
-	_, err := db.Exec(ctx, updateTest,
+func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) (pgconn.CommandTag, error) {
+	return db.Exec(ctx, updateTest,
 		arg.Name,
 		arg.RunConfig,
 		arg.Labels,
@@ -292,5 +293,4 @@ func (q *Queries) UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams)
 		arg.ID,
 		arg.Namespace,
 	)
-	return err
 }

@@ -129,7 +129,7 @@ func (s *Scheduler) Start() error {
 						minNextRunAt = nextRunAt
 					}
 
-					err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
+					_, err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
 						ID:           test.ID,
 						Name:         test.Name,
 						Labels:       test.Labels,

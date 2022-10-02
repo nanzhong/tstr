@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgconn"
 )
 
 type Querier interface {
@@ -17,7 +18,7 @@ type Querier interface {
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	AuthAccessToken(ctx context.Context, db DBTX, tokenHash string) (AuthAccessTokenRow, error)
 	DeleteRunsForTest(ctx context.Context, db DBTX, testID uuid.UUID) error
-	DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) error
+	DeleteTest(ctx context.Context, db DBTX, arg DeleteTestParams) (pgconn.CommandTag, error)
 	// TODO re: ::text[] https://github.com/kyleconroy/sqlc/issues/1256
 	GetAccessToken(ctx context.Context, db DBTX, id uuid.UUID) (GetAccessTokenRow, error)
 	GetRun(ctx context.Context, db DBTX, arg GetRunParams) (Run, error)
@@ -49,7 +50,7 @@ type Querier interface {
 	UpdateResultData(ctx context.Context, db DBTX, arg UpdateResultDataParams) error
 	UpdateRun(ctx context.Context, db DBTX, arg UpdateRunParams) error
 	UpdateRunnerHeartbeat(ctx context.Context, db DBTX, arg UpdateRunnerHeartbeatParams) error
-	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) error
+	UpdateTest(ctx context.Context, db DBTX, arg UpdateTestParams) (pgconn.CommandTag, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -263,7 +263,7 @@ func (s *ControlServer) UpdateTest(ctx context.Context, r *controlv1.UpdateTestR
 	}
 
 	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
-		err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
+		_, err = s.dbQuerier.UpdateTest(ctx, tx, db.UpdateTestParams{
 			Namespace:    test.Namespace,
 			ID:           id,
 			Name:         test.Name,
@@ -318,7 +318,7 @@ func (s *ControlServer) DeleteTest(ctx context.Context, r *controlv1.DeleteTestR
 		if err := s.dbQuerier.DeleteRunsForTest(ctx, tx, id); err != nil {
 			return err
 		}
-		if err := s.dbQuerier.DeleteTest(ctx, tx, db.DeleteTestParams{
+		if _, err := s.dbQuerier.DeleteTest(ctx, tx, db.DeleteTestParams{
 			ID:        id,
 			Namespace: ns,
 		}); err != nil {

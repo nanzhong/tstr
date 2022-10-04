@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"testing"
 
@@ -12,6 +11,7 @@ import (
 	commonv1 "github.com/nanzhong/tstr/api/common/v1"
 	"github.com/nanzhong/tstr/db"
 	"github.com/nanzhong/tstr/grpc/auth"
+	"github.com/nanzhong/tstr/grpc/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -38,8 +38,8 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 		mockQuerierReturn func(*commonv1.AccessToken) (db.GetAccessTokenRow, error)
 	}{
 		{
-			name:    "valid acces token uuid in the request",
-			token:   NewAccessTokenBuilder().WithRevokedAt().Build(),
+			name:    "valid access token uuid in the request",
+			token:   newAccessTokenBuilder().withRevokedAt().build(),
 			errCode: codes.OK,
 			errMsg:  "",
 			mockQuerierReturn: func(token *commonv1.AccessToken) (db.GetAccessTokenRow, error) {
@@ -49,22 +49,22 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 					Name:               token.Name,
 					NamespaceSelectors: token.NamespaceSelectors,
 					Scopes:             []string{"admin"},
-					IssuedAt:           sql.NullTime{Valid: true, Time: token.IssuedAt.AsTime()},
-					ExpiresAt:          sql.NullTime{Valid: true, Time: token.ExpiresAt.AsTime()},
-					RevokedAt:          sql.NullTime{Valid: true, Time: token.RevokedAt.AsTime()},
+					IssuedAt:           types.FromProtoTimestampAsNullTime(token.IssuedAt),
+					ExpiresAt:          types.FromProtoTimestampAsNullTime(token.ExpiresAt),
+					RevokedAt:          types.FromProtoTimestampAsNullTime(token.RevokedAt),
 				}, nil
 			},
 		},
 		{
 			name:              "invalid access token uuid in the request",
-			token:             NewAccessTokenBuilder().WithRevokedAt().WithId("invalid").Build(),
+			token:             newAccessTokenBuilder().withRevokedAt().withId("invalid").build(),
 			errCode:           codes.InvalidArgument,
 			errMsg:            "invalid access token id",
 			mockQuerierReturn: nil,
 		},
 		{
 			name:    "fail query for access token",
-			token:   NewAccessTokenBuilder().Build(),
+			token:   newAccessTokenBuilder().build(),
 			errCode: codes.Internal,
 			errMsg:  "failed to get access token",
 			mockQuerierReturn: func(token *commonv1.AccessToken) (db.GetAccessTokenRow, error) {
@@ -79,13 +79,12 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var request *adminv1.GetAccessTokenRequest
 			if tt.mockQuerierReturn != nil {
 				tokenID, _ := uuid.Parse(tt.token.Id)
 				mockQuerier.EXPECT().GetAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenID).Return(tt.mockQuerierReturn(tt.token))
 			}
 
-			request = &adminv1.GetAccessTokenRequest{Id: tt.token.Id}
+			request := &adminv1.GetAccessTokenRequest{Id: tt.token.Id}
 			res, err := server.GetAccessToken(ctx, request)
 
 			if res != nil {

@@ -12,7 +12,7 @@ type accessTokenBuilder struct {
 	accessToken *commonv1.AccessToken
 }
 
-func NewAccessTokenBuilder() *accessTokenBuilder {
+func newAccessTokenBuilder() *accessTokenBuilder {
 	return &accessTokenBuilder{
 		&commonv1.AccessToken{
 			Id:                 uuid.New().String(),
@@ -25,31 +25,31 @@ func NewAccessTokenBuilder() *accessTokenBuilder {
 	}
 }
 
-func (b *accessTokenBuilder) WithId(id string) *accessTokenBuilder {
+func (b *accessTokenBuilder) withId(id string) *accessTokenBuilder {
 	b.accessToken.Id = id
 	return b
 }
 
-func (b *accessTokenBuilder) WithName(name string) *accessTokenBuilder {
+func (b *accessTokenBuilder) withName(name string) *accessTokenBuilder {
 	b.accessToken.Name = name
 	return b
 }
 
-func (b *accessTokenBuilder) WithNamespaceSelectors(namespaceSelectors []string) *accessTokenBuilder {
+func (b *accessTokenBuilder) withNamespaceSelectors(namespaceSelectors []string) *accessTokenBuilder {
 	b.accessToken.NamespaceSelectors = namespaceSelectors
 	return b
 }
 
-func (b *accessTokenBuilder) WithScopes(scopes []commonv1.AccessToken_Scope) *accessTokenBuilder {
+func (b *accessTokenBuilder) withScopes(scopes []commonv1.AccessToken_Scope) *accessTokenBuilder {
 	b.accessToken.Scopes = scopes
 	return b
 }
 
-func (b *accessTokenBuilder) WithRevokedAt() *accessTokenBuilder {
+func (b *accessTokenBuilder) withRevokedAt() *accessTokenBuilder {
 	b.accessToken.RevokedAt = types.ToProtoTimestamp(time.Now().Add(time.Hour))
 	return b
 }
 
-func (b *accessTokenBuilder) Build() *commonv1.AccessToken {
+func (b *accessTokenBuilder) build() *commonv1.AccessToken {
 	return b.accessToken
 }

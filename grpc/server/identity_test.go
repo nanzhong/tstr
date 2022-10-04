@@ -32,7 +32,7 @@ func TestIdentityServer_Identity(t *testing.T) {
 	tokenHash := auth.HashToken(tokenString)
 	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(auth.MDKeyAuth, "bearer "+tokenString))
 
-	token := NewAccessTokenBuilder().Build()
+	token := newAccessTokenBuilder().build()
 	tokenID, err := uuid.Parse(token.Id)
 	if err != nil {
 		t.Error("unable to parse the token id", token.Id)

@@ -11,7 +11,7 @@
   "dependencies": {
     "@headlessui/vue": "^1.7.3",
     "@heroicons/vue": "^2.0.12",
-    "axios": "^0.27.2",
+    "axios": "^1.1.2",
     "dayjs": "^1.11.5",
     "pinia": "^2.0.23",
     "plotly.js-dist": "^2.15.0",

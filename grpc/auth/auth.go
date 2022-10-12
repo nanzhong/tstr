@@ -102,7 +102,7 @@ func UnaryServerInterceptor(pgxPool *pgxpool.Pool) grpc.UnaryServerInterceptor {
 			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
 			namespace, err := NamespaceFromMD(md)
 			if err != nil {
-				return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+				return nil, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namespace")
 			}
 
 			allowed, err := authorizeNamespace(auth, namespace)
@@ -149,7 +149,7 @@ func StreamServerInterceptor(pgxPool *pgxpool.Pool) grpc.StreamServerInterceptor
 			strings.HasPrefix(info.FullMethod, "/tstr.data.v1") {
 			namespace, err := NamespaceFromMD(md)
 			if err != nil {
-				return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+				return status.Error(codes.PermissionDenied, "failed to authorize request: invalid namespace")
 			}
 
 			allowed, err := authorizeNamespace(auth, namespace)
@@ -189,7 +189,7 @@ func authorizeNamespace(auth db.AuthAccessTokenRow, namespace string) (bool, err
 		}
 	}
 	if !namespaceAllowed {
-		return false, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namepsace")
+		return false, status.Error(codes.PermissionDenied, "failed to authorize request: invalid namespace")
 	}
 
 	return true, nil

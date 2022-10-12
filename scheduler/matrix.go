@@ -36,7 +36,7 @@ func RunsForTest(test db.Test) ([]db.ScheduleRunParams, error) {
 			Labels:       dbLabels,
 			TestMatrixID: matrixID,
 			TestID:       test.ID,
-			Namepsace:    test.Namespace,
+			Namespace:    test.Namespace,
 		})
 	}
 	return runParams, nil

@@ -12,6 +12,6 @@ var (
 
 func init() {
 	ctlTestCmd.PersistentFlags().StringVar(&ctlTestNamespace, "namespace", "", "The namespace to use.")
-	ctlTestCmd.MarkFlagRequired("namespace")
+	ctlTestCmd.MarkPersistentFlagRequired("namespace")
 	ctlCmd.AddCommand(ctlTestCmd)
 }

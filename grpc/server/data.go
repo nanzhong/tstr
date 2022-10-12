@@ -514,8 +514,8 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 			Dur("duration", interval).
 			Logger()
 
-		resultBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownResult(ctx, tx, db.SummarizeRunsBreakdownResultParams{
-			Namepsace: ns,
+		resultBreakdown, err := s.dbQuerier.SummarizeRunsBreakdownResult(ctx, tx, db.SummarizeRunsBreakdownResultParams{
+			Namespace: ns,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},
@@ -528,8 +528,8 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 			return err
 		}
 
-		testBreakdwon, err := s.dbQuerier.SummarizeRunsBreakdownTest(ctx, tx, db.SummarizeRunsBreakdownTestParams{
-			Namepsace: ns,
+		testBreakdown, err := s.dbQuerier.SummarizeRunsBreakdownTest(ctx, tx, db.SummarizeRunsBreakdownTestParams{
+			Namespace: ns,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},
@@ -543,7 +543,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 		}
 
 		statsMap := map[time.Time]*datav1.SummarizeRunsResponse_IntervalStats{}
-		for _, result := range resultBreakdwon {
+		for _, result := range resultBreakdown {
 			statsMap[result.IntervalsStart] = &datav1.SummarizeRunsResponse_IntervalStats{
 				StartTime: types.ToProtoTimestamp(result.IntervalsStart),
 				Duration:  durationpb.New(interval),
@@ -555,7 +555,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 				},
 			}
 		}
-		for _, test := range testBreakdwon {
+		for _, test := range testBreakdown {
 			statsMap[test.IntervalsStart].TestCount = append(statsMap[test.IntervalsStart].TestCount, &datav1.SummarizeRunsResponse_IntervalStats_TestBreakdown{
 				TestId:   test.ID.String(),
 				TestName: test.Name,

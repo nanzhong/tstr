@@ -441,7 +441,7 @@ type ScheduleRunParams struct {
 	Labels       pgtype.JSONB
 	TestMatrixID uuid.NullUUID
 	TestID       uuid.UUID
-	Namepsace    string
+	Namespace    string
 }
 
 func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParams) (Run, error) {
@@ -449,7 +449,7 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 		arg.Labels,
 		arg.TestMatrixID,
 		arg.TestID,
-		arg.Namepsace,
+		arg.Namespace,
 	)
 	var i Run
 	err := row.Scan(
@@ -499,7 +499,7 @@ type SummarizeRunsBreakdownResultParams struct {
 	Precision string
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
-	Namepsace string
+	Namespace string
 	Interval  float64
 }
 
@@ -516,7 +516,7 @@ func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg
 		arg.Precision,
 		arg.StartTime,
 		arg.EndTime,
-		arg.Namepsace,
+		arg.Namespace,
 		arg.Interval,
 	)
 	if err != nil {
@@ -575,7 +575,7 @@ type SummarizeRunsBreakdownTestParams struct {
 	Precision string
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
-	Namepsace string
+	Namespace string
 	Interval  float64
 }
 
@@ -594,7 +594,7 @@ func (q *Queries) SummarizeRunsBreakdownTest(ctx context.Context, db DBTX, arg S
 		arg.Precision,
 		arg.StartTime,
 		arg.EndTime,
-		arg.Namepsace,
+		arg.Namespace,
 		arg.Interval,
 	)
 	if err != nil {

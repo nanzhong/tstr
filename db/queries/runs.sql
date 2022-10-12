@@ -15,7 +15,7 @@ ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace');
 INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
 SELECT tests.id, tests.run_config, sqlc.arg('labels'), sqlc.narg('test_matrix_id')
 FROM tests
-WHERE tests.id = sqlc.arg('test_id') AND tests.namespace = sqlc.arg('namepsace')
+WHERE tests.id = sqlc.arg('test_id') AND tests.namespace = sqlc.arg('namespace')
 RETURNING *;
 
 -- name: ListPendingRuns :many
@@ -135,7 +135,7 @@ ON
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namepsace')
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 GROUP BY intervals.start
 ORDER BY intervals.start ASC;
 
@@ -162,6 +162,6 @@ ON
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namepsace')
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 GROUP BY intervals.start, tests.id
 ORDER BY intervals.start ASC;

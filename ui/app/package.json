@@ -13,7 +13,7 @@
     "@heroicons/vue": "^2.0.12",
     "axios": "^0.27.2",
     "dayjs": "^1.11.5",
-    "pinia": "^2.0.22",
+    "pinia": "^2.0.23",
     "plotly.js-dist": "^2.15.0",
     "vue": "^3.2.40",
     "vue-property-decorator": "^9.1.2",

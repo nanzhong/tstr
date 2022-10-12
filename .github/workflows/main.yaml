@@ -8,11 +8,10 @@ jobs:
     secrets: inherit
   build:
     uses: ./.github/workflows/build.yaml
-    needs: [test]
     secrets: inherit
   deploy:
     uses: ./.github/workflows/deploy.yaml
-    needs: [build]
+    needs: [build, test]
     secrets: inherit
     with:
       environment: demo

@@ -32,7 +32,7 @@ jobs:
         id: build
         run: |
           nix build .#image
-          echo "::set-output name=image_tag::$(nix eval --raw .#image.imageTag)"
+          echo "image_tage=$(nix eval --raw .#image.imageTag)" >> $GITHUB_OUTPUT
       - name: Upload built image
         uses: actions/upload-artifact@v3
         with:

@@ -16,9 +16,6 @@ jobs:
     concurrency: ${{ inputs.environment }}
     environment: ${{ inputs.environment }}
     steps:
-      - run: |
-          echo ${{ secrets.PG_DSN }} | wc -c
-          echo ${{ secrets.UI_ACCESS_TOKEN }} | wc -c
       - uses: actions/checkout@v3
       - uses: cachix/install-nix-action@v17
       - uses: cachix/cachix-action@v10

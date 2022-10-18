@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 func newTestAdminServer(t *testing.T) (*AdminServer, *db.MockQuerier) {
@@ -29,6 +30,72 @@ func newTestAdminServer(t *testing.T) (*AdminServer, *db.MockQuerier) {
 	}, mockQuerier
 }
 
+func TestAdminServer_IssueAccessToken(t *testing.T) {
+	tests := []struct {
+		name              string
+		token             *commonv1.AccessToken
+		errCode           codes.Code
+		errMsg            string
+		mockQuerierReturn func(*commonv1.AccessToken) (db.IssueAccessTokenRow, error)
+	}{
+		{
+			name:    "issue access token using valid token data request",
+			token:   newAccessTokenBuilder().build(),
+			errCode: codes.OK,
+			errMsg:  "",
+			mockQuerierReturn: func(token *commonv1.AccessToken) (db.IssueAccessTokenRow, error) {
+				tokenID, _ := uuid.Parse(token.Id)
+				return db.IssueAccessTokenRow{
+					ID:                 tokenID,
+					Name:               token.Name,
+					NamespaceSelectors: token.NamespaceSelectors,
+					Scopes:             []string{"admin"},
+					IssuedAt:           types.FromProtoTimestampAsNullTime(token.IssuedAt),
+					ExpiresAt:          types.FromProtoTimestampAsNullTime(token.ExpiresAt),
+				}, nil
+			},
+		},
+		{
+			name:    "db query fails when issuing access token",
+			token:   newAccessTokenBuilder().build(),
+			errCode: codes.Internal,
+			errMsg:  "failed to issue access token",
+			mockQuerierReturn: func(token *commonv1.AccessToken) (db.IssueAccessTokenRow, error) {
+				return db.IssueAccessTokenRow{}, errors.New("Dummy Error")
+			},
+		},
+	}
+
+	server, mockQuerier := newTestAdminServer(t)
+	tokenString := "token"
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(auth.MDKeyAuth, "bearer "+tokenString))
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockQuerier.EXPECT().IssueAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), gomock.Any()).Return(tt.mockQuerierReturn(tt.token))
+
+			request := adminv1.IssueAccessTokenRequest{
+				Name:               tt.token.Name,
+				NamespaceSelectors: tt.token.NamespaceSelectors,
+				Scopes:             tt.token.Scopes,
+				ValidDuration:      durationpb.New(tt.token.ExpiresAt.AsTime().Sub(tt.token.IssuedAt.AsTime())),
+			}
+			res, err := server.IssueAccessToken(ctx, &request)
+
+			if res != nil {
+				require.NoError(t, err)
+				tt.token.Token = res.AccessToken.Token
+				assert.Equal(t, &adminv1.IssueAccessTokenResponse{AccessToken: tt.token}, res)
+			} else {
+				if er, ok := status.FromError(err); ok {
+					assert.Equal(t, er.Code(), tt.errCode)
+					assert.Equal(t, er.Message(), tt.errMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestAdminServer_GetAccessToken(t *testing.T) {
 	tests := []struct {
 		name              string
@@ -38,7 +105,7 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 		mockQuerierReturn func(*commonv1.AccessToken) (db.GetAccessTokenRow, error)
 	}{
 		{
-			name:    "valid access token uuid in the request",
+			name:    "get access token details using valid token uuid in the request",
 			token:   newAccessTokenBuilder().withRevokedAt().build(),
 			errCode: codes.OK,
 			errMsg:  "",
@@ -56,14 +123,14 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 			},
 		},
 		{
-			name:              "invalid access token uuid in the request",
+			name:              "get access token details using invalid token uuid in the request",
 			token:             newAccessTokenBuilder().withRevokedAt().withId("invalid").build(),
 			errCode:           codes.InvalidArgument,
 			errMsg:            "invalid access token id",
 			mockQuerierReturn: nil,
 		},
 		{
-			name:    "fail query for access token",
+			name:    "db query fails when getting access token",
 			token:   newAccessTokenBuilder().build(),
 			errCode: codes.Internal,
 			errMsg:  "failed to get access token",
@@ -90,6 +157,126 @@ func TestAdminServer_GetAccessToken(t *testing.T) {
 			if res != nil {
 				require.NoError(t, err)
 				assert.Equal(t, &adminv1.GetAccessTokenResponse{AccessToken: tt.token}, res)
+			} else {
+				if er, ok := status.FromError(err); ok {
+					assert.Equal(t, er.Code(), tt.errCode)
+					assert.Equal(t, er.Message(), tt.errMsg)
+				}
+			}
+		})
+	}
+}
+
+func TestAdminServer_ListAccessTokens(t *testing.T) {
+	tests := []struct {
+		name              string
+		token             *commonv1.AccessToken
+		errCode           codes.Code
+		errMsg            string
+		mockQuerierReturn func(*commonv1.AccessToken) ([]db.ListAccessTokensRow, error)
+	}{
+		{
+			name:    "valid access token available when listing access tokens",
+			token:   newAccessTokenBuilder().withRevokedAt().build(),
+			errCode: codes.OK,
+			errMsg:  "",
+			mockQuerierReturn: func(token *commonv1.AccessToken) ([]db.ListAccessTokensRow, error) {
+				tokenID, _ := uuid.Parse(token.Id)
+				return []db.ListAccessTokensRow{{
+					ID:                 tokenID,
+					Name:               token.Name,
+					NamespaceSelectors: token.NamespaceSelectors,
+					Scopes:             []string{"admin"},
+					IssuedAt:           types.FromProtoTimestampAsNullTime(token.IssuedAt),
+					ExpiresAt:          types.FromProtoTimestampAsNullTime(token.ExpiresAt),
+					RevokedAt:          types.FromProtoTimestampAsNullTime(token.RevokedAt),
+				}}, nil
+			},
+		},
+		{
+			name:    "fail query for list access tokens",
+			token:   newAccessTokenBuilder().build(),
+			errCode: codes.Internal,
+			errMsg:  "failed to list access tokens",
+			mockQuerierReturn: func(token *commonv1.AccessToken) ([]db.ListAccessTokensRow, error) {
+				return []db.ListAccessTokensRow{}, errors.New("Dummy Error")
+			},
+		},
+	}
+
+	server, mockQuerier := newTestAdminServer(t)
+	tokenString := "token"
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(auth.MDKeyAuth, "bearer "+tokenString))
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			params := db.ListAccessTokensParams{IncludeExpired: true, IncludeRevoked: true}
+			mockQuerier.EXPECT().ListAccessTokens(ctx, gomock.AssignableToTypeOf(server.pgxPool), params).Return(tt.mockQuerierReturn(tt.token))
+
+			request := &adminv1.ListAccessTokensRequest{IncludeExpired: params.IncludeExpired, IncludeRevoked: params.IncludeRevoked}
+			res, err := server.ListAccessTokens(ctx, request)
+
+			if res != nil {
+				require.NoError(t, err)
+				assert.Equal(t, &adminv1.ListAccessTokensResponse{AccessTokens: []*commonv1.AccessToken{tt.token}}, res)
+			} else {
+				if er, ok := status.FromError(err); ok {
+					assert.Equal(t, er.Code(), tt.errCode)
+					assert.Equal(t, er.Message(), tt.errMsg)
+				}
+			}
+		})
+	}
+}
+
+func TestAdminServer_RevokeAccessToken(t *testing.T) {
+	tests := []struct {
+		name              string
+		token             string
+		errCode           codes.Code
+		errMsg            string
+		mockQuerierReturn func() error
+	}{
+		{
+			name:              "revoke access token using valid token uuid in the request",
+			token:             uuid.New().String(),
+			errCode:           codes.OK,
+			errMsg:            "",
+			mockQuerierReturn: func() error { return nil },
+		},
+		{
+			name:              "revoke access token using invalid token uuid in the request",
+			token:             "invalid",
+			errCode:           codes.InvalidArgument,
+			errMsg:            "invalid access token id",
+			mockQuerierReturn: nil,
+		},
+		{
+			name:              "fail query for revoke access tokens",
+			token:             uuid.New().String(),
+			errCode:           codes.Internal,
+			errMsg:            "failed to revoke access tokens",
+			mockQuerierReturn: func() error { return errors.New("Dummy Error") },
+		},
+	}
+
+	server, mockQuerier := newTestAdminServer(t)
+	tokenString := "token"
+	ctx := metadata.NewIncomingContext(context.Background(), metadata.Pairs(auth.MDKeyAuth, "bearer "+tokenString))
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.mockQuerierReturn != nil {
+				tokenID, _ := uuid.Parse(tt.token)
+				mockQuerier.EXPECT().RevokeAccessToken(ctx, gomock.AssignableToTypeOf(server.pgxPool), tokenID).Return(tt.mockQuerierReturn())
+			}
+
+			request := &adminv1.RevokeAccessTokenRequest{Id: tt.token}
+			res, err := server.RevokeAccessToken(ctx, request)
+
+			if res != nil {
+				require.NoError(t, err)
+				assert.Equal(t, &adminv1.RevokeAccessTokenResponse{}, res)
 			} else {
 				if er, ok := status.FromError(err); ok {
 					assert.Equal(t, er.Code(), tt.errCode)

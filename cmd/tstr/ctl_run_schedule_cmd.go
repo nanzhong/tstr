@@ -5,8 +5,10 @@ import (
 	"fmt"
 
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -19,6 +21,7 @@ var ctlRunScheduleCmd = &cobra.Command{
 		defer cancel()
 
 		return withControlClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client controlv1.ControlServiceClient) error {
+			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
 			res, err := client.ScheduleRun(ctx, &controlv1.ScheduleRunRequest{
 				TestId: args[0],
 			})

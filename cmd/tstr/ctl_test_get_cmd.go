@@ -19,7 +19,7 @@ var ctlTestGetCmd = &cobra.Command{
 		return withCtlControlClient(context.Background(), func(ctx context.Context, client controlv1.ControlServiceClient) error {
 			fmt.Printf("Getting registered test %s...\n", args[0])
 
-			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
+			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlNamespace)
 			res, err := client.GetTest(ctx, &controlv1.GetTestRequest{Id: args[0]})
 			if err != nil {
 				return err

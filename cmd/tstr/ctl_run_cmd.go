@@ -8,7 +8,7 @@ var ctlRunCmd = &cobra.Command{
 }
 
 func init() {
-	ctlTestCmd.PersistentFlags().StringVar(&ctlTestNamespace, "namespace", "", "The namespace to use.")
-	ctlTestCmd.MarkPersistentFlagRequired("namespace")
+	ctlRunCmd.PersistentFlags().StringVar(&ctlNamespace, "namespace", "", "The namespace to use.")
+	ctlRunCmd.MarkPersistentFlagRequired("namespace")
 	ctlCmd.AddCommand(ctlRunCmd)
 }

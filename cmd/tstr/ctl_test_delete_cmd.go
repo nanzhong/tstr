@@ -19,7 +19,7 @@ var ctlTestDeleteCmd = &cobra.Command{
 		return withCtlControlClient(context.Background(), func(ctx context.Context, client controlv1.ControlServiceClient) error {
 			fmt.Printf("Deleting registered test %s...\n", args[0])
 
-			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
+			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlNamespace)
 			res, err := client.DeleteTest(ctx, &controlv1.DeleteTestRequest{Id: args[0]})
 			if err != nil {
 				return err

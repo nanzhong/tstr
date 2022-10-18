@@ -14,7 +14,7 @@
     "axios": "^0.27.2",
     "dayjs": "^1.11.5",
     "pinia": "^2.0.23",
-    "plotly.js-dist": "^2.15.0",
+    "plotly.js-dist": "^2.16.0",
     "vue": "^3.2.41",
     "vue-property-decorator": "^9.1.2",
     "vue-router": "^4.1.5"

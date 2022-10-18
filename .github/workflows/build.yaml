@@ -32,7 +32,7 @@ jobs:
         id: build
         run: |
           nix build .#image
-          echo "image_tage=$(nix eval --raw .#image.imageTag)" >> $GITHUB_OUTPUT
+          echo "image_tag=$(nix eval --raw .#image.imageTag)" >> $GITHUB_OUTPUT
       - name: Upload built image
         uses: actions/upload-artifact@v3
         with:
@@ -57,5 +57,7 @@ jobs:
           username: nanzhong
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
       - name: Push container image
+        id: push
         run: |
           docker push "nanzhong/tstr:${{ needs.build.outputs.image_tag }}"
+          echo "image_tag=${{ needs.build.outputs.image_tag }}" >> $GITHUB_OUTPUT

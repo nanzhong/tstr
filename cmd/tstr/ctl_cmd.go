@@ -7,10 +7,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var ctlCmd = &cobra.Command{
-	Use:   "ctl",
-	Short: "The cli interface for interacting with tstr",
-}
+var (
+	ctlCmd = &cobra.Command{
+		Use:   "ctl",
+		Short: "The cli interface for interacting with tstr",
+	}
+	ctlNamespace string
+)
 
 func init() {
 	ctlCmd.PersistentFlags().String("grpc-addr", "localhost:9000", "Address of the tstr gRPC API to dial.")

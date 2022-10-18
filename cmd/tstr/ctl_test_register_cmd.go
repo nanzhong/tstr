@@ -126,11 +126,9 @@ var (
 			}
 
 			return withCtlControlClient(context.Background(), func(ctx context.Context, client controlv1.ControlServiceClient) error {
-				ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
+				ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlNamespace)
 				if test.Id == "" {
 					fmt.Printf("Registering new test: %s\n", test.Name)
-
-					ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
 					res, err := client.RegisterTest(ctx, &controlv1.RegisterTestRequest{
 						Name:         test.Name,
 						Labels:       test.Labels,

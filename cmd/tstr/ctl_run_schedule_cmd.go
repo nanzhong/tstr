@@ -21,7 +21,7 @@ var ctlRunScheduleCmd = &cobra.Command{
 		defer cancel()
 
 		return withControlClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), func(ctx context.Context, client controlv1.ControlServiceClient) error {
-			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlTestNamespace)
+			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlNamespace)
 			res, err := client.ScheduleRun(ctx, &controlv1.ScheduleRunRequest{
 				TestId: args[0],
 			})

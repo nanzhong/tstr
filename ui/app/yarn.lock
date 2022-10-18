@@ -662,10 +662,10 @@ pinia@^2.0.23:
     "@vue/devtools-api" "^6.4.4"
     vue-demi "*"
 
-plotly.js-dist@^2.15.0:
-  version "2.15.0"
-  resolved "https://registry.yarnpkg.com/plotly.js-dist/-/plotly.js-dist-2.15.0.tgz#6da64b92fdab82b675a6e4cb02ae1069e14a68b0"
-  integrity sha512-mXqB+Am1Ye/dspgEwQ7XudLzYe8mw0uglqB+A7Aq7LkMBIhdhIgqyGDJqoV/rfqH2SbltIMMAXlvjJ1ToAIvCg==
+plotly.js-dist@^2.16.0:
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/plotly.js-dist/-/plotly.js-dist-2.16.0.tgz#d4140987e6bd4c4687f38516765f5f3cdd7ddc73"
+  integrity sha512-vdMa/ABwzj5PCSoMKbvi9RwDE51S3uiQYNKbsjUSs4gK00TPm7yhiHfBHtBN1ep+Ht3FqnwMVbTzCJM2L+vycA==
 
 postcss-import@^14.1.0:
   version "14.1.0"

@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/benbjohnson/clock v1.3.0
-	github.com/docker/docker v20.10.19+incompatible
+	github.com/docker/docker v20.10.20+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.6.13
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0

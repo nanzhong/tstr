@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/benbjohnson/clock v1.3.0
-	github.com/docker/docker v20.10.20+incompatible
+	github.com/docker/docker v20.10.21+incompatible
 	github.com/envoyproxy/protoc-gen-validate v0.6.13
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -14,7 +14,7 @@ require (
 	github.com/jwreagor/grpc-zerolog v0.0.0-20180425150930-27ca9d023ead
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/zerolog v1.28.0
-	github.com/spf13/cobra v1.6.0
+	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
 	google.golang.org/grpc v1.50.1

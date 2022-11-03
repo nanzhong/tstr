@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 func newTestRunnerServer(t *testing.T) (*RunnerServer, *db.MockQuerier) {
@@ -93,6 +95,65 @@ func TestRunnerServer_RegisterRunner(t *testing.T) {
 				}, nil
 			},
 		},
+		{
+			name:         "Authortize token returns error",
+			responseCode: codes.Internal,
+			errMsg:       "failed to get identity",
+			token:        newAccessTokenBuilder().build(),
+			runner: func(namespaceSelectors []string) *commonv1.Runner {
+				return createRunnerData(namespaceSelectors)
+			},
+			mockQuerierReturnAuth:	func(token *commonv1.AccessToken) (db.AuthAccessTokenRow, error) {
+				return db.AuthAccessTokenRow{}, errors.New("Dummy Error")
+			},
+			mockQuerierReturnRunner: func(runner *commonv1.Runner) (db.Runner, error) {
+				runnerID, _ := uuid.Parse(runner.Id)
+				return db.Runner{
+					ID:                       runnerID,
+					Name:                     runner.Name,
+					NamespaceSelectors:       runner.NamespaceSelectors,
+					AcceptTestLabelSelectors: convertTestLabelSelectors(runner.AcceptTestLabelSelectors),
+					RejectTestLabelSelectors: convertTestLabelSelectors(runner.RejectTestLabelSelectors),
+					RegisteredAt:             types.FromProtoTimestampAsNullTime(runner.RegisteredAt),
+					LastHeartbeatAt:          types.FromProtoTimestampAsNullTime(runner.LastHeartbeatAt),
+				}, nil
+			},
+		},
+		{
+			name:         "Register runner returns error",
+			responseCode: codes.Internal,
+			errMsg:       "failed to register runner",
+			token:        newAccessTokenBuilder().build(),
+			runner: func(namespaceSelectors []string) *commonv1.Runner {
+				return createRunnerData(namespaceSelectors)
+			},
+			mockQuerierReturnAuth: func(token *commonv1.AccessToken) (db.AuthAccessTokenRow, error) {
+				tokenID, _ := uuid.Parse(token.Id)
+				return db.AuthAccessTokenRow{
+					ID:                 tokenID,
+					Name:               token.Name,
+					NamespaceSelectors: token.NamespaceSelectors,
+					Scopes:             []string{"admin"},
+					IssuedAt:           types.FromProtoTimestampAsNullTime(token.IssuedAt),
+					ExpiresAt:          types.FromProtoTimestampAsNullTime(token.ExpiresAt),
+					RevokedAt:          types.FromProtoTimestampAsNullTime(token.RevokedAt),
+				}, nil
+			},
+			mockQuerierReturnRunner: func(runner *commonv1.Runner) (db.Runner, error) {
+				return db.Runner{}, errors.New("Runner Error")
+			},
+		},
+		{
+			name:         "Register runner without token",
+			responseCode: codes.Internal,
+			errMsg:       "failed to get identity",
+			token:        nil,
+			runner: func(namespaceSelectors []string) *commonv1.Runner {
+				return createRunnerData(namespaceSelectors)
+			},
+			mockQuerierReturnAuth:  nil,
+			mockQuerierReturnRunner: nil,
+		},
 	}
 
 	server, mockQuerier := newTestRunnerServer(t)
@@ -116,9 +177,16 @@ func TestRunnerServer_RegisterRunner(t *testing.T) {
 				AcceptTestLabelSelectors: runner.AcceptTestLabelSelectors,
 				RejectTestLabelSelectors: runner.RejectTestLabelSelectors}
 			res, err := server.RegisterRunner(ctx, request)
-
-			assert.Equal(t, &runnerv1.RegisterRunnerResponse{Runner: runner}, res)
-			require.NoError(t, err)
+			
+			if res != nil {
+				require.NoError(t, err)
+				assert.Equal(t, &runnerv1.RegisterRunnerResponse{Runner: runner}, res)
+			} else {
+				if er, ok := status.FromError(err); ok {
+					assert.Equal(t, er.Code(), tt.responseCode)
+					assert.Equal(t, er.Message(), tt.errMsg)
+			}	
+			}								
 		})
 	}
 }

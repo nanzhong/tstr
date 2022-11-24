@@ -12,7 +12,7 @@ import (
 )
 
 var ctlTestDeleteCmd = &cobra.Command{
-	Use:   "delete",
+	Use:   "delete <test-id>",
 	Short: "Delete a registered test",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {

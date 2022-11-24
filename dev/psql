@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-set -o allexport
-source .env
-set +o allexport
+# shellcheck source=dev/common.sh
+source dev/common.sh
 
 psql "$DATABASE_URL"

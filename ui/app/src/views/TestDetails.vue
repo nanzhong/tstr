@@ -76,7 +76,10 @@ const runSummaries = testData.runSummaries!;
         </div>
       </div>
 
-      <RunSummariesPlot :runSummaries="runSummaries" />
+      <RunSummariesPlot v-if="runSummaries" :runSummaries="runSummaries" />
+    <div v-else>
+      <p class="mt-5 text-gray-400">No runs in last 24h.</p>
+    </div>
     </div>
   </div>
 </template>

@@ -122,7 +122,7 @@ WITH intervals AS (
     make_interval(secs => sqlc.arg('interval'))
   ) as start
 )
-SELECT 
+SELECT
   intervals.start::timestamptz,
   COUNT(runs.id) FILTER (WHERE result = 'pass') as pass,
   COUNT(runs.id) FILTER (WHERE result = 'fail') as fail,
@@ -135,7 +135,10 @@ ON
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
+ON
+  runs.test_id = tests.id AND
+  tests.namespace = sqlc.arg('namespace') AND
+  (sqlc.narg('test_ids')::uuid[] IS NULL OR tests.id = ANY (sqlc.narg('test_ids')::uuid[]))
 GROUP BY intervals.start
 ORDER BY intervals.start ASC;
 
@@ -147,7 +150,7 @@ WITH intervals AS (
     make_interval(secs => sqlc.arg('interval'))
   ) as start
 )
-SELECT 
+SELECT
   intervals.start::timestamptz,
   tests.id,
   tests.name,
@@ -162,6 +165,9 @@ ON
   runs.scheduled_at > sqlc.arg('start_time') AND
   runs.scheduled_at < sqlc.arg('end_time')
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
+ON
+  runs.test_id = tests.id AND
+  tests.namespace = sqlc.arg('namespace') AND
+  (sqlc.narg('test_ids')::uuid[] IS NULL OR tests.id = ANY (sqlc.narg('test_ids')::uuid[]))
 GROUP BY intervals.start, tests.id
 ORDER BY intervals.start ASC;

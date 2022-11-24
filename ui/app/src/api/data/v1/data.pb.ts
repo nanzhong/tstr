@@ -72,6 +72,7 @@ export type SummarizeRunsRequest = {
   scheduledAfter?: GoogleProtobufTimestamp.Timestamp
   window?: GoogleProtobufDuration.Duration
   interval?: SummarizeRunsRequestInterval
+  testIds?: string[]
 }
 
 export type SummarizeRunsResponseIntervalStatsResultBreakdown = {

@@ -472,12 +472,12 @@ func (q *Queries) ScheduleRun(ctx context.Context, db DBTX, arg ScheduleRunParam
 const summarizeRunsBreakdownResult = `-- name: SummarizeRunsBreakdownResult :many
 WITH intervals AS (
   SELECT generate_series(
-    date_trunc($1, $2::timestamptz) + make_interval(secs => $5),
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $6),
     date_trunc($1, $3::timestamptz),
-    make_interval(secs => $5)
+    make_interval(secs => $6)
   ) as start
 )
-SELECT 
+SELECT
   intervals.start::timestamptz,
   COUNT(runs.id) FILTER (WHERE result = 'pass') as pass,
   COUNT(runs.id) FILTER (WHERE result = 'fail') as fail,
@@ -490,7 +490,10 @@ ON
   runs.scheduled_at > $2 AND
   runs.scheduled_at < $3
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = $4
+ON
+  runs.test_id = tests.id AND
+  tests.namespace = $4 AND
+  ($5::uuid[] IS NULL OR tests.id = ANY ($5::uuid[]))
 GROUP BY intervals.start
 ORDER BY intervals.start ASC
 `
@@ -500,6 +503,7 @@ type SummarizeRunsBreakdownResultParams struct {
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
 	Namespace string
+	TestIds   []uuid.UUID
 	Interval  float64
 }
 
@@ -517,6 +521,7 @@ func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg
 		arg.StartTime,
 		arg.EndTime,
 		arg.Namespace,
+		arg.TestIds,
 		arg.Interval,
 	)
 	if err != nil {
@@ -546,12 +551,12 @@ func (q *Queries) SummarizeRunsBreakdownResult(ctx context.Context, db DBTX, arg
 const summarizeRunsBreakdownTest = `-- name: SummarizeRunsBreakdownTest :many
 WITH intervals AS (
   SELECT generate_series(
-    date_trunc($1, $2::timestamptz) + make_interval(secs => $5),
+    date_trunc($1, $2::timestamptz) + make_interval(secs => $6),
     date_trunc($1, $3::timestamptz),
-    make_interval(secs => $5)
+    make_interval(secs => $6)
   ) as start
 )
-SELECT 
+SELECT
   intervals.start::timestamptz,
   tests.id,
   tests.name,
@@ -566,7 +571,10 @@ ON
   runs.scheduled_at > $2 AND
   runs.scheduled_at < $3
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = $4
+ON
+  runs.test_id = tests.id AND
+  tests.namespace = $4 AND
+  ($5::uuid[] IS NULL OR tests.id = ANY ($5::uuid[]))
 GROUP BY intervals.start, tests.id
 ORDER BY intervals.start ASC
 `
@@ -576,6 +584,7 @@ type SummarizeRunsBreakdownTestParams struct {
 	StartTime sql.NullTime
 	EndTime   sql.NullTime
 	Namespace string
+	TestIds   []uuid.UUID
 	Interval  float64
 }
 
@@ -595,6 +604,7 @@ func (q *Queries) SummarizeRunsBreakdownTest(ctx context.Context, db DBTX, arg S
 		arg.StartTime,
 		arg.EndTime,
 		arg.Namespace,
+		arg.TestIds,
 		arg.Interval,
 	)
 	if err != nil {

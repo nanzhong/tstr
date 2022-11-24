@@ -504,11 +504,21 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 	startTime := r.ScheduledAfter.AsTime()
 	endTime := r.ScheduledAfter.AsTime().Add(r.Window.AsDuration())
 
+	var testIDs []uuid.UUID
+	for _, rid := range r.TestIds {
+		id, err := uuid.Parse(rid)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "failed to parse test id")
+		}
+		testIDs = append(testIDs, id)
+	}
+
 	var stats []*datav1.SummarizeRunsResponse_IntervalStats
 	err = s.pgxPool.BeginFunc(ctx, func(tx pgx.Tx) error {
 		log := log.With().
 			Str("namespace", ns).
 			Str("precision", precision).
+			Strs("test_ids", r.TestIds).
 			Time("start_time", startTime).
 			Time("end_time", endTime).
 			Dur("duration", interval).
@@ -516,6 +526,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 
 		resultBreakdown, err := s.dbQuerier.SummarizeRunsBreakdownResult(ctx, tx, db.SummarizeRunsBreakdownResultParams{
 			Namespace: ns,
+			TestIds:   testIDs,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},
@@ -530,6 +541,7 @@ func (s *DataServer) SummarizeRuns(ctx context.Context, r *datav1.SummarizeRunsR
 
 		testBreakdown, err := s.dbQuerier.SummarizeRunsBreakdownTest(ctx, tx, db.SummarizeRunsBreakdownTestParams{
 			Namespace: ns,
+			TestIds:   testIDs,
 			Precision: precision,
 			StartTime: sql.NullTime{Valid: true, Time: startTime},
 			EndTime:   sql.NullTime{Valid: true, Time: endTime},

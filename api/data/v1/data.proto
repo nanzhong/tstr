@@ -72,10 +72,10 @@ message GetTestResponse {
 
 message QueryTestsRequest {
   repeated string ids = 1 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   repeated string test_suite_ids = 2 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   map<string, string> labels = 3;
 }
@@ -96,13 +96,13 @@ message GetRunResponse {
 
 message QueryRunsRequest {
   repeated string ids = 1 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   repeated string test_ids = 2 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   repeated string runner_ids = 3 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   repeated tstr.common.v1.Run.Result results = 4;
   google.protobuf.Timestamp scheduled_before = 5;
@@ -128,6 +128,9 @@ message SummarizeRunsRequest {
   google.protobuf.Timestamp scheduled_after = 1;
   google.protobuf.Duration window = 2;
   Interval interval = 3;
+  repeated string test_ids = 4 [
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
+  ];
 }
 
 message SummarizeRunsResponse {
@@ -165,7 +168,7 @@ message GetRunnerResponse {
 
 message QueryRunnersRequest {
   repeated string ids = 1 [
-    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } } 
+    (validate.rules).repeated = { ignore_empty: true, items: { string: { uuid: true } } }
   ];
   google.protobuf.Duration last_heartbeat_within = 2;
 }

@@ -247,6 +247,16 @@
               "WEEK"
             ],
             "default": "UNKNOWN"
+          },
+          {
+            "name": "testIds",
+            "in": "query",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
           }
         ],
         "tags": [

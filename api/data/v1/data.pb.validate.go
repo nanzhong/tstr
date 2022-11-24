@@ -1633,8 +1633,37 @@ func (m *SummarizeRunsRequest) validate(all bool) error {
 
 	// no validation rules for Interval
 
+	if len(m.GetTestIds()) > 0 {
+
+		for idx, item := range m.GetTestIds() {
+			_, _ = idx, item
+
+			if err := m._validateUuid(item); err != nil {
+				err = SummarizeRunsRequestValidationError{
+					field:  fmt.Sprintf("TestIds[%v]", idx),
+					reason: "value must be a valid UUID",
+					cause:  err,
+				}
+				if !all {
+					return err
+				}
+				errors = append(errors, err)
+			}
+
+		}
+
+	}
+
 	if len(errors) > 0 {
 		return SummarizeRunsRequestMultiError(errors)
+	}
+
+	return nil
+}
+
+func (m *SummarizeRunsRequest) _validateUuid(uuid string) error {
+	if matched := _data_uuidPattern.MatchString(uuid); !matched {
+		return errors.New("invalid uuid format")
 	}
 
 	return nil

@@ -23,7 +23,7 @@ jobs:
           name: tstr
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Setup doctl
-        uses: digitalocean/action-doctl@v2.1.1
+        uses: digitalocean/action-doctl@v2.2.0
         with:
           token: ${{ secrets.DO_ACCESS_TOKEN }}
       - name: Configure kubectl

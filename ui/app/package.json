@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.4",
-    "@heroicons/vue": "^2.0.12",
+    "@heroicons/vue": "^2.0.13",
     "axios": "^1.2.0",
     "dayjs": "^1.11.6",
     "notiwind": "^1.2.6",

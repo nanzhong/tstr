@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 
-set -eo pipefail
-
-scripts_path="${BASH_SOURCE%/*}"
-
+# shellcheck source=dev/common.sh
+source dev/common.sh
 # shellcheck source=scripts/common.sh
-source "$scripts_path/common.sh"
+source scripts/common.sh
 
 options=$(getopt -l "gotags:" -o "t:" -a -- "$@")
 eval set -- "$options"
@@ -25,6 +23,6 @@ do
   shift
 done
 
-run "Generating protobufs..." "$scripts_path/gen_pb.sh"
-run "Generating db implementation..." "$scripts_path/gen_db.sh"
+run "Generating protobufs..." scripts/gen_pb.sh
+run "Generating db implementation..." scripts/gen_db.sh
 run "Running go generate..." go generate -tags="$gotags" ./...

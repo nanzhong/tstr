@@ -60,29 +60,35 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "required (generated)"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "required"
         },
         "token": {
-          "type": "string"
+          "type": "string",
+          "title": "required (generated) will be present only on issuance, empty otherwise"
         },
         "namespaceSelectors": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "required"
         },
         "scopes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/AccessTokenScope"
-          }
+          },
+          "title": "required"
         },
         "issuedAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "required"
         },
         "expiresAt": {
           "type": "string",
@@ -98,7 +104,8 @@
       "type": "object",
       "properties": {
         "accessToken": {
-          "$ref": "#/definitions/v1AccessToken"
+          "$ref": "#/definitions/v1AccessToken",
+          "title": "required"
         }
       }
     },
@@ -106,7 +113,8 @@
       "type": "object",
       "properties": {
         "accessToken": {
-          "$ref": "#/definitions/v1AccessToken"
+          "$ref": "#/definitions/v1AccessToken",
+          "title": "required"
         }
       }
     },
@@ -117,7 +125,8 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/v1AccessToken"
-          }
+          },
+          "title": "required"
         }
       }
     },

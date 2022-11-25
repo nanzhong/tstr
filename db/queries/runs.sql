@@ -9,7 +9,8 @@ WHERE runs.id = sqlc.arg('id');
 SELECT runs.*
 FROM runs
 JOIN tests
-ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace');
+ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
+ORDER BY runs.scheduled_at ASC;
 
 -- name: ScheduleRun :one
 INSERT INTO runs (test_id, test_run_config, labels, test_matrix_id)
@@ -23,7 +24,8 @@ SELECT runs.*, tests.namespace
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id
-WHERE runner_id IS NULL;
+WHERE runner_id IS NULL
+ORDER BY runs.scheduled_at ASC;
 
 -- name: AssignRun :one
 UPDATE runs
@@ -34,6 +36,7 @@ WHERE runs.id = (
   WHERE
     matching_runs.id = ANY (sqlc.arg('run_IDs')::uuid[]) AND
     matching_runs.runner_id IS NULL
+  ORDER BY matching_runs.scheduled_at ASC
   LIMIT 1
   FOR UPDATE SKIP LOCKED
 )
@@ -58,7 +61,7 @@ WHERE id = sqlc.arg('id');
 
 -- name: UpdateResultData :exec
 UPDATE runs
-SET result_data = result_data || sqlc.arg('result_data')::jsonb 
+SET result_data = result_data || sqlc.arg('result_data')::jsonb
 WHERE id = sqlc.arg('id');
 
 -- name: ResetOrphanedRuns :exec
@@ -86,7 +89,7 @@ FROM runs
 JOIN tests
 ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE runs.test_id = sqlc.arg('test_id') AND runs.scheduled_at > sqlc.arg('scheduled_after')
-ORDER by runs.scheduled_at desc;
+ORDER by runs.scheduled_at DESC;
 
 -- name: RunSummariesForRunner :many
 SELECT runs.id, tests.namespace AS test_namespace, tests.id AS test_id, tests.name AS test_name, runs.test_run_config, runs.labels, runs.runner_id, runs.result, runs.scheduled_at, runs.started_at, runs.finished_at, runs.result_data
@@ -94,7 +97,7 @@ FROM runs
 JOIN tests
 ON runs.test_id = tests.id AND tests.namespace = sqlc.arg('namespace')
 WHERE runs.runner_id = sqlc.arg('runner_id') AND runs.scheduled_at > sqlc.arg('scheduled_after')
-ORDER by runs.scheduled_at desc;
+ORDER by runs.scheduled_at DESC;
 
 -- name: QueryRuns :many
 SELECT runs.*

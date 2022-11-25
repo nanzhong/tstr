@@ -31,14 +31,17 @@
       "type": "object",
       "properties": {
         "time": {
-          "type": "string"
+          "type": "string",
+          "title": "required"
         },
         "outputType": {
-          "$ref": "#/definitions/LogOutput"
+          "$ref": "#/definitions/LogOutput",
+          "title": "required"
         },
         "data": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "required"
         }
       }
     },
@@ -56,7 +59,8 @@
       "type": "object",
       "properties": {
         "containerImage": {
-          "type": "string"
+          "type": "string",
+          "title": "required"
         },
         "command": {
           "type": "string"
@@ -109,7 +113,8 @@
       "type": "object",
       "properties": {
         "run": {
-          "$ref": "#/definitions/v1Run"
+          "$ref": "#/definitions/v1Run",
+          "title": "required"
         }
       }
     },
@@ -117,7 +122,8 @@
       "type": "object",
       "properties": {
         "runner": {
-          "$ref": "#/definitions/v1Runner"
+          "$ref": "#/definitions/v1Runner",
+          "title": "required"
         }
       }
     },
@@ -125,13 +131,16 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "required (generated)"
         },
         "testId": {
-          "type": "string"
+          "type": "string",
+          "title": "required"
         },
         "testRunConfig": {
-          "$ref": "#/definitions/TestRunConfig"
+          "$ref": "#/definitions/TestRunConfig",
+          "title": "required"
         },
         "testMatrixId": {
           "type": "string"
@@ -162,7 +171,8 @@
         },
         "scheduledAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "required"
         },
         "startedAt": {
           "type": "string",
@@ -178,16 +188,19 @@
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "title": "required (generated)"
         },
         "name": {
-          "type": "string"
+          "type": "string",
+          "title": "required"
         },
         "namespaceSelectors": {
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "required"
         },
         "acceptTestLabelSelectors": {
           "type": "object",
@@ -203,7 +216,8 @@
         },
         "registeredAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "title": "required"
         },
         "lastHeartbeatAt": {
           "type": "string",

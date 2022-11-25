@@ -86,9 +86,18 @@ func (m *FieldRules) validate(all bool) error {
 		}
 	}
 
-	switch m.Type.(type) {
-
+	switch v := m.Type.(type) {
 	case *FieldRules_Float:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetFloat()).(type) {
@@ -120,6 +129,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Double:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetDouble()).(type) {
@@ -151,6 +170,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Int32:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetInt32()).(type) {
@@ -182,6 +211,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Int64:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetInt64()).(type) {
@@ -213,6 +252,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Uint32:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetUint32()).(type) {
@@ -244,6 +293,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Uint64:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetUint64()).(type) {
@@ -275,6 +334,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Sint32:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetSint32()).(type) {
@@ -306,6 +375,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Sint64:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetSint64()).(type) {
@@ -337,6 +416,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Fixed32:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetFixed32()).(type) {
@@ -368,6 +457,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Fixed64:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetFixed64()).(type) {
@@ -399,6 +498,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Sfixed32:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetSfixed32()).(type) {
@@ -430,6 +539,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Sfixed64:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetSfixed64()).(type) {
@@ -461,6 +580,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Bool:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetBool()).(type) {
@@ -492,6 +621,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_String_:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetString_()).(type) {
@@ -523,6 +662,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Bytes:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetBytes()).(type) {
@@ -554,6 +703,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Enum:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetEnum()).(type) {
@@ -585,6 +744,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Repeated:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetRepeated()).(type) {
@@ -616,6 +785,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Map:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetMap()).(type) {
@@ -647,6 +826,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Any:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetAny()).(type) {
@@ -678,6 +867,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Duration:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetDuration()).(type) {
@@ -709,6 +908,16 @@ func (m *FieldRules) validate(all bool) error {
 		}
 
 	case *FieldRules_Timestamp:
+		if v == nil {
+			err := FieldRulesValidationError{
+				field:  "Type",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 
 		if all {
 			switch v := interface{}(m.GetTimestamp()).(type) {
@@ -739,6 +948,8 @@ func (m *FieldRules) validate(all bool) error {
 			}
 		}
 
+	default:
+		_ = v // ensures v is used
 	}
 
 	if len(errors) > 0 {
@@ -2303,38 +2514,129 @@ func (m *StringRules) validate(all bool) error {
 
 	// no validation rules for IgnoreEmpty
 
-	switch m.WellKnown.(type) {
-
+	switch v := m.WellKnown.(type) {
 	case *StringRules_Email:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Email
-
 	case *StringRules_Hostname:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Hostname
-
 	case *StringRules_Ip:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ip
-
 	case *StringRules_Ipv4:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ipv4
-
 	case *StringRules_Ipv6:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ipv6
-
 	case *StringRules_Uri:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Uri
-
 	case *StringRules_UriRef:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for UriRef
-
 	case *StringRules_Address:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Address
-
 	case *StringRules_Uuid:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Uuid
-
 	case *StringRules_WellKnownRegex:
+		if v == nil {
+			err := StringRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for WellKnownRegex
-
+	default:
+		_ = v // ensures v is used
 	}
 
 	if len(errors) > 0 {
@@ -2454,17 +2756,45 @@ func (m *BytesRules) validate(all bool) error {
 
 	// no validation rules for IgnoreEmpty
 
-	switch m.WellKnown.(type) {
-
+	switch v := m.WellKnown.(type) {
 	case *BytesRules_Ip:
+		if v == nil {
+			err := BytesRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ip
-
 	case *BytesRules_Ipv4:
+		if v == nil {
+			err := BytesRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ipv4
-
 	case *BytesRules_Ipv6:
+		if v == nil {
+			err := BytesRulesValidationError{
+				field:  "WellKnown",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
 		// no validation rules for Ipv6
-
+	default:
+		_ = v // ensures v is used
 	}
 
 	if len(errors) > 0 {

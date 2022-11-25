@@ -5,23 +5,19 @@
     flake-utils.url = "github:numtide/flake-utils";
     nix-npm-buildpackage.url = "github:serokell/nix-npm-buildpackage";
     sqlc = {
-      url = "github:kyleconroy/sqlc";
+      url = "github:kyleconroy/sqlc/v1.16.0";
       flake = false;
     };
     dbmate = {
-      url = "github:amacneil/dbmate";
+      url = "github:amacneil/dbmate/v1.16.0";
       flake = false;
     };
     overmind = {
-      url = "github:DarthSim/overmind";
-      flake = false;
-    };
-    quicktemplate = {
-      url = "github:valyala/quicktemplate";
+      url = "github:DarthSim/overmind/v2.3.0";
       flake = false;
     };
     grpc-gateway = {
-      url = "github:grpc-ecosystem/grpc-gateway/v2.10.3";
+      url = "github:grpc-ecosystem/grpc-gateway/v2.14.0";
       flake = false;
     };
     protoc-gen-grpc-gateway-ts = {
@@ -30,7 +26,7 @@
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, sqlc, dbmate, overmind, quicktemplate, grpc-gateway, protoc-gen-grpc-gateway-ts }:
+  outputs = { self, nixpkgs, flake-utils, nix-npm-buildpackage, sqlc, dbmate, overmind, grpc-gateway, protoc-gen-grpc-gateway-ts }:
     flake-utils.lib.eachDefaultSystem(system:
       let
         pkgs = import nixpkgs { inherit system; };
@@ -66,7 +62,7 @@
             src = sqlc;
             subPackages = [ "cmd/sqlc" ];
             doCheck = false;
-            vendorSha256 = "sha256-QTNzhlphJNq918450WNXGDI/y6D0QHDoTwWYnH+NkbM=";
+            vendorSha256 = "sha256-cMYTQ8rATCXOquSxc4iZ2MvxIaMO3RG8PZkpOwwntyc=";
             proxyVendor = true;
             buildInputs = [
               pkgs.xxHash
@@ -78,7 +74,7 @@
             name = "dbmate";
             src = dbmate;
             doCheck = false;
-            vendorSha256 = "sha256-U9VTS0rmLHxweFiIcFyoybHMBihy5ezloDC2iLc4IMc=";
+            vendorSha256 = "sha256-DwQUrNBfKZaVIpqI8yI/C9CQF5Ok/sApOrsLeIxt3hM=";
           };
           overmind = pkgs.buildGoModule {
             name = "overmind";
@@ -94,7 +90,7 @@
               "protoc-gen-grpc-gateway"
               "protoc-gen-openapiv2"
             ];
-            vendorSha256 = "sha256-FhiTU9VmDZNCPBWrmCqmQo/kPdDe8Da1T2E06CVN2kw=";
+            vendorSha256 = "sha256-dGdnDuRbwg8fU7uB5GaHEWa/zI3w06onqjturvooJQA=";
           };
           protoc-gen-grpc-gateway-ts = pkgs.buildGoModule {
             name = "protoc-gen-grpc-gateway-ts";

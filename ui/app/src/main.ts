@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import { createRouter, createWebHashHistory, RouteRecordRaw } from "vue-router";
 import { createPinia } from "pinia";
+import Notifications, { notify } from "notiwind";
 import App from "./App.vue";
 import "./index.css";
 
@@ -17,9 +18,19 @@ const Tests = () => import("./views/Tests.vue");
 const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia);
+app.use(Notifications);
 app.provide("apiPathPrefix", "/api");
 app.config.globalProperties.$initReq = {
   pathPrefix: "/api",
+};
+app.config.errorHandler = (err, instance, info) => {
+  console.log("[tstr ui error]", "err:", err, "instance:", instance, `in: ${info}`)
+  notify({
+    group: "top",
+    type: "error",
+    title: "Uh oh, something went wrong!",
+    text: err.toString(),
+  }, 4000);
 };
 
 function prefixRoutes(prefix: string, routes: RouteRecordRaw[]) {
@@ -50,7 +61,7 @@ const routes = [
     {
       path: "dashboard",
       name: "dashboard",
-      props: { 
+      props: {
         header: { title: "Dashboard" },
       },
       components: {

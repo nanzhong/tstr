@@ -13,6 +13,7 @@
     "@heroicons/vue": "^2.0.12",
     "axios": "^1.2.0",
     "dayjs": "^1.11.6",
+    "notiwind": "^1.2.6",
     "pinia": "^2.0.23",
     "plotly.js-dist": "^2.16.1",
     "vue": "^3.2.41",

@@ -3,6 +3,7 @@ import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import Plotly from "plotly.js-dist/plotly";
 import { BoltIcon, FaceSmileIcon, FaceFrownIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline';
+import { notify } from "notiwind";
 import { useInitReq } from "../api/init";
 import { RunResult } from "../api/common/v1/common.pb";
 import { DataService, SummarizeRunsRequestInterval } from "../api/data/v1/data.pb";

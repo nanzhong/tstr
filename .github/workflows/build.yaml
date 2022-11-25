@@ -21,10 +21,10 @@ jobs:
       - name: Validate generated code is up to date
         run: |
           nix develop -c dev/up
-          nix develop -c scripts/gen.sh
+          nix develop -c dev/gen
           nix develop -c dev/down
           if [ -n "$(git status --porcelain)" ]; then
-            echo "There is outdated generated code. Please regenerate with `scripts/gen.sh`.";
+            echo "There is outdated generated code. Please regenerate with `dev/gen`.";
             git status
             exit 1
           fi

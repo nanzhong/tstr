@@ -83,10 +83,9 @@ message AccessToken {
   enum Scope {
     UNKNOWN = 0;
     ADMIN = 1;
-    CONTROL_R = 2;
-    CONTROL_RW = 3;
+    CONTROL = 2;
+    DATA = 3;
     RUNNER = 4;
-    DATA = 5;
   }
 
   string id = 1; // required (generated)

@@ -134,60 +134,6 @@
     "v1DeleteTestResponse": {
       "type": "object"
     },
-    "v1GetRunResponse": {
-      "type": "object",
-      "properties": {
-        "run": {
-          "$ref": "#/definitions/v1Run",
-          "title": "required"
-        }
-      }
-    },
-    "v1GetTestResponse": {
-      "type": "object",
-      "properties": {
-        "test": {
-          "$ref": "#/definitions/v1Test",
-          "title": "required"
-        }
-      }
-    },
-    "v1ListRunnersResponse": {
-      "type": "object",
-      "properties": {
-        "runners": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Runner"
-          },
-          "title": "required"
-        }
-      }
-    },
-    "v1ListRunsResponse": {
-      "type": "object",
-      "properties": {
-        "runs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Run"
-          },
-          "title": "required"
-        }
-      }
-    },
-    "v1ListTestsResponse": {
-      "type": "object",
-      "properties": {
-        "tests": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/v1Test"
-          },
-          "title": "required"
-        }
-      }
-    },
     "v1RegisterTestResponse": {
       "type": "object",
       "properties": {
@@ -249,47 +195,6 @@
           "format": "date-time"
         },
         "finishedAt": {
-          "type": "string",
-          "format": "date-time"
-        }
-      }
-    },
-    "v1Runner": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "required (generated)"
-        },
-        "name": {
-          "type": "string",
-          "title": "required"
-        },
-        "namespaceSelectors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "title": "required"
-        },
-        "acceptTestLabelSelectors": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "rejectTestLabelSelectors": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "registeredAt": {
-          "type": "string",
-          "format": "date-time",
-          "title": "required"
-        },
-        "lastHeartbeatAt": {
           "type": "string",
           "format": "date-time"
         }

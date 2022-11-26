@@ -29,10 +29,9 @@ COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UU
 
 CREATE TYPE public.access_token_scope AS ENUM (
     'admin',
-    'control_r',
-    'control_rw',
-    'runner',
-    'data'
+    'control',
+    'data',
+    'runner'
 );
 
 
@@ -262,4 +261,5 @@ ALTER TABLE ONLY public.runs
 INSERT INTO public.schema_migrations (version) VALUES
     ('20220426134459'),
     ('20220909000425'),
-    ('20220909001359');
+    ('20220909001359'),
+    ('20221126034047');

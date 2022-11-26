@@ -32,21 +32,15 @@ const (
 var scopeAuthorizations = map[string][]commonv1.AccessToken_Scope{
 	"/tstr.identity.v1.IdentityService/Identity": {
 		commonv1.AccessToken_ADMIN,
-		commonv1.AccessToken_CONTROL_RW,
-		commonv1.AccessToken_CONTROL_R,
+		commonv1.AccessToken_CONTROL,
 		commonv1.AccessToken_RUNNER,
 		commonv1.AccessToken_DATA,
 	},
 
-	"/tstr.control.v1.ControlService/RegisterTest": {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/UpdateTest":   {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetTest":      {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListTests":    {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/DeleteTest":   {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/GetRun":       {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ListRuns":     {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
-	"/tstr.control.v1.ControlService/ScheduleRun":  {commonv1.AccessToken_CONTROL_RW},
-	"/tstr.control.v1.ControlService/ListRunners":  {commonv1.AccessToken_CONTROL_RW, commonv1.AccessToken_CONTROL_R},
+	"/tstr.control.v1.ControlService/RegisterTest": {commonv1.AccessToken_CONTROL},
+	"/tstr.control.v1.ControlService/UpdateTest":   {commonv1.AccessToken_CONTROL},
+	"/tstr.control.v1.ControlService/DeleteTest":   {commonv1.AccessToken_CONTROL},
+	"/tstr.control.v1.ControlService/ScheduleRun":  {commonv1.AccessToken_CONTROL},
 
 	"/tstr.admin.v1.AdminService/IssueAccessToken":  {commonv1.AccessToken_ADMIN},
 	"/tstr.admin.v1.AdminService/GetAccessToken":    {commonv1.AccessToken_ADMIN},

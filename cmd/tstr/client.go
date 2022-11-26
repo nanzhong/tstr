@@ -7,6 +7,7 @@ import (
 	grpc_validator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	adminv1 "github.com/nanzhong/tstr/api/admin/v1"
 	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	datav1 "github.com/nanzhong/tstr/api/data/v1"
 	identityv1 "github.com/nanzhong/tstr/api/identity/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
@@ -74,6 +75,23 @@ func withControlClient(ctx context.Context, apiAddr string, secure bool, accessT
 	return fn(ctx, client)
 }
 
+func withDataClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, datav1.DataServiceClient) error) error {
+	log.Debug().Str("addr", apiAddr).Msg("dialing data service")
+
+	conn, err := grpc.DialContext(
+		ctx,
+		apiAddr,
+		clientDialOpts(secure, accessToken)...,
+	)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	client := datav1.NewDataServiceClient(conn)
+	return fn(ctx, client)
+}
+
 func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, adminv1.AdminServiceClient) error) error {
 	log.Debug().Str("addr", apiAddr).Msg("dialing admin service")
 
@@ -120,4 +138,11 @@ func withCtlControlClient(ctx context.Context, fn func(context.Context, controlv
 	defer cancel()
 
 	return withControlClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), fn)
+}
+
+func withCtlDataClient(ctx context.Context, fn func(context.Context, datav1.DataServiceClient) error) error {
+	ctx, cancel := context.WithTimeout(ctx, viper.GetDuration("ctl.timeout"))
+	defer cancel()
+
+	return withDataClient(ctx, viper.GetString("ctl.grpc-addr"), !viper.GetBool("ctl.insecure"), viper.GetString("ctl.access-token"), fn)
 }

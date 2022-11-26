@@ -36,14 +36,12 @@ var (
 				switch strings.ToLower(s) {
 				case "admin":
 					req.Scopes = append(req.Scopes, commonv1.AccessToken_ADMIN)
-				case "control_r":
-					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL_R)
-				case "control_rw":
-					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL_RW)
-				case "runner":
-					req.Scopes = append(req.Scopes, commonv1.AccessToken_RUNNER)
+				case "control":
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_CONTROL)
 				case "data":
 					req.Scopes = append(req.Scopes, commonv1.AccessToken_DATA)
+				case "runner":
+					req.Scopes = append(req.Scopes, commonv1.AccessToken_RUNNER)
 				default:
 					return fmt.Errorf("invalid access token scope %s", s)
 				}

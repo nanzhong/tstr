@@ -39,6 +39,7 @@ WHERE runs.id = (
   WHERE
     matching_runs.id = ANY ($2::uuid[]) AND
     matching_runs.runner_id IS NULL
+  ORDER BY matching_runs.scheduled_at ASC
   LIMIT 1
   FOR UPDATE SKIP LOCKED
 )
@@ -119,6 +120,7 @@ FROM runs
 JOIN tests
 ON runs.test_id = tests.id
 WHERE runner_id IS NULL
+ORDER BY runs.scheduled_at ASC
 `
 
 type ListPendingRunsRow struct {
@@ -176,6 +178,7 @@ SELECT runs.id, runs.test_id, runs.test_run_config, runs.test_matrix_id, runs.la
 FROM runs
 JOIN tests
 ON runs.test_id = tests.id AND tests.namespace = $1
+ORDER BY runs.scheduled_at ASC
 `
 
 func (q *Queries) ListRuns(ctx context.Context, db DBTX, namespace string) ([]Run, error) {
@@ -309,7 +312,7 @@ FROM runs
 JOIN tests
 ON runs.test_id = tests.id AND tests.namespace = $1
 WHERE runs.runner_id = $2 AND runs.scheduled_at > $3
-ORDER by runs.scheduled_at desc
+ORDER by runs.scheduled_at DESC
 `
 
 type RunSummariesForRunnerParams struct {
@@ -372,7 +375,7 @@ FROM runs
 JOIN tests
 ON runs.test_id = tests.id AND tests.namespace = $1
 WHERE runs.test_id = $2 AND runs.scheduled_at > $3
-ORDER by runs.scheduled_at desc
+ORDER by runs.scheduled_at DESC
 `
 
 type RunSummariesForTestParams struct {
@@ -657,7 +660,7 @@ func (q *Queries) TimeoutRuns(ctx context.Context, db DBTX, arg TimeoutRunsParam
 
 const updateResultData = `-- name: UpdateResultData :exec
 UPDATE runs
-SET result_data = result_data || $1::jsonb 
+SET result_data = result_data || $1::jsonb
 WHERE id = $2
 `
 

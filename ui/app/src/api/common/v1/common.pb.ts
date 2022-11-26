@@ -24,10 +24,9 @@ export enum RunLogOutput {
 export enum AccessTokenScope {
   UNKNOWN = "UNKNOWN",
   ADMIN = "ADMIN",
-  CONTROL_R = "CONTROL_R",
-  CONTROL_RW = "CONTROL_RW",
-  RUNNER = "RUNNER",
+  CONTROL = "CONTROL",
   DATA = "DATA",
+  RUNNER = "RUNNER",
 }
 
 export type TestRunConfig = {

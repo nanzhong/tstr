@@ -30,7 +30,7 @@ func TestAccessTokensQueries(t *testing.T) {
 				Name:               "valid",
 				TokenHash:          "valid-hash",
 				NamespaceSelectors: []string{"ns-0", "ns-1"},
-				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControlRw)},
+				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControl)},
 				ExpiresAt:          sql.NullTime{Valid: true, Time: time.Now().Add(time.Hour)},
 			})
 			require.NoError(t, err)
@@ -39,7 +39,7 @@ func TestAccessTokensQueries(t *testing.T) {
 				Name:               "valid no expiry",
 				TokenHash:          "valid-no-expriy-hash",
 				NamespaceSelectors: []string{"ns-0", "ns-1"},
-				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControlRw)},
+				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControl)},
 			})
 			require.NoError(t, err)
 
@@ -47,7 +47,7 @@ func TestAccessTokensQueries(t *testing.T) {
 				Name:               "expired",
 				TokenHash:          "expired-hash",
 				NamespaceSelectors: []string{"ns-0", "ns-1"},
-				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControlRw)},
+				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControl)},
 				ExpiresAt:          sql.NullTime{Valid: true, Time: time.Now().Add(-time.Hour)},
 			})
 			require.NoError(t, err)
@@ -57,7 +57,7 @@ func TestAccessTokensQueries(t *testing.T) {
 				Name:               "revoked",
 				TokenHash:          "revoked-hash",
 				NamespaceSelectors: []string{"ns-0", "ns-1"},
-				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControlRw)},
+				Scopes:             []string{string(AccessTokenScopeAdmin), string(AccessTokenScopeControl)},
 			})
 			require.NoError(t, err)
 		})

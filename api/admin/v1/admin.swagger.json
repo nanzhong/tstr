@@ -22,10 +22,9 @@
       "enum": [
         "UNKNOWN",
         "ADMIN",
-        "CONTROL_R",
-        "CONTROL_RW",
-        "RUNNER",
-        "DATA"
+        "CONTROL",
+        "DATA",
+        "RUNNER"
       ],
       "default": "UNKNOWN"
     },

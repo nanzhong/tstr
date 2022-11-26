@@ -59,7 +59,7 @@ var apiCmd = &cobra.Command{
 			tokenHash := hex.EncodeToString(tokenHashBytes[:])
 
 			var textScopes []string
-			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControlRw, db.AccessTokenScopeRunner, db.AccessTokenScopeData} {
+			for _, s := range []db.AccessTokenScope{db.AccessTokenScopeAdmin, db.AccessTokenScopeControl, db.AccessTokenScopeRunner, db.AccessTokenScopeData} {
 				textScopes = append(textScopes, string(s))
 			}
 			_, err := db.New().IssueAccessToken(ctx, pgxPool, db.IssueAccessTokenParams{

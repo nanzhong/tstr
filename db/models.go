@@ -16,11 +16,10 @@ import (
 type AccessTokenScope string
 
 const (
-	AccessTokenScopeAdmin     AccessTokenScope = "admin"
-	AccessTokenScopeControlR  AccessTokenScope = "control_r"
-	AccessTokenScopeControlRw AccessTokenScope = "control_rw"
-	AccessTokenScopeRunner    AccessTokenScope = "runner"
-	AccessTokenScopeData      AccessTokenScope = "data"
+	AccessTokenScopeAdmin   AccessTokenScope = "admin"
+	AccessTokenScopeControl AccessTokenScope = "control"
+	AccessTokenScopeData    AccessTokenScope = "data"
+	AccessTokenScopeRunner  AccessTokenScope = "runner"
 )
 
 func (e *AccessTokenScope) Scan(src interface{}) error {

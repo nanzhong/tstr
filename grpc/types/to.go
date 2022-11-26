@@ -29,14 +29,12 @@ func ToAccessTokenScope(scope string) commonv1.AccessToken_Scope {
 	switch scope {
 	case string(db.AccessTokenScopeAdmin):
 		return commonv1.AccessToken_ADMIN
-	case string(db.AccessTokenScopeControlR):
-		return commonv1.AccessToken_CONTROL_R
-	case string(db.AccessTokenScopeControlRw):
-		return commonv1.AccessToken_CONTROL_RW
-	case string(db.AccessTokenScopeRunner):
-		return commonv1.AccessToken_RUNNER
+	case string(db.AccessTokenScopeControl):
+		return commonv1.AccessToken_CONTROL
 	case string(db.AccessTokenScopeData):
 		return commonv1.AccessToken_DATA
+	case string(db.AccessTokenScopeRunner):
+		return commonv1.AccessToken_RUNNER
 	default:
 		return commonv1.AccessToken_UNKNOWN
 	}

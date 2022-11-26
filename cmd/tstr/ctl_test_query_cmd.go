@@ -4,22 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	controlv1 "github.com/nanzhong/tstr/api/control/v1"
+	datav1 "github.com/nanzhong/tstr/api/data/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
-var ctlTestListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "List registered tests",
-	Args:  cobra.ExactArgs(0),
+var ctlTestQueryCmd = &cobra.Command{
+	Use:     "query",
+	Short:   "query registered tests",
+	Args:    cobra.ExactArgs(0),
+	Aliases: []string{"q", "list", "ls"},
 	RunE: func(cmd *cobra.Command, _ []string) error {
-		return withCtlControlClient(context.Background(), func(ctx context.Context, client controlv1.ControlServiceClient) error {
+		return withCtlDataClient(context.Background(), func(ctx context.Context, client datav1.DataServiceClient) error {
 			fmt.Println("Listing registered tests...")
 			ctx = metadata.AppendToOutgoingContext(ctx, auth.MDKeyNamespace, ctlNamespace)
-			res, err := client.ListTests(ctx, &controlv1.ListTestsRequest{})
+			res, err := client.QueryTests(ctx, &datav1.QueryTestsRequest{})
 			if err != nil {
 				return err
 			}
@@ -31,5 +32,5 @@ var ctlTestListCmd = &cobra.Command{
 }
 
 func init() {
-	ctlTestCmd.AddCommand(ctlTestListCmd)
+	ctlTestCmd.AddCommand(ctlTestQueryCmd)
 }

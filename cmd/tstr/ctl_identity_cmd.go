@@ -19,18 +19,23 @@ type ctlIdentityResult struct {
 func (r *ctlIdentityResult) RenderText(w io.Writer) error {
 	var titleStyle = lipgloss.NewStyle().Bold(true).Width(20)
 
-	fmt.Fprintf(w, "%s %s (%s)\n", titleStyle.Render("Access Token"), r.res.AccessToken.Name, r.res.AccessToken.Id)
 	var scopes []string
 	for _, s := range r.res.AccessToken.Scopes {
 		scopes = append(scopes, s.String())
 	}
-	fmt.Fprintf(w, "%s %s\n", titleStyle.Render("Scopes"), strings.Join(scopes, ", "))
-	fmt.Fprintf(w, "%s %s (accessible: %s)\n", titleStyle.Render("Namespace Selectors"), strings.Join(r.res.AccessToken.NamespaceSelectors, ", "), strings.Join(r.res.AccessibleNamespaces, ", "))
-	fmt.Fprintf(w, "%s %s\n", titleStyle.Render("Issued At"), r.res.AccessToken.IssuedAt.AsTime().String())
-	if !r.res.AccessToken.ExpiresAt.AsTime().IsZero() {
-		fmt.Fprintf(w, "%s %s\n", titleStyle.Render("Expires At"), r.res.AccessToken.ExpiresAt.AsTime().String())
+
+	output := []string{
+		fmt.Sprintf("%s %s (%s)", titleStyle.Render("Access Token"), r.res.AccessToken.Name, r.res.AccessToken.Id),
+		fmt.Sprintf("%s %s (%s)", titleStyle.Render("Access Token"), r.res.AccessToken.Name, r.res.AccessToken.Id),
+		fmt.Sprintf("%s %s", titleStyle.Render("Scopes"), strings.Join(scopes, ", ")),
+		fmt.Sprintf("%s %s (accessible: %s)", titleStyle.Render("Namespace Selectors"), strings.Join(r.res.AccessToken.NamespaceSelectors, ", "), strings.Join(r.res.AccessibleNamespaces, ", ")),
+		fmt.Sprintf("%s %s", titleStyle.Render("Issued At"), r.res.AccessToken.IssuedAt.AsTime().String()),
 	}
-	return nil
+	if r.res.AccessToken.ExpiresAt != nil {
+		output = append(output, fmt.Sprintf("%s %s", titleStyle.Render("Expires At"), r.res.AccessToken.ExpiresAt.AsTime().String()))
+	}
+	_, err := fmt.Fprintln(w, strings.Join(output, "\n"))
+	return err
 }
 
 func (r *ctlIdentityResult) RenderJSON(w io.Writer) error {

@@ -11,7 +11,6 @@ import (
 	identityv1 "github.com/nanzhong/tstr/api/identity/v1"
 	runnerv1 "github.com/nanzhong/tstr/api/runner/v1"
 	"github.com/nanzhong/tstr/grpc/auth"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -42,8 +41,6 @@ func clientDialOpts(secure bool, accessToken string) []grpc.DialOption {
 }
 
 func withIdentityClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, identityv1.IdentityServiceClient) error) error {
-	log.Debug().Str("addr", apiAddr).Msg("dialing identity service")
-
 	conn, err := grpc.DialContext(
 		ctx,
 		apiAddr,
@@ -59,8 +56,6 @@ func withIdentityClient(ctx context.Context, apiAddr string, secure bool, access
 }
 
 func withControlClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, controlv1.ControlServiceClient) error) error {
-	log.Debug().Str("addr", apiAddr).Msg("dialing control service")
-
 	conn, err := grpc.DialContext(
 		ctx,
 		apiAddr,
@@ -76,8 +71,6 @@ func withControlClient(ctx context.Context, apiAddr string, secure bool, accessT
 }
 
 func withDataClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, datav1.DataServiceClient) error) error {
-	log.Debug().Str("addr", apiAddr).Msg("dialing data service")
-
 	conn, err := grpc.DialContext(
 		ctx,
 		apiAddr,
@@ -93,8 +86,6 @@ func withDataClient(ctx context.Context, apiAddr string, secure bool, accessToke
 }
 
 func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, adminv1.AdminServiceClient) error) error {
-	log.Debug().Str("addr", apiAddr).Msg("dialing admin service")
-
 	conn, err := grpc.DialContext(
 		ctx,
 		apiAddr,
@@ -110,8 +101,6 @@ func withAdminClient(ctx context.Context, apiAddr string, secure bool, accessTok
 }
 
 func withRunnerClient(ctx context.Context, apiAddr string, secure bool, accessToken string, fn func(context.Context, runnerv1.RunnerServiceClient) error) error {
-	log.Debug().Str("addr", apiAddr).Msg("dialing runner service")
-
 	conn, err := grpc.DialContext(
 		ctx,
 		apiAddr,

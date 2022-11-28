@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"io"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -13,6 +16,12 @@ var (
 		Short: "The cli interface for interacting with tstr",
 	}
 	ctlNamespace string
+	ctlOutput    string
+)
+
+const (
+	outputFormatText = "text"
+	outputFormatJSON = "json"
 )
 
 func init() {
@@ -29,4 +38,35 @@ func init() {
 	viper.BindPFlag("ctl.access-token", ctlCmd.PersistentFlags().Lookup("access-token"))
 
 	rootCmd.AddCommand(ctlCmd)
+}
+
+func addOutputFlag(cmd *cobra.Command) {
+	cmd.Flags().StringVarP(&ctlOutput, "output", "o", outputFormatText, "Output format [json, text]")
+}
+
+func validateOutputFormat() error {
+	ctlOutput = strings.ToLower(ctlOutput)
+
+	switch ctlOutput {
+	case outputFormatText, outputFormatJSON:
+		return nil
+	default:
+		return fmt.Errorf("invalid output format: %s", ctlOutput)
+	}
+}
+
+func render(r outputRenderer, w io.Writer) error {
+	switch ctlOutput {
+	case outputFormatJSON:
+		return r.RenderJSON(w)
+	case outputFormatText:
+		return r.RenderText(w)
+	default:
+		return fmt.Errorf("failed to  render: output format not specified")
+	}
+}
+
+type outputRenderer interface {
+	RenderText(io.Writer) error
+	RenderJSON(io.Writer) error
 }

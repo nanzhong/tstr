@@ -973,6 +973,7 @@ func init() {
 		"jsonb":          &JSONB{},
 		"line":           &Line{},
 		"lseg":           &Lseg{},
+		"ltree":          &Ltree{},
 		"macaddr":        &Macaddr{},
 		"name":           &Name{},
 		"numeric":        &Numeric{},

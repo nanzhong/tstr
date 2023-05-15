@@ -126,6 +126,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }
@@ -176,6 +177,7 @@
         "logs": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/RunLog"
           }
         },
@@ -206,6 +208,7 @@
         "runs": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Run"
           },
           "title": "required"

@@ -394,6 +394,7 @@
         "resultCount": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/IntervalStatsResultBreakdown"
           }
         }
@@ -471,12 +472,14 @@
         "resultCount": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/IntervalStatsResultBreakdown"
           }
         },
         "testCount": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/IntervalStatsTestBreakdown"
           }
         }
@@ -542,6 +545,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }
@@ -564,6 +568,7 @@
         "runSummaries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1RunSummary"
           }
         }
@@ -578,6 +583,7 @@
         "runSummaries": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1RunSummary"
           }
         }
@@ -589,6 +595,7 @@
         "runners": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Runner"
           }
         }
@@ -600,6 +607,7 @@
         "runs": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Run"
           }
         }
@@ -611,6 +619,7 @@
         "tests": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1Test"
           }
         }
@@ -649,6 +658,7 @@
         "logs": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/RunLog"
           }
         },
@@ -767,6 +777,7 @@
         "intervalStats": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/SummarizeRunsResponseIntervalStats"
           }
         }

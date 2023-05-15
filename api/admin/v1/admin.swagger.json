@@ -50,6 +50,7 @@
         "details": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
         }
@@ -123,6 +124,7 @@
         "accessTokens": {
           "type": "array",
           "items": {
+            "type": "object",
             "$ref": "#/definitions/v1AccessToken"
           },
           "title": "required"

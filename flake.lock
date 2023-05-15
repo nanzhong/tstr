@@ -3,16 +3,16 @@
     "dbmate": {
       "flake": false,
       "locked": {
-        "lastModified": 1666482592,
-        "narHash": "sha256-6M7ruiBjvXO6LTdZNuGwUIVwa3QzdBQo0Y34UslCGAE=",
+        "lastModified": 1683876671,
+        "narHash": "sha256-bWmRdrULXXVIaO5f3rntsVURnyojYFbhbZ43WvGzoZk=",
         "owner": "amacneil",
         "repo": "dbmate",
-        "rev": "649e03f59925de17177b3aa966418c60e2cf65bc",
+        "rev": "f4610da0b9bc55d0298ac3be0bbc41a4f988d4c8",
         "type": "github"
       },
       "original": {
         "owner": "amacneil",
-        "ref": "v1.16.0",
+        "ref": "v2.3.0",
         "repo": "dbmate",
         "type": "github"
       }
@@ -35,16 +35,16 @@
     "grpc-gateway": {
       "flake": false,
       "locked": {
-        "lastModified": 1668551680,
-        "narHash": "sha256-lnNdsDCpeSHtl2lC1IhUw11t3cnGF+37qSM7HDvKLls=",
+        "lastModified": 1677265818,
+        "narHash": "sha256-0fpVSFo+o+M7vwwHIrYQZcAjdZjASdWz/cKXnPr6Je8=",
         "owner": "grpc-ecosystem",
         "repo": "grpc-gateway",
-        "rev": "fb3f4344d4f1d8c813694275c0448a0eacb125d6",
+        "rev": "0eb17c3d70415c44406b0f02265ceaad570d6fa3",
         "type": "github"
       },
       "original": {
         "owner": "grpc-ecosystem",
-        "ref": "v2.14.0",
+        "ref": "v2.15.2",
         "repo": "grpc-gateway",
         "type": "github"
       }
@@ -100,16 +100,16 @@
     "overmind": {
       "flake": false,
       "locked": {
-        "lastModified": 1659100928,
-        "narHash": "sha256-vmmSsg0JneMseFCcx/no2x/Ghppmyiod8ZAIb4JWW9I=",
+        "lastModified": 1674829061,
+        "narHash": "sha256-cpsTytV1TbvdR7XUKkp4GPD1qyt1qnmY6qOsge01swE=",
         "owner": "DarthSim",
         "repo": "overmind",
-        "rev": "8a5f4e2270b66c37055a7968d9909b00af859494",
+        "rev": "401322180d78cc2cf077b90c92fec5e767b796fd",
         "type": "github"
       },
       "original": {
         "owner": "DarthSim",
-        "ref": "v2.3.0",
+        "ref": "v2.4.0",
         "repo": "overmind",
         "type": "github"
       }
@@ -146,16 +146,16 @@
     "sqlc": {
       "flake": false,
       "locked": {
-        "lastModified": 1667968843,
-        "narHash": "sha256-YxGMfGhcPT3Pcyxu1hAkadkJnEBMX26fE/rGfGSTsyc=",
+        "lastModified": 1682617748,
+        "narHash": "sha256-5MC7D9+33x/l76j186FCnzo0Hnx0wY6BPdneW7E7MpE=",
         "owner": "kyleconroy",
         "repo": "sqlc",
-        "rev": "89922d459cc11e2051ef3c37979e6b2223565271",
+        "rev": "e4b1c1873690a5b1006436024f0e6c25166bed76",
         "type": "github"
       },
       "original": {
         "owner": "kyleconroy",
-        "ref": "v1.16.0",
+        "ref": "v1.18.0",
         "repo": "sqlc",
         "type": "github"
       }

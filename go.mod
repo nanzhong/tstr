@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/benbjohnson/clock v1.3.0
 	github.com/docker/docker v20.10.24+incompatible
-	github.com/envoyproxy/protoc-gen-validate v0.10.0
+	github.com/envoyproxy/protoc-gen-validate v1.0.1
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/jackc/pgconn v1.13.0
@@ -30,7 +30,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/lyft/protoc-gen-star/v2 v2.0.1 // indirect
+	github.com/lyft/protoc-gen-star/v2 v2.0.3 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -71,11 +71,11 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

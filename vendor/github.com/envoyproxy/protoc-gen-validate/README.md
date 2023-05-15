@@ -6,8 +6,7 @@
 ![Release](https://img.shields.io/github/v/release/bufbuild/protoc-gen-validate?include_prereleases)
 ![Slack](https://img.shields.io/badge/slack-buf-%23e01563)
 
-*This project is currently in **alpha**. The API should be considered unstable
-and likely to change*
+***New: we're hard at work on v2.0 of protoc-gen-validate, you can read all about it [here!](https://buf.build/blog/protoc-gen-validate-v1-and-v2/) We'd love your feedback, reach out to us on our [Slack](https://buf.build/links/slack) to get in touch.***
 
 PGV is a protoc plugin to generate polyglot message validators. While protocol
 buffers effectively guarantee the types of structured data, they cannot enforce
@@ -97,7 +96,7 @@ go get -d github.com/envoyproxy/protoc-gen-validate
 > better `cmd/go`
 > support for modules that change paths, but progress is slow. Until then, we
 > will
-> continue to use the `bufbuild` module path.
+> continue to use the `envoyproxy` module path.
 
 ```
 git clone github.com/bufbuild/protoc-gen-validate
@@ -126,7 +125,7 @@ into `../generated/example.pb.validate.go`:
 ```sh
 protoc \
   -I . \
-  -I path/to/validate/ \ 
+  -I path/to/validate/ \
   --go_out=":../generated" \
   --validate_out="lang=go:../generated" \
   example.proto
@@ -143,7 +142,7 @@ code.
 
 **Note**: by default **example.pb.validate.go** is nested in a directory
 structure that matches your `option go_package` name. You can change this using
-the protoc parameter `paths=source_relative:.`. Then `--validate_out` will
+the protoc parameter `paths=source_relative:.`, as like `--validate_out="lang=go,paths=source_relative:../generated"`. Then `--validate_out` will
 output the file where it is expected. See Google's protobuf documentation
 or [packages and input paths](https://github.com/golang/protobuf#packages-and-input-paths)
 or [parameters](https://github.com/golang/protobuf#parameters) for more
@@ -152,6 +151,25 @@ information.
 There's also support for the `module=example.com/foo`
 flag [described here](https://developers.google.com/protocol-buffers/docs/reference/go-generated#invocation)
 .
+
+With newer Buf CLI versions (>v1.9.0), you can use the new plugin key instead of using the `protoc` command directly:
+
+```
+# buf.gen.yaml
+
+version: v1
+plugins:
+  - plugin: buf.build/bufbuild/validate-go
+    out: gen
+```
+
+```
+# proto/buf.yaml
+
+version: v1
+deps:
+  - buf.build/envoyproxy/protoc-gen-validate
+```
 
 #### Java
 
@@ -334,7 +352,7 @@ language-specific constraint capabilities.
   for optional fields where switching to WKTs is not feasible.
 
   ```protobuf
-  unint32 x = 1 [(validate.rules).uint32 = {ignore_empty: true, gte: 200}];
+  uint32 x = 1 [(validate.rules).uint32 = {ignore_empty: true, gte: 200}];
   ```
 
 ### Bools
@@ -407,7 +425,7 @@ language-specific constraint capabilities.
 
   // x must contain "baz" anywhere inside it
   string x = 1 [(validate.rules).string.contains = "baz"];
-  
+
   // x cannot contain "baz" anywhere inside it
   string x = 1 [(validate.rules).string.not_contains = "baz"];
 
@@ -472,13 +490,13 @@ language-specific constraint capabilities.
 
   // x must be a valid UUID (via RFC 4122)
   string x = 1 [(validate.rules).string.uuid = true];
-  
+
   // x must conform to a well known regex for HTTP header names (via RFC 7230)
   string x = 1 [(validate.rules).string.well_known_regex = HTTP_HEADER_NAME]
-  
-  // x must conform to a well known regex for HTTP header values (via RFC 7230) 
+
+  // x must conform to a well known regex for HTTP header values (via RFC 7230)
   string x = 1 [(validate.rules).string.well_known_regex = HTTP_HEADER_VALUE];
-  
+
   // x must conform to a well known regex for headers, disallowing \r\n\0 characters.
   string x = 1 [(validate.rules).string {well_known_regex: HTTP_HEADER_VALUE, strict: false}];
   ```
@@ -1024,10 +1042,10 @@ docker run --rm \
 # executes the 'build' & 'testcases' make targets
 docker run --rm \
   bufbuild/protoc-gen-validate build testcases
-  
+
 # override the entrypoint and interact with the container directly
-# this can be useful when wanting to run bazel commands without 
-# bazel installed locally. 
+# this can be useful when wanting to run bazel commands without
+# bazel installed locally.
 docker run --rm \
  -it --entrypoint=/bin/bash \
  bufbuild/protoc-gen-validate

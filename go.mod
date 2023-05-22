@@ -7,7 +7,7 @@ require (
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.1
 	github.com/google/uuid v1.3.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/jackc/pgconn v1.13.0
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v4 v4.17.2

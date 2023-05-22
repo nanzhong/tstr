@@ -190,13 +190,13 @@ asynckit@^0.4.0:
   resolved "https://registry.yarnpkg.com/asynckit/-/asynckit-0.4.0.tgz#c79ed97f7f34cb8f2ba1bc9790bcc366474b4b79"
   integrity sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==
 
-autoprefixer@^10.4.13:
-  version "10.4.13"
-  resolved "https://registry.yarnpkg.com/autoprefixer/-/autoprefixer-10.4.13.tgz#b5136b59930209a321e9fa3dca2e7c4d223e83a8"
-  integrity sha512-49vKpMqcZYsJjwotvt4+h/BCjJVnhGwcLpDt5xkcaOG3eLrG/HUYLagrihYsQ+qrIBgIzX1Rw7a6L8I/ZA1Atg==
+autoprefixer@^10.4.14:
+  version "10.4.14"
+  resolved "https://registry.yarnpkg.com/autoprefixer/-/autoprefixer-10.4.14.tgz#e28d49902f8e759dd25b153264e862df2705f79d"
+  integrity sha512-FQzyfOsTlwVzjHxKEqRIAdJx9niO6VCBCoEwax/VLSoQF29ggECcPuBqUMZ+u8jCZOPSy8b8/8KnuFbp0SaFZQ==
   dependencies:
-    browserslist "^4.21.4"
-    caniuse-lite "^1.0.30001426"
+    browserslist "^4.21.5"
+    caniuse-lite "^1.0.30001464"
     fraction.js "^4.2.0"
     normalize-range "^0.1.2"
     picocolors "^1.0.0"
@@ -223,25 +223,25 @@ braces@^3.0.2, braces@~3.0.2:
   dependencies:
     fill-range "^7.0.1"
 
-browserslist@^4.21.4:
-  version "4.21.4"
-  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.21.4.tgz#e7496bbc67b9e39dd0f98565feccdcb0d4ff6987"
-  integrity sha512-CBHJJdDmgjl3daYjN5Cp5kbTf1mUhZoS+beLklHIvkOWscs83YAhLlF3Wsh/lciQYAcbBJgTOD44VtG31ZM4Hw==
+browserslist@^4.21.5:
+  version "4.21.5"
+  resolved "https://registry.yarnpkg.com/browserslist/-/browserslist-4.21.5.tgz#75c5dae60063ee641f977e00edd3cfb2fb7af6a7"
+  integrity sha512-tUkiguQGW7S3IhB7N+c2MV/HZPSCPAAiYBZXLsBhFB/PCy6ZKKsZrmBayHV9fdGV/ARIfJ14NkxKzRDjvp7L6w==
   dependencies:
-    caniuse-lite "^1.0.30001400"
-    electron-to-chromium "^1.4.251"
-    node-releases "^2.0.6"
-    update-browserslist-db "^1.0.9"
+    caniuse-lite "^1.0.30001449"
+    electron-to-chromium "^1.4.284"
+    node-releases "^2.0.8"
+    update-browserslist-db "^1.0.10"
 
 camelcase-css@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/camelcase-css/-/camelcase-css-2.0.1.tgz#ee978f6947914cc30c6b44741b6ed1df7f043fd5"
   integrity sha512-QOSvevhslijgYwRx6Rv7zKdMF8lbRmx+uQGx2+vDc+KI/eBnsy9kit5aj23AgGu3pa4t9AgwbnXWqS+iOY+2aA==
 
-caniuse-lite@^1.0.30001400, caniuse-lite@^1.0.30001426:
-  version "1.0.30001427"
-  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001427.tgz#d3a749f74be7ae0671fbec3a4eea18576e8ad646"
-  integrity sha512-lfXQ73oB9c8DP5Suxaszm+Ta2sr/4tf8+381GkIm1MLj/YdLf+rEDyDSRCzeltuyTVGm+/s18gdZ0q+Wmp8VsQ==
+caniuse-lite@^1.0.30001449, caniuse-lite@^1.0.30001464:
+  version "1.0.30001489"
+  resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001489.tgz#ca82ee2d4e4dbf2bd2589c9360d3fcc2c7ba3bd8"
+  integrity sha512-x1mgZEXK8jHIfAxm+xgdpHpk50IN3z3q3zP261/WS+uvePxW8izXuCu6AHz0lkuYTlATDehiZ/tNyYBdSQsOUQ==
 
 "chokidar@>=3.0.0 <4.0.0", chokidar@^3.5.3:
   version "3.5.3"
@@ -314,10 +314,10 @@ dlv@^1.1.3:
   resolved "https://registry.yarnpkg.com/dlv/-/dlv-1.1.3.tgz#5c198a8a11453596e751494d49874bc7732f2e79"
   integrity sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==
 
-electron-to-chromium@^1.4.251:
-  version "1.4.270"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.270.tgz#2c6ea409b45cdb5c3e0cb2c08cf6c0ba7e0f2c26"
-  integrity sha512-KNhIzgLiJmDDC444dj9vEOpZEgsV96ult9Iff98Vanumn+ShJHd5se8aX6KeVxdc0YQeqdrezBZv89rleDbvSg==
+electron-to-chromium@^1.4.284:
+  version "1.4.402"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.4.402.tgz#9aa7bbb63081513127870af6d22f829344c5ba57"
+  integrity sha512-gWYvJSkohOiBE6ecVYXkrDgNaUjo47QEKK0kQzmWyhkH+yoYiG44bwuicTGNSIQRG3WDMsWVZJLRnJnLNkbWvA==
 
 esbuild-android-64@0.15.10:
   version "0.15.10"
@@ -615,10 +615,10 @@ nanoid@^3.3.4:
   resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.4.tgz#730b67e3cd09e2deacf03c027c81c9d9dbc5e8ab"
   integrity sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==
 
-node-releases@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.6.tgz#8a7088c63a55e493845683ebf3c828d8c51c5503"
-  integrity sha512-PiVXnNuFm5+iYkLBNeq5211hvO38y63T0i2KKh2KnUs3RpzJ+JtODFjkD8yjLwnDkTYF1eKXheUwdssR+NRZdg==
+node-releases@^2.0.8:
+  version "2.0.11"
+  resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.11.tgz#59d7cef999d13f908e43b5a70001cf3129542f0f"
+  integrity sha512-+M0PwXeU80kRohZ3aT4J/OnR+l9/KD2nVLNNoRgFtnf+umQVFdGBAO2N8+nCnEi0xlh/Wk3zOGC+vNNx+uM79Q==
 
 normalize-path@^3.0.0, normalize-path@~3.0.0:
   version "3.0.0"
@@ -853,10 +853,10 @@ typescript@~4.9.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.9.3.tgz#3aea307c1746b8c384435d8ac36b8a2e580d85db"
   integrity sha512-CIfGzTelbKNEnLpLdGFgdyKhG23CKdKgQPOBc+OUNrkJ2vr+KSzsSV5kq5iWhEQbok+quxgGzrAtGWCyU7tHnA==
 
-update-browserslist-db@^1.0.9:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.0.9.tgz#2924d3927367a38d5c555413a7ce138fc95fcb18"
-  integrity sha512-/xsqn21EGVdXI3EXSum1Yckj3ZVZugqyOZQ/CxYPBD/R+ko9NSUScf8tFF4dOKY+2pvSSJA/S+5B8s4Zr4kyvg==
+update-browserslist-db@^1.0.10:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/update-browserslist-db/-/update-browserslist-db-1.0.11.tgz#9a2a641ad2907ae7b3616506f4b977851db5b940"
+  integrity sha512-dCwEFf0/oT85M1fHBg4F0jtLwJrutGoHSQXCh7u4o2t1drG+c0a9Flnqww6XUKSfQMPpJBRjU8d4RXB09qtvaA==
   dependencies:
     escalade "^3.1.1"
     picocolors "^1.0.0"

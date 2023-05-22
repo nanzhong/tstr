@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/benbjohnson/clock v1.3.0
-	github.com/docker/docker v20.10.24+incompatible
+	github.com/docker/docker v24.0.1+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.1
 	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
@@ -63,7 +63,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rs/xid v1.4.0 // indirect
-	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

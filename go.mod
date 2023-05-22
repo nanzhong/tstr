@@ -3,7 +3,7 @@ module github.com/nanzhong/tstr
 go 1.18
 
 require (
-	github.com/benbjohnson/clock v1.3.0
+	github.com/benbjohnson/clock v1.3.5
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/envoyproxy/protoc-gen-validate v1.0.1
 	github.com/google/uuid v1.3.0

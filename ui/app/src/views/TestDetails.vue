@@ -7,6 +7,7 @@ import { DataService } from "../api/data/v1/data.pb";
 import RunSummariesPlot from "../components/RunSummariesPlot.vue";
 import Labels from "../components/Labels.vue";
 import MatrixLabels from "../components/MatrixLabels.vue";
+import TextWithTooltip from "../components/TextWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 
@@ -31,7 +32,7 @@ const runSummaries = testData.runSummaries!;
         <dl class="grid grid-cols-1 gap-x-2 gap-y-4 mb-4 sm:grid-cols-3">
           <div class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Container Image</dt>
-            <dd class="mt-1 text-sm text-gray-900"><pre>{{ test.runConfig?.containerImage }}</pre></dd>
+            <dd class="mt-1 text-sm text-gray-900"><TextWithTooltip :text="test.runConfig?.containerImage"/></dd>
           </div>
           <div v-if="test.runConfig?.command" class="col-span-1">
             <dt class="text-sm font-medium text-gray-500">Command</dt>

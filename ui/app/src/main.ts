@@ -29,7 +29,7 @@ app.config.errorHandler = (err, instance, info) => {
     group: "top",
     type: "error",
     title: "Uh oh, something went wrong!",
-    text: err.toString(),
+    text: err.message,
   }, 4000);
 };
 

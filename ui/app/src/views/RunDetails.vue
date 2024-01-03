@@ -9,6 +9,7 @@ import { RunLogOutput, Runner } from "../api/common/v1/common.pb";
 import RunResult from "../components/RunResult.vue";
 import Labels from "../components/Labels.vue";
 import TimeWithTooltip from "../components/TimeWithTooltip.vue";
+import TextWithTooltip from "../components/TextWithTooltip.vue";
 
 dayjs.extend(relativeTime);
 dayjs.extend(duration)
@@ -92,7 +93,7 @@ const logDecode = (data: string | null) => {
           <dl class="grid grid-cols-1 gap-2 my-4">
             <div class="col-span-1">
               <dt class="text-sm font-medium text-gray-500">Container Image</dt>
-              <dd class="mt-1 text-sm text-gray-900"><pre>{{ run.testRunConfig?.containerImage }}</pre></dd>
+              <dd class="mt-1 text-sm text-gray-900"><TextWithTooltip :text="test.runConfig?.containerImage"/></dd>
             </div>
             <div v-if="run.testRunConfig?.command" class="col-span-1">
               <dt class="text-sm font-medium text-gray-500">Command</dt>

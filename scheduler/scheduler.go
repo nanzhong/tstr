@@ -137,6 +137,7 @@ func (s *Scheduler) Start() error {
 						RunConfig:    test.RunConfig,
 						CronSchedule: test.CronSchedule,
 						NextRunAt:    sql.NullTime{Valid: true, Time: nextRunAt},
+						Namespace:    test.Namespace,
 					})
 					if err != nil {
 						log.Error().

@@ -371,7 +371,8 @@ func (s *DataServer) GetRunner(ctx context.Context, r *datav1.GetRunnerRequest) 
 	}
 
 	runSummaries, err := s.dbQuerier.RunSummariesForRunner(ctx, s.pgxPool, db.RunSummariesForRunnerParams{
-		RunnerID: uuid.NullUUID{Valid: true, UUID: runner.ID},
+		Namespace: ns,
+		RunnerID:  uuid.NullUUID{Valid: true, UUID: runner.ID},
 		// TODO Configure default + query param handling
 		ScheduledAfter: sql.NullTime{Valid: true, Time: s.clock.Now().Add(-24 * time.Hour)},
 	})
